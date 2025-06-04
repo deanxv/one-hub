@@ -89,9 +89,9 @@ func ListGeminiModelsByToken(c *gin.Context) {
 
 	var geminiModels []gemini.ModelDetails
 	for _, modelName := range models {
-		// Get the price to check if it's a Gemini model (channel_type=25)
+		// Get the price to check if it's a Gemini model (channel_type=25 or 42)
 		price := model.PricingInstance.GetPrice(modelName)
-		if price.ChannelType == config.ChannelTypeGemini {
+		if price.ChannelType == config.ChannelTypeGemini || price.ChannelType == config.ChannelTypeVertexAI {
 			geminiModels = append(geminiModels, gemini.ModelDetails{
 				Name: fmt.Sprintf("models/%s", modelName),
 			})
