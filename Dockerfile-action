@@ -7,7 +7,7 @@ RUN apk update \
     && apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates 2>/dev/null || true
 
-COPY /one-api-$TARGETARCH /one-api
+COPY done-api-$TARGETARCH /done-api
 EXPOSE 3000
 WORKDIR /data
-ENTRYPOINT ["/one-api"]
+ENTRYPOINT ["/done-api"]
