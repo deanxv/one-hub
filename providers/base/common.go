@@ -233,3 +233,139 @@ func (p *BaseProvider) GetOtherArg() string {
 func (p *BaseProvider) SetOtherArg(otherArg string) {
 	p.OtherArg = otherArg
 }
+
+// NewRequestWithCustomParams 创建带有额外参数处理的请求
+// 这个方法会自动处理channel中配置的额外参数，并将其合并到请求体中
+func (p *BaseProvider) NewRequestWithCustomParams(method, url string, originalRequest interface{}, headers map[string]string, modelName string) (*http.Request, *types.OpenAIErrorWithStatusCode) {
+	// 处理额外参数
+	customParams, err := p.CustomParameterHandler()
+	if err != nil {
+		return nil, common.ErrorWrapper(err, "custom_parameter_error", http.StatusInternalServerError)
+	}
+
+	// 如果有额外参数，将其添加到请求体中
+	if customParams != nil {
+		// 将请求体转换为map，以便添加额外参数
+		var requestMap map[string]interface{}
+		requestBytes, err := json.Marshal(originalRequest)
+		if err != nil {
+			return nil, common.ErrorWrapper(err, "marshal_request_failed", http.StatusInternalServerError)
+		}
+
+		err = json.Unmarshal(requestBytes, &requestMap)
+		if err != nil {
+			return nil, common.ErrorWrapper(err, "unmarshal_request_failed", http.StatusInternalServerError)
+		}
+
+		// 处理自定义额外参数
+		requestMap = p.mergeCustomParams(requestMap, customParams, modelName)
+
+		// 使用修改后的请求体创建请求
+		req, err := p.Requester.NewRequest(method, url, p.Requester.WithBody(requestMap), p.Requester.WithHeader(headers))
+		if err != nil {
+			return nil, common.ErrorWrapper(err, "new_request_failed", http.StatusInternalServerError)
+		}
+
+		return req, nil
+	}
+
+	// 如果没有额外参数，使用原始请求体创建请求
+	req, err := p.Requester.NewRequest(method, url, p.Requester.WithBody(originalRequest), p.Requester.WithHeader(headers))
+	if err != nil {
+		return nil, common.ErrorWrapper(err, "new_request_failed", http.StatusInternalServerError)
+	}
+
+	return req, nil
+}
+
+// mergeCustomParams 将自定义参数合并到请求体中
+func (p *BaseProvider) mergeCustomParams(requestMap map[string]interface{}, customParams map[string]interface{}, modelName string) map[string]interface{} {
+	// 检查是否需要覆盖已有参数
+	shouldOverwrite := false
+	if overwriteValue, exists := customParams["overwrite"]; exists {
+		if boolValue, ok := overwriteValue.(bool); ok {
+			shouldOverwrite = boolValue
+		}
+	}
+
+	// 检查是否按照模型粒度控制
+	perModel := false
+	if perModelValue, exists := customParams["per_model"]; exists {
+		if boolValue, ok := perModelValue.(bool); ok {
+			perModel = boolValue
+		}
+	}
+
+	customParamsModel := customParams
+	if perModel && modelName != "" {
+		if v, exists := customParams[modelName]; exists {
+			if modelConfig, ok := v.(map[string]interface{}); ok {
+				customParamsModel = modelConfig
+			} else {
+				customParamsModel = map[string]interface{}{}
+			}
+		} else {
+			customParamsModel = map[string]interface{}{}
+		}
+	}
+
+	// 添加额外参数
+	for key, value := range customParamsModel {
+		// 忽略控制参数
+		if key == "stream" || key == "overwrite" || key == "per_model" {
+			continue
+		}
+		// 根据覆盖设置决定如何添加参数
+		if shouldOverwrite {
+			// 覆盖模式：直接添加/覆盖参数
+			requestMap[key] = value
+		} else {
+			// 非覆盖模式：进行深度合并
+			if existingValue, exists := requestMap[key]; exists {
+				// 如果都是map类型，进行深度合并
+				if existingMap, ok := existingValue.(map[string]interface{}); ok {
+					if newMap, ok := value.(map[string]interface{}); ok {
+						requestMap[key] = p.deepMergeMap(existingMap, newMap)
+						continue
+					}
+				}
+				// 如果不是map类型或类型不匹配，保持原值（不覆盖）
+			} else {
+				// 参数不存在时直接添加
+				requestMap[key] = value
+			}
+		}
+	}
+
+	return requestMap
+}
+
+// deepMergeMap 深度合并两个map
+func (p *BaseProvider) deepMergeMap(existing map[string]interface{}, new map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	// 先复制现有的所有键值
+	for k, v := range existing {
+		result[k] = v
+	}
+
+	// 然后合并新的键值
+	for k, newValue := range new {
+		if existingValue, exists := result[k]; exists {
+			// 如果都是map类型，递归深度合并
+			if existingMap, ok := existingValue.(map[string]interface{}); ok {
+				if newMap, ok := newValue.(map[string]interface{}); ok {
+					result[k] = p.deepMergeMap(existingMap, newMap)
+					continue
+				}
+			}
+			// 如果不是map类型，新值覆盖旧值
+			result[k] = newValue
+		} else {
+			// 键不存在，直接添加
+			result[k] = newValue
+		}
+	}
+
+	return result
+}

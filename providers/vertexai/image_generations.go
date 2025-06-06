@@ -81,14 +81,14 @@ func (p *VertexAIProvider) CreateImageGenerations(request *types.ImageRequest) (
 	// 获取请求头
 	headers := p.GetRequestHeaders()
 
-	// 创建请求
-	req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(vertexRequest), p.Requester.WithHeader(headers))
-	if err != nil {
-		return nil, common.ErrorWrapper(err, "new_request_failed", http.StatusInternalServerError)
+	// 使用BaseProvider的统一方法创建请求，支持额外参数处理
+	req, errWithCode := p.NewRequestWithCustomParams(http.MethodPost, fullRequestURL, vertexRequest, headers, request.Model)
+	if errWithCode != nil {
+		return nil, errWithCode
 	}
 
 	vertexResponse := &VertexAIImageResponse{}
-	_, errWithCode := p.Requester.SendRequest(req, vertexResponse, false)
+	_, errWithCode = p.Requester.SendRequest(req, vertexResponse, false)
 	if errWithCode != nil {
 		return nil, errWithCode
 	}

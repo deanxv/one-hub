@@ -92,10 +92,10 @@ func (p *VertexAIProvider) getClaudeRequest(request *claude.ClaudeRequest) (*htt
 	// 错误处理
 	p.Requester.ErrorHandler = RequestErrorHandle(p.Category.ErrorHandler)
 
-	// 创建请求
-	req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(vertexaiRequest), p.Requester.WithHeader(headers))
-	if err != nil {
-		return nil, common.StringErrorWrapperLocal(err.Error(), "new_request_failed", http.StatusInternalServerError)
+	// 使用BaseProvider的统一方法创建请求，支持额外参数处理
+	req, errWithCode := p.NewRequestWithCustomParams(http.MethodPost, fullRequestURL, vertexaiRequest, headers, request.Model)
+	if errWithCode != nil {
+		return nil, errWithCode
 	}
 	return req, nil
 }

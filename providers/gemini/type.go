@@ -127,7 +127,9 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 			isTools = true
 			choice.Delta.ToolCalls = append(choice.Delta.ToolCalls, part.FunctionCall.ToOpenAITool())
 		} else if part.InlineData != nil {
+			imgText := ""
 			if strings.HasPrefix(part.InlineData.MimeType, "image/") {
+
 				images = append(images, types.MultimediaData{
 					Data: part.InlineData.Data,
 				})
@@ -137,9 +139,11 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 					url = storage.Upload(imageData, utils.GetUUID()+".png")
 				}
 				if url == "" {
-					url = "image upload err"
+					imgText = "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+				} else {
+					imgText = fmt.Sprintf("%s(%s)", GeminiImageSymbol, url)
 				}
-				content = append(content, fmt.Sprintf("%s(%s)", GeminiImageSymbol, url))
+				content = append(content, imgText)
 			}
 			//  else if strings.HasPrefix(part.InlineData.MimeType, "audio/") {
 			// 	choice.Message.Audio = types.MultimediaData{
@@ -207,6 +211,7 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 			useTools = true
 			choice.Message.ToolCalls = append(choice.Message.ToolCalls, part.FunctionCall.ToOpenAITool())
 		} else if part.InlineData != nil {
+			imgText := ""
 			if strings.HasPrefix(part.InlineData.MimeType, "image/") {
 
 				images = append(images, types.MultimediaData{
@@ -218,9 +223,11 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 					url = storage.Upload(imageData, utils.GetUUID()+".png")
 				}
 				if url == "" {
-					url = "image upload err"
+					imgText = "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+				} else {
+					imgText = fmt.Sprintf("%s(%s)", GeminiImageSymbol, url)
 				}
-				content = append(content, fmt.Sprintf("%s(%s)", GeminiImageSymbol, url))
+				content = append(content, imgText)
 			}
 			//  else if strings.HasPrefix(part.InlineData.MimeType, "audio/") {
 			// 	choice.Message.Audio = types.MultimediaData{
