@@ -166,7 +166,8 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 
 	if request.Reasoning != nil {
 		geminiRequest.GenerationConfig.ThinkingConfig = &ThinkingConfig{
-			ThinkingBudget: request.Reasoning.MaxTokens,
+			ThinkingBudget:  request.Reasoning.MaxTokens,
+			IncludeThoughts: request.IncludeThoughts,
 		}
 	}
 
