@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import DataCard from 'ui-component/cards/DataCard';
 import { gridSpacing } from 'store/constant';
-import { showError, renderQuota } from 'utils/common';
+import { renderQuota, showError } from 'utils/common';
 import { API } from 'utils/api';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +26,13 @@ export default function Overview() {
     Oder: 0,
     OderContent: ''
   });
+
+  const [rpmTpmStatistics, setRpmTpmStatistics] = useState({
+    rpm: 0,
+    tpm: 0
+  });
+
+  const [rpmTpmLoading, setRpmTpmLoading] = useState(true);
 
   const userStatisticsData = (data) => {
     data.total_quota = renderQuota(data.total_quota);
@@ -104,9 +111,15 @@ export default function Overview() {
         if (data.redemption_statistic || data.order_statistics) {
           rechargeStatisticsData(data?.redemption_statistic, data?.order_statistics);
         }
+
+        if (data.rpm_tpm_statistics) {
+          setRpmTpmStatistics(data.rpm_tpm_statistics);
+        }
+
         setUserLoading(false);
         setChannelLoading(false);
         setRechargeLoading(false);
+        setRpmTpmLoading(false);
       } else {
         showError(message);
       }
@@ -121,7 +134,7 @@ export default function Overview() {
 
   return (
     <Grid container spacing={gridSpacing}>
-      <Grid item lg={3} xs={12}>
+      <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={userLoading}
           title={t('analytics_index.totalUserSpending')}
@@ -129,7 +142,7 @@ export default function Overview() {
           subContent={t('analytics_index.totalUserBalance') + '：' + (userStatistics?.total_quota || '0')}
         />
       </Grid>
-      <Grid item lg={3} xs={12}>
+      <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={userLoading}
           title={t('analytics_index.totalUsers')}
@@ -142,27 +155,42 @@ export default function Overview() {
           }
         />
       </Grid>
-      <Grid item lg={3} xs={12}>
+      <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={channelLoading}
           title={t('analytics_index.channelCount')}
           content={channelStatistics.total}
           subContent={
             <>
-              {t('analytics_index.active')}：{channelStatistics.active} / {t('analytics_index.disabled')}：{channelStatistics.disabled} <br />
+              {t('analytics_index.active')}：{channelStatistics.active} / {t('analytics_index.disabled')}：{channelStatistics.disabled}{' '}
+              <br />
               {t('analytics_index.testDisabled')}：{channelStatistics.test_disabled}
             </>
           }
         />
       </Grid>
-      <Grid item lg={3} xs={12}>
+      <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={rechargeLoading}
           title={'充值统计'}
           content={rechargeStatistics.total}
           subContent={
             <>
-              兑换码: {rechargeStatistics.Redemption} <br /> 订单: {rechargeStatistics.Oder} / {rechargeStatistics.OderContent}
+              兑换码: {rechargeStatistics.Redemption}
+              <br /> 订单: {rechargeStatistics.Oder} / {rechargeStatistics.OderContent}
+            </>
+          }
+        />
+      </Grid>
+      <Grid item lg={2.4} md={4} xs={12}>
+        <DataCard
+          isLoading={rpmTpmLoading}
+          title={'实时流量'}
+          content={`${rpmTpmStatistics.rpm} RPM`}
+          subContent={
+            <>
+              TPM (Token/分钟): {rpmTpmStatistics.tpm.toLocaleString()} <br />
+              最近60秒统计
             </>
           }
         />
