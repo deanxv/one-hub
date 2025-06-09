@@ -914,6 +914,16 @@
           "label": "Reward Quota for Inviter",
           "placeholder": "e.g., 2000"
         },
+        "rechargeRewardType": {
+          "label": "Recharge Reward Type",
+          "fixed": "Fixed",
+          "percentage": "Percentage"
+        },
+        "rechargeRewardValue": {
+          "label": "Recharge Reward Value",
+          "fixedPlaceholder": "e.g., 2000",
+          "percentagePlaceholder": "e.g., 10"
+        },
         "quotaForNewUser": {
           "label": "Initial Quota for New Users",
           "placeholder": "e.g., 100"

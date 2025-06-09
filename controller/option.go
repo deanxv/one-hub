@@ -7,6 +7,7 @@ import (
 	"one-api/common/utils"
 	"one-api/model"
 	"one-api/safty"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -90,6 +91,36 @@ func UpdateOption(c *gin.Context) {
 				"message": "无法启用 Turnstile 校验，请先填入 Turnstile 校验相关配置信息！",
 			})
 			return
+		}
+	case "InviterRewardValue":
+		value, err := strconv.Atoi(option.Value)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "充值返利值必须是有效的数字",
+			})
+			return
+		}
+
+		// 验证充值返利值的范围
+		if config.InviterRewardType == "percentage" {
+			// 百分比类型：值应在0-100之间
+			if value < 0 || value > 100 {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "当充值返利类型为百分比时，返利值应在0-100之间",
+				})
+				return
+			}
+		} else {
+			// 固定类型：值应>=0
+			if value < 0 {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "当充值返利类型为固定时，返利值应大于等于0",
+				})
+				return
+			}
 		}
 	}
 	err = model.UpdateOption(option.Key, option.Value)

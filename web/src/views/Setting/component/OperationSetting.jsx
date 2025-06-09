@@ -7,6 +7,7 @@ import {
   Chip,
   FormControl,
   FormControlLabel,
+  InputAdornment,
   InputLabel,
   MenuItem,
   OutlinedInput,
@@ -35,33 +36,35 @@ const OperationSetting = () => {
     QuotaForNewUser: 0,
     QuotaForInviter: 0,
     QuotaForInvitee: 0,
+    InviterRewardType: 'fixed',
+    InviterRewardValue: 0,
     QuotaRemindThreshold: 0,
     PreConsumedQuota: 0,
     TopUpLink: '',
     ChatLink: '',
     ChatLinks: '',
     QuotaPerUnit: 0,
-    AutomaticDisableChannelEnabled: '',
-    AutomaticEnableChannelEnabled: '',
+    AutomaticDisableChannelEnabled: 'false',
+    AutomaticEnableChannelEnabled: 'false',
     ChannelDisableThreshold: 0,
-    LogConsumeEnabled: '',
-    DisplayInCurrencyEnabled: '',
-    ApproximateTokenEnabled: '',
-    EmptyResponseBillingEnabled: '',
+    LogConsumeEnabled: 'true',
+    DisplayInCurrencyEnabled: 'false',
+    ApproximateTokenEnabled: 'false',
+    EmptyResponseBillingEnabled: 'true',
     RetryTimes: 0,
     RetryTimeOut: 0,
     RetryCooldownSeconds: 0,
-    MjNotifyEnabled: '',
+    MjNotifyEnabled: 'false',
     ChatImageRequestProxy: '',
     PaymentUSDRate: 0,
     PaymentMinAmount: 1,
     RechargeDiscount: '',
     CFWorkerImageUrl: '',
     CFWorkerImageKey: '',
-    ClaudeAPIEnabled: '',
-    GeminiAPIEnabled: '',
+    ClaudeAPIEnabled: 'true',
+    GeminiAPIEnabled: 'true',
     DisableChannelKeywords: '',
-    EnableSafe: '',
+    EnableSafe: 'false',
     SafeToolName: '',
     SafeKeyWords: '',
     safeTools: [],
@@ -70,6 +73,7 @@ const OperationSetting = () => {
   });
   const [originInputs, setOriginInputs] = useState({});
   let [loading, setLoading] = useState(false);
+  let [dataLoaded, setDataLoaded] = useState(false); // 添加数据加载状态
   let [historyTimestamp, setHistoryTimestamp] = useState(now.getTime() / 1000 - 30 * 24 * 3600); // a month ago new Date().getTime() / 1000 + 3600
   let [invoiceMonth, setInvoiceMonth] = useState(now.getTime()); // a month ago new Date().getTime() / 1000 + 3600
   const loadStatus = useContext(LoadStatusContext);
@@ -91,6 +95,10 @@ const OperationSetting = () => {
             } catch (e) {
               console.error('解析SafeKeyWords失败:', e);
             }
+          }
+          // 处理布尔值配置项，统一转换为字符串
+          if (item.key.endsWith('Enabled') && typeof item.value === 'boolean') {
+            item.value = item.value.toString();
           }
           newInputs[item.key] = item.value;
         });
@@ -133,6 +141,7 @@ const OperationSetting = () => {
     const initData = async () => {
       await getSafeTools();
       await getOptions();
+      setDataLoaded(true); // 数据加载完成后设置状态
     };
     initData();
   }, []);
@@ -204,6 +213,29 @@ const OperationSetting = () => {
           }
           break;
         case 'quota':
+          // 验证充值返利值的范围
+          if (originInputs['InviterRewardValue'] !== inputs.InviterRewardValue) {
+            const rewardValue = parseInt(inputs.InviterRewardValue);
+            if (isNaN(rewardValue)) {
+              showError('充值返利值必须是有效的数字');
+              return;
+            }
+
+            if (inputs.InviterRewardType === 'percentage') {
+              // 百分比类型：值应在0-100之间
+              if (rewardValue < 0 || rewardValue > 100) {
+                showError('当充值返利类型为百分比时，返利值应在0-100之间');
+                return;
+              }
+            } else {
+              // 固定类型：值应>=0
+              if (rewardValue < 0) {
+                showError('当充值返利类型为固定时，返利值应大于等于0');
+                return;
+              }
+            }
+          }
+
           if (originInputs['QuotaForNewUser'] !== inputs.QuotaForNewUser) {
             await updateOption('QuotaForNewUser', inputs.QuotaForNewUser);
           }
@@ -212,6 +244,12 @@ const OperationSetting = () => {
           }
           if (originInputs['QuotaForInviter'] !== inputs.QuotaForInviter) {
             await updateOption('QuotaForInviter', inputs.QuotaForInviter);
+          }
+          if (originInputs['InviterRewardType'] !== inputs.InviterRewardType) {
+            await updateOption('InviterRewardType', inputs.InviterRewardType);
+          }
+          if (originInputs['InviterRewardValue'] !== inputs.InviterRewardValue) {
+            await updateOption('InviterRewardValue', inputs.InviterRewardValue);
           }
           if (originInputs['PreConsumedQuota'] !== inputs.PreConsumedQuota) {
             await updateOption('PreConsumedQuota', inputs.PreConsumedQuota);
@@ -461,9 +499,10 @@ const OperationSetting = () => {
               label={t('setting_index.operationSettings.generalSettings.displayInCurrency')}
               control={
                 <Checkbox
-                  checked={inputs.DisplayInCurrencyEnabled === 'true'}
+                  checked={dataLoaded ? inputs.DisplayInCurrencyEnabled === 'true' : false}
                   onChange={handleInputChange}
                   name="DisplayInCurrencyEnabled"
+                  disabled={!dataLoaded || loading}
                 />
               }
             />
@@ -471,16 +510,22 @@ const OperationSetting = () => {
             <FormControlLabel
               label={t('setting_index.operationSettings.generalSettings.approximateToken')}
               control={
-                <Checkbox checked={inputs.ApproximateTokenEnabled === 'true'} onChange={handleInputChange} name="ApproximateTokenEnabled" />
+                <Checkbox
+                  checked={dataLoaded ? inputs.ApproximateTokenEnabled === 'true' : false}
+                  onChange={handleInputChange}
+                  name="ApproximateTokenEnabled"
+                  disabled={!dataLoaded || loading}
+                />
               }
             />
             <FormControlLabel
               label="空回复计费"
               control={
                 <Checkbox
-                  checked={inputs.EmptyResponseBillingEnabled === 'true'}
+                  checked={dataLoaded ? inputs.EmptyResponseBillingEnabled === 'true' : false}
                   onChange={handleInputChange}
                   name="EmptyResponseBillingEnabled"
+                  disabled={!dataLoaded || loading}
                 />
               }
             />
@@ -506,17 +551,38 @@ const OperationSetting = () => {
             <FormControlLabel
               sx={{ marginLeft: '0px' }}
               label={t('setting_index.operationSettings.otherSettings.mjNotify')}
-              control={<Checkbox checked={inputs.MjNotifyEnabled === 'true'} onChange={handleInputChange} name="MjNotifyEnabled" />}
+              control={
+                <Checkbox
+                  checked={dataLoaded ? inputs.MjNotifyEnabled === 'true' : false}
+                  onChange={handleInputChange}
+                  name="MjNotifyEnabled"
+                  disabled={!dataLoaded || loading}
+                />
+              }
             />
             <FormControlLabel
               sx={{ marginLeft: '0px' }}
               label={t('setting_index.operationSettings.otherSettings.claudeAPIEnabled')}
-              control={<Checkbox checked={inputs.ClaudeAPIEnabled === 'true'} onChange={handleInputChange} name="ClaudeAPIEnabled" />}
+              control={
+                <Checkbox
+                  checked={dataLoaded ? inputs.ClaudeAPIEnabled === 'true' : false}
+                  onChange={handleInputChange}
+                  name="ClaudeAPIEnabled"
+                  disabled={!dataLoaded || loading}
+                />
+              }
             />
             <FormControlLabel
               sx={{ marginLeft: '0px' }}
               label={t('setting_index.operationSettings.otherSettings.geminiAPIEnabled')}
-              control={<Checkbox checked={inputs.GeminiAPIEnabled === 'true'} onChange={handleInputChange} name="GeminiAPIEnabled" />}
+              control={
+                <Checkbox
+                  checked={dataLoaded ? inputs.GeminiAPIEnabled === 'true' : false}
+                  onChange={handleInputChange}
+                  name="GeminiAPIEnabled"
+                  disabled={!dataLoaded || loading}
+                />
+              }
             />
           </Stack>
           <Stack spacing={2}>
@@ -581,7 +647,14 @@ const OperationSetting = () => {
         <Stack direction="column" justifyContent="flex-start" alignItems="flex-start" spacing={2}>
           <FormControlLabel
             label={t('setting_index.operationSettings.logSettings.logConsume')}
-            control={<Checkbox checked={inputs.LogConsumeEnabled === 'true'} onChange={handleInputChange} name="LogConsumeEnabled" />}
+            control={
+              <Checkbox
+                checked={dataLoaded ? inputs.LogConsumeEnabled === 'true' : false}
+                onChange={handleInputChange}
+                name="LogConsumeEnabled"
+                disabled={!dataLoaded || loading}
+              />
+            }
           />
           <FormControl>
             <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'zh-cn'}>
@@ -714,9 +787,10 @@ const OperationSetting = () => {
             label={t('setting_index.operationSettings.monitoringSettings.automaticDisableChannel')}
             control={
               <Checkbox
-                checked={inputs.AutomaticDisableChannelEnabled === 'true'}
+                checked={dataLoaded ? inputs.AutomaticDisableChannelEnabled === 'true' : false}
                 onChange={handleInputChange}
                 name="AutomaticDisableChannelEnabled"
+                disabled={!dataLoaded || loading}
               />
             }
           />
@@ -724,9 +798,10 @@ const OperationSetting = () => {
             label={t('setting_index.operationSettings.monitoringSettings.automaticEnableChannel')}
             control={
               <Checkbox
-                checked={inputs.AutomaticEnableChannelEnabled === 'true'}
+                checked={dataLoaded ? inputs.AutomaticEnableChannelEnabled === 'true' : false}
                 onChange={handleInputChange}
                 name="AutomaticEnableChannelEnabled"
+                disabled={!dataLoaded || loading}
               />
             }
           />
@@ -780,8 +855,51 @@ const OperationSetting = () => {
                 label={t('setting_index.operationSettings.quotaSettings.quotaForInviter.label')}
                 value={inputs.QuotaForInviter}
                 onChange={handleInputChange}
+                autoComplete="new-password"
                 placeholder={t('setting_index.operationSettings.quotaSettings.quotaForInviter.placeholder')}
                 disabled={loading}
+              />
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>{t('setting_index.operationSettings.quotaSettings.rechargeRewardType.label')}</InputLabel>
+              <Select
+                value={inputs.InviterRewardType}
+                name="InviterRewardType"
+                onChange={handleInputChange}
+                label={t('setting_index.operationSettings.quotaSettings.rechargeRewardType.label')}
+                disabled={loading}
+              >
+                <MenuItem value="fixed">{t('setting_index.operationSettings.quotaSettings.rechargeRewardType.fixed')}</MenuItem>
+                <MenuItem value="percentage">{t('setting_index.operationSettings.quotaSettings.rechargeRewardType.percentage')}</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel htmlFor="InviterRewardValue">
+                {t('setting_index.operationSettings.quotaSettings.rechargeRewardValue.label')}
+                {inputs.InviterRewardType === 'percentage' ? ' (%)' : ''}
+              </InputLabel>
+              <OutlinedInput
+                id="InviterRewardValue"
+                name="InviterRewardValue"
+                type="number"
+                value={inputs.InviterRewardValue}
+                onChange={handleInputChange}
+                label={
+                  t('setting_index.operationSettings.quotaSettings.rechargeRewardValue.label') +
+                  (inputs.InviterRewardType === 'percentage' ? ' (%)' : '')
+                }
+                placeholder={
+                  inputs.InviterRewardType === 'percentage'
+                    ? t('setting_index.operationSettings.quotaSettings.rechargeRewardValue.percentagePlaceholder')
+                    : t('setting_index.operationSettings.quotaSettings.rechargeRewardValue.fixedPlaceholder')
+                }
+                inputProps={{
+                  min: 0,
+                  max: inputs.InviterRewardType === 'percentage' ? 100 : undefined,
+                  step: 1
+                }}
+                disabled={loading}
+                endAdornment={inputs.InviterRewardType === 'percentage' ? <InputAdornment position="end">%</InputAdornment> : null}
               />
             </FormControl>
             <FormControl fullWidth>
@@ -995,7 +1113,8 @@ const OperationSetting = () => {
               }
               control={
                 <Checkbox
-                  checked={inputs.EnableSafe === 'true'}
+                  checked={dataLoaded ? inputs.EnableSafe === 'true' : false}
+                  disabled={!dataLoaded || loading}
                   onChange={(e) => {
                     console.log('Checkbox changed:', e.target.checked);
                     const newValue = e.target.checked ? 'true' : 'false';

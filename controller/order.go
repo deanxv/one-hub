@@ -176,6 +176,11 @@ func PaymentCallback(c *gin.Context) {
 
 	model.RecordQuotaLog(order.UserId, model.LogTypeTopup, order.Quota, c.ClientIP(), fmt.Sprintf("在线充值成功，充值积分: %d，支付金额：%.2f %s", order.Quota, order.OrderAmount, order.OrderCurrency))
 
+	// 处理邀请人充值返利
+	err = model.ProcessInviterReward(order.UserId, order.Quota, c.ClientIP())
+	if err != nil {
+		logger.SysError(fmt.Sprintf("failed to process inviter reward, trade_no: %s, error: %s", payNotify.TradeNo, err.Error()))
+	}
 }
 
 func CheckOrderStatus(c *gin.Context) {
