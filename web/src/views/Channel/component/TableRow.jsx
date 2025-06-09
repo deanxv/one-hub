@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { showInfo, showError, showSuccess } from 'utils/common';
+import { copy, renderQuota, showError, showInfo, showSuccess } from 'utils/common';
 import { API } from 'utils/api';
 import { CHANNEL_OPTIONS } from 'constants/ChannelConstants';
 import { useTranslation } from 'react-i18next';
@@ -12,49 +12,47 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import { usePopover } from 'hooks/use-popover';
 
 import {
-  Popover,
-  TableRow,
-  MenuItem,
-  TableCell,
-  IconButton,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Tooltip,
-  Button,
   Grid,
-  Collapse,
-  Typography,
-  TextField,
-  Stack,
-  Menu,
-  Box,
-  Switch,
+  IconButton,
   InputAdornment,
-  CircularProgress,
+  Menu,
+  MenuItem,
+  MenuList,
+  Popover,
+  Stack,
+  Switch,
   Table,
   TableBody,
+  TableCell,
   TableHead,
-  Checkbox,
   TablePagination,
-  MenuList
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material';
 
 import Label from 'ui-component/Label';
 // import TableSwitch from 'ui-component/Switch';
-
 import ResponseTimeLabel from './ResponseTimeLabel';
 import GroupLabel from './GroupLabel';
 
-import { styled, alpha } from '@mui/material/styles';
+import { alpha, styled } from '@mui/material/styles';
 import { Icon } from '@iconify/react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { copy, renderQuota } from 'utils/common';
 import { ChannelCheck } from './ChannelCheck';
-import { PAGE_SIZE_OPTIONS, getPageSize, savePageSize } from 'constants';
+import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants';
 
 const StyledMenu = styled((props) => (
   <Menu
@@ -106,7 +104,7 @@ function statusInfo(t, status) {
   }
 }
 
-export default function ChannelTableRow({ item, manageChannel, onRefresh, groupOptions, modelOptions, prices }) {
+export default function ChannelTableRow({ item, manageChannel, onRefresh, groupOptions, modelOptions, prices, selected, onSelect }) {
   const { t } = useTranslation();
   const popover = usePopover();
   const confirmDelete = useBoolean();
@@ -137,7 +135,10 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
   const tagStatusConfirm = useBoolean();
   const [statusChangeAction, setStatusChangeAction] = useState('');
 
-  const [responseTimeData, setResponseTimeData] = useState({ test_time: item.test_time, response_time: item.response_time });
+  const [responseTimeData, setResponseTimeData] = useState({
+    test_time: item.test_time,
+    response_time: item.response_time
+  });
   const [itemBalance, setItemBalance] = useState(item.balance);
 
   const [openRow, setOpenRow] = useState(false);
@@ -194,7 +195,16 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
     const { success } = await manageChannel(channelId, 'status', newStatus);
     if (success) {
       // 更新本地状态
-      setTagChannels((prev) => prev.map((channel) => (channel.id === channelId ? { ...channel, status: newStatus } : channel)));
+      setTagChannels((prev) =>
+        prev.map((channel) =>
+          channel.id === channelId
+            ? {
+                ...channel,
+                status: newStatus
+              }
+            : channel
+        )
+      );
     }
   };
 
@@ -326,18 +336,32 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
     <>
       <TableRow tabIndex={item.id}>
         <TableCell sx={{ minWidth: 50, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-            <IconButton aria-label="expand row" size="small" onClick={() => setOpenRow(!openRow)}>
-              {openRow ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-            </IconButton>
-            {item.tag ? (
+          {!item.tag && (
+            <Checkbox
+              checked={selected}
+              onChange={onSelect}
+              inputProps={{
+                'aria-labelledby': `channel-${item.id}`
+              }}
+            />
+          )}
+          {item.tag && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+              <IconButton aria-label="expand row" size="small" onClick={() => setOpenRow(!openRow)}>
+                {openRow ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+              </IconButton>
               <Label color="primary" variant="soft" sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
                 {t('channel_row.tag')}
               </Label>
-            ) : (
-              item.id
-            )}
-          </Box>
+            </Box>
+          )}
+        </TableCell>
+        <TableCell sx={{ minWidth: 80, textAlign: 'center' }}>
+          {!item.tag && (
+            <Typography variant="body2" id={`channel-${item.id}`}>
+              {item.id}
+            </Typography>
+          )}
         </TableCell>
         <TableCell sx={{ minWidth: 100, maxWidth: 220, overflow: 'hidden' }}>
           {item.tag ? (
@@ -435,7 +459,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
           )}
         </TableCell>
         {/* <TableCell>
-          
+
         </TableCell> */}
         <TableCell>
           {!item.tag && (
@@ -1311,7 +1335,13 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                 onClick={() => {
                   manageChannel(currentTestingChannel.id, 'test', model).then(({ success, time }) => {
                     if (success) {
-                      showSuccess(t('channel_row.modelTestSuccess', { channel: currentTestingChannel.name, model, time: time.toFixed(2) }));
+                      showSuccess(
+                        t('channel_row.modelTestSuccess', {
+                          channel: currentTestingChannel.name,
+                          model,
+                          time: time.toFixed(2)
+                        })
+                      );
                       // 更新本地状态
                       setTagChannels((prev) =>
                         prev.map((c) =>
@@ -1418,7 +1448,15 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
 
                       // 更新本地状态
                       setTagChannels((prev) =>
-                        prev.map((c) => (c.id === channelId ? { ...c, name: editedChannel.name, key: editedChannel.key } : c))
+                        prev.map((c) =>
+                          c.id === channelId
+                            ? {
+                                ...c,
+                                name: editedChannel.name,
+                                key: editedChannel.key
+                              }
+                            : c
+                        )
                       );
 
                       onRefresh(false); // 刷新父组件数据

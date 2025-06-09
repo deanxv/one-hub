@@ -83,7 +83,13 @@
     "totalUserSpending": "ユーザーの総消費額",
     "totalUsers": "ユーザーの総数",
     "unused": "未使用",
-    "used": "使用済み"
+    "used": "使用済み",
+    "rechargeStatistics": "チャージ統計",
+    "redemptionCode": "引き換えコード",
+    "order": "注文",
+    "realTimeTraffic": "リアルタイム流量",
+    "tpmDescription": "TPM (Token/分)",
+    "last60SecondsStats": "最近60秒の統計"
   },
   "auth": {
     "invalidLink": "無効なリンク",

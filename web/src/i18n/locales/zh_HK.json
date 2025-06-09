@@ -86,7 +86,13 @@
     "totalUserSpending": "用戶總消費金額",
     "totalUsers": "用戶總數",
     "unused": "未使用",
-    "used": "已使用"
+    "used": "已使用",
+    "rechargeStatistics": "充值統計",
+    "redemptionCode": "兌換碼",
+    "order": "訂單",
+    "realTimeTraffic": "實時流量",
+    "tpmDescription": "TPM (Token/分鐘)",
+    "last60SecondsStats": "最近60秒統計"
   },
   "auth": {
     "invalidLink": "無效的鏈接",

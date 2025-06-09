@@ -132,7 +132,13 @@
     "testDisabled": "测试禁用",
     "redeemCodeIssued": "兑换码发行量",
     "used": "已使用",
-    "unused": "未使用"
+    "unused": "未使用",
+    "rechargeStatistics": "充值统计",
+    "redemptionCode": "兑换码",
+    "order": "订单",
+    "realTimeTraffic": "实时流量",
+    "tpmDescription": "TPM (Token/分钟)",
+    "last60SecondsStats": "最近60秒统计"
   },
   "channel_index": {
     "channelList": "渠道列表",
@@ -182,7 +188,12 @@
     "batchDeleteTip": "如果渠道只有一个模型的，将不会显示，请手动去列表删除渠道",
     "batchDeleteModel": "请输入完整模型名称",
     "AzureApiVersion": "Azure 版本号",
-    "batchDelete": "批量删除模型"
+    "batchDelete": "批量删除模型",
+    "deleteChannels": "删除渠道",
+    "batchDeleteChannels": "批量删除渠道",
+    "batchDeleteChannelsConfirm": "确定要删除选中的 {{count}} 个渠道吗？此操作不可撤销。",
+    "pleaseSelectChannels": "请先选择要删除的渠道",
+    "batchDeleteChannelsSuccess": "成功删除 {{count}} 个渠道"
   },
   "channel_edit": {
     "customModelTip": "自定义：点击或回车输入",

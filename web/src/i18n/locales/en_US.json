@@ -95,7 +95,13 @@
     "totalUserSpending": "Total User Spending",
     "totalUsers": "Total Users",
     "unused": "Unused",
-    "used": "Used"
+    "used": "Used",
+    "rechargeStatistics": "Recharge Statistics",
+    "redemptionCode": "Redemption Code",
+    "order": "Order",
+    "realTimeTraffic": "Real-time Traffic",
+    "tpmDescription": "TPM (Token/min)",
+    "last60SecondsStats": "Last 60 seconds statistics"
   },
   "auth": {
     "invalidLink": "Invalid link",

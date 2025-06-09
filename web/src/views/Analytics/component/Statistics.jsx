@@ -172,12 +172,12 @@ export default function Overview() {
       <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={rechargeLoading}
-          title={'充值统计'}
+          title={t('analytics_index.rechargeStatistics')}
           content={rechargeStatistics.total}
           subContent={
             <>
-              兑换码: {rechargeStatistics.Redemption}
-              <br /> 订单: {rechargeStatistics.Oder} / {rechargeStatistics.OderContent}
+              {t('analytics_index.redemptionCode')}: {rechargeStatistics.Redemption}
+              <br /> {t('analytics_index.order')}: {rechargeStatistics.Oder} / {rechargeStatistics.OderContent}
             </>
           }
         />
@@ -185,12 +185,12 @@ export default function Overview() {
       <Grid item lg={2.4} md={4} xs={12}>
         <DataCard
           isLoading={rpmTpmLoading}
-          title={'实时流量'}
+          title={t('analytics_index.realTimeTraffic')}
           content={`${rpmTpmStatistics.rpm} RPM`}
           subContent={
             <>
-              TPM (Token/分钟): {rpmTpmStatistics.tpm.toLocaleString()} <br />
-              最近60秒统计
+              {t('analytics_index.tpmDescription')}: {rpmTpmStatistics.tpm.toLocaleString()} <br />
+              {t('analytics_index.last60SecondsStats')}
             </>
           }
         />
