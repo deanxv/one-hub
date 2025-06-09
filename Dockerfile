@@ -5,10 +5,7 @@ WORKDIR /build
 COPY web/package.json .
 COPY web/yarn.lock .
 
-RUN yarn config set registry https://registry.npmmirror.com && \
-    yarn config set network-timeout 600000 && \
-    yarn config set network-concurrency 1 && \
-    yarn --frozen-lockfile --network-timeout 600000
+RUN yarn --frozen-lockfile
 
 COPY ./web .
 COPY ./VERSION .
