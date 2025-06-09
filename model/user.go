@@ -145,6 +145,7 @@ func (user *User) Insert(inviterId int) error {
 			_ = IncreaseUserQuota(user.Id, config.QuotaForInvitee)
 			RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("使用邀请码赠送 %s", common.LogQuota(config.QuotaForInvitee)))
 		}
+		// 注册时的邀请奖励保持原有逻辑，充值时的返利使用新的配置
 		if config.QuotaForInviter > 0 {
 			_ = IncreaseUserQuota(inviterId, config.QuotaForInviter)
 			RecordLog(inviterId, LogTypeSystem, fmt.Sprintf("邀请用户赠送 %s", common.LogQuota(config.QuotaForInviter)))
@@ -203,8 +204,8 @@ func (user *User) Delete() error {
 // ValidateAndFill check password & user status
 func (user *User) ValidateAndFill() (err error) {
 	// When querying with struct, GORM will only query with non-zero fields,
-	// that means if your field’s value is 0, '', false or other zero values,
-	// it won’t be used to build query conditions
+	// that means if your field's value is 0, '', false or other zero values,
+	// it won't be used to build query conditions
 	password := user.Password
 	if user.Username == "" || password == "" {
 		return errors.New("用户名或密码为空")
@@ -562,6 +563,64 @@ func ChangeUserQuota(id int, quota int, isRecharge bool) (err error) {
 	if config.RedisEnabled {
 		redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
 	}
+
+	return nil
+}
+
+// ProcessInviterReward 处理邀请人的充值返利
+func ProcessInviterReward(userId int, rechargeQuota int, ip string) error {
+	// 获取用户信息，查看是否有邀请人
+	user := &User{}
+	err := DB.Where("id = ?", userId).First(user).Error
+	if err != nil {
+		return err
+	}
+
+	// 如果没有邀请人，直接返回
+	if user.InviterId == 0 {
+		return nil
+	}
+
+	// 如果奖励值为0或奖励类型为空，直接返回
+	if config.InviterRewardValue == 0 || config.InviterRewardType == "" {
+		return nil
+	}
+
+	var rewardQuota int
+	var logMessage string
+
+	if config.InviterRewardType == "percentage" {
+		// 百分比奖励
+		rewardQuota = int(float64(rechargeQuota) * float64(config.InviterRewardValue) / 100.0)
+		logMessage = fmt.Sprintf("邀请用户充值返利 %s \n\n (充值额度: %s, 返利比例: %d%%)",
+			common.LogQuota(rewardQuota),
+			common.LogQuota(rechargeQuota),
+			config.InviterRewardValue)
+	} else {
+		// 固定奖励
+		rewardQuota = config.InviterRewardValue
+		logMessage = fmt.Sprintf("邀请用户充值返利 %s (固定奖励)",
+			common.LogQuota(rewardQuota))
+	}
+
+	if rewardQuota <= 0 {
+		return nil
+	}
+
+	// 给邀请人增加额度
+	err = IncreaseUserQuota(user.InviterId, rewardQuota)
+	if err != nil {
+		return err
+	}
+
+	// 更新邀请人的aff_quota
+	err = DB.Model(&User{}).Where("id = ?", user.InviterId).Update("aff_quota", gorm.Expr("aff_quota + ?", rewardQuota)).Error
+	if err != nil {
+		logger.SysError("failed to update inviter aff_quota: " + err.Error())
+	}
+
+	// 记录日志
+	RecordLog(user.InviterId, LogTypeSystem, logMessage)
 
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"one-api/common/config"
 	"one-api/common/logger"
 	"one-api/common/utils"
+	"time"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -265,4 +266,28 @@ type LogStatisticGroupModel struct {
 type LogStatisticGroupChannel struct {
 	LogStatistic
 	Channel string `gorm:"column:channel"`
+}
+
+type RpmTpmStatistics struct {
+	RPM int64 `json:"rpm"`
+	TPM int64 `json:"tpm"`
+}
+
+func GetRpmTpmStatistics() (*RpmTpmStatistics, error) {
+	var result RpmTpmStatistics
+
+	// 获取最近60秒的统计数据
+	now := time.Now().Unix()
+	startTime := now - 60
+
+	err := DB.Table("logs").
+		Select("COUNT(*) as rpm, COALESCE(SUM(prompt_tokens + completion_tokens), 0) as tpm").
+		Where("type = ? AND created_at >= ?", LogTypeConsume, startTime).
+		Scan(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

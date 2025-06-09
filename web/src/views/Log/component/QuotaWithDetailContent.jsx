@@ -64,10 +64,10 @@ export default function QuotaWithDetailContent({ item }) {
   // Create a calculation explanation string
   const stepStr = `(${inputTokens} / 1,000,000 * ${inputPrice})${outputTokens > 0 ? ` + (${outputTokens} / 1,000,000 * ${outputPrice})` : ''} = ${renderQuota(quota, 6)}`;
 
-  let savePercent = '';
-  if (originalQuota > 0 && quota > 0) {
-    savePercent = `${t('logPage.quotaDetail.saved')}${((1 - quota / originalQuota) * 100).toFixed(0)}%`;
-  }
+  // let savePercent = '';
+  // if (originalQuota > 0 && quota > 0) {
+  //   savePercent = `${t('logPage.quotaDetail.saved')}${((1 - quota / originalQuota) * 100).toFixed(0)}%`;
+  // }
   return (
     <Box
       sx={{
@@ -177,19 +177,37 @@ export default function QuotaWithDetailContent({ item }) {
           <CalculateIcon sx={{ fontSize: 20, mr: 1, color: (theme) => theme.palette.success.main }} />
           <Typography sx={{ fontWeight: 600, fontSize: 15 }}>{t('logPage.quotaDetail.finalCalculation')}</Typography>
         </Box>
-        <Typography sx={{ fontSize: 13, color: (theme) => theme.palette.text.secondary, mb: 1, textAlign: 'left' }}>{stepStr}</Typography>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, mb: 1 }}>
-          <Typography
-            sx={{
-              fontSize: 13,
-              color: (theme) => theme.palette.text.secondary,
-              mr: 2,
-              mb: { xs: 0.5, sm: 0 },
-              textAlign: 'left'
-            }}
-          >
-            {t('logPage.quotaDetail.originalBilling')}: {renderQuota(originalQuota, 6)}
-          </Typography>
+        <Typography
+          sx={{
+            fontSize: 13,
+            color: (theme) => theme.palette.text.secondary,
+            mb: 1,
+            textAlign: 'left'
+          }}
+        >
+          {stepStr}
+        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: 1
+          }}
+        >
+          {
+            <Typography
+              sx={{
+                fontSize: 13,
+                color: (theme) => theme.palette.text.secondary,
+                mr: 2,
+                mb: { xs: 0.5, sm: 0 },
+                textAlign: 'left'
+              }}
+            >
+              {t('logPage.quotaDetail.originalBilling')}: {renderQuota(originalQuota, 6)}
+            </Typography>
+          }
           <Typography
             sx={{
               fontSize: 13,
@@ -202,7 +220,8 @@ export default function QuotaWithDetailContent({ item }) {
           >
             {t('logPage.quotaDetail.actualBilling')}: {renderQuota(quota, 6)}
           </Typography>
-          {savePercent && (
+          {/* 注释掉节省百分比的显示 */}
+          {/* {savePercent && (
             <Box
               sx={{
                 display: 'inline-block',
@@ -217,7 +236,7 @@ export default function QuotaWithDetailContent({ item }) {
             >
               {savePercent}
             </Box>
-          )}
+          )} */}
         </Box>
         <Typography sx={{ fontSize: 12, color: (theme) => theme.palette.text.disabled, textAlign: 'left' }}>
           {t('logPage.quotaDetail.calculationNote')}

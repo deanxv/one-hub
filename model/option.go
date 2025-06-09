@@ -39,6 +39,7 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterBool("AutomaticEnableChannelEnabled", &config.AutomaticEnableChannelEnabled)
 	config.GlobalOption.RegisterBool("ApproximateTokenEnabled", &config.ApproximateTokenEnabled)
 	config.GlobalOption.RegisterBool("LogConsumeEnabled", &config.LogConsumeEnabled)
+	config.GlobalOption.RegisterBool("EmptyResponseBillingEnabled", &config.EmptyResponseBillingEnabled)
 	config.GlobalOption.RegisterBool("DisplayInCurrencyEnabled", &config.DisplayInCurrencyEnabled)
 	config.GlobalOption.RegisterFloat("ChannelDisableThreshold", &config.ChannelDisableThreshold)
 	config.GlobalOption.RegisterBool("EmailDomainRestrictionEnabled", &config.EmailDomainRestrictionEnabled)
@@ -79,6 +80,8 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterInt("QuotaForNewUser", &config.QuotaForNewUser)
 	config.GlobalOption.RegisterInt("QuotaForInviter", &config.QuotaForInviter)
 	config.GlobalOption.RegisterInt("QuotaForInvitee", &config.QuotaForInvitee)
+	config.GlobalOption.RegisterString("InviterRewardType", &config.InviterRewardType)
+	config.GlobalOption.RegisterInt("InviterRewardValue", &config.InviterRewardValue)
 	config.GlobalOption.RegisterInt("QuotaRemindThreshold", &config.QuotaRemindThreshold)
 	config.GlobalOption.RegisterInt("PreConsumedQuota", &config.PreConsumedQuota)
 

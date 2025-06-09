@@ -95,7 +95,13 @@
     "totalUserSpending": "Total User Spending",
     "totalUsers": "Total Users",
     "unused": "Unused",
-    "used": "Used"
+    "used": "Used",
+    "rechargeStatistics": "Recharge Statistics",
+    "redemptionCode": "Redemption Code",
+    "order": "Order",
+    "realTimeTraffic": "Real-time Traffic",
+    "tpmDescription": "TPM (Token/min)",
+    "last60SecondsStats": "Last 60 seconds statistics"
   },
   "auth": {
     "invalidLink": "Invalid link",
@@ -907,6 +913,16 @@
         "quotaForInviter": {
           "label": "Reward Quota for Inviter",
           "placeholder": "e.g., 2000"
+        },
+        "rechargeRewardType": {
+          "label": "Recharge Reward Type",
+          "fixed": "Fixed",
+          "percentage": "Percentage"
+        },
+        "rechargeRewardValue": {
+          "label": "Recharge Reward Value",
+          "fixedPlaceholder": "e.g., 2000",
+          "percentagePlaceholder": "e.g., 10"
         },
         "quotaForNewUser": {
           "label": "Initial Quota for New Users",

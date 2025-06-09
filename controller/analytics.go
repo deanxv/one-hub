@@ -61,6 +61,12 @@ type StatisticsDetail struct {
 	ChannelStatistics   []*model.ChannelStatistics    `json:"channel_statistics"`
 	RedemptionStatistic []*model.RedemptionStatistics `json:"redemption_statistic"`
 	OrderStatistics     []*model.OrderStatistics      `json:"order_statistics"`
+	RpmTpmStatistics    *RpmTpmStatistics             `json:"rpm_tpm_statistics"`
+}
+
+type RpmTpmStatistics struct {
+	RPM int64 `json:"rpm"`
+	TPM int64 `json:"tpm"`
 }
 
 func GetStatisticsDetail(c *gin.Context) {
@@ -85,6 +91,16 @@ func GetStatisticsDetail(c *gin.Context) {
 	if err == nil {
 		statisticsDetail.OrderStatistics = orderStatistics
 	}
+
+	// 获取最近60秒的RPM和TPM统计
+	rpmTpmStats, err := model.GetRpmTpmStatistics()
+	if err == nil {
+		statisticsDetail.RpmTpmStatistics = &RpmTpmStatistics{
+			RPM: rpmTpmStats.RPM,
+			TPM: rpmTpmStats.TPM,
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",

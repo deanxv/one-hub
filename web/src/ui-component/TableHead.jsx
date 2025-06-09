@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import { TableCell, TableHead, TableRow, TableSortLabel, Tooltip, IconButton, Typography, Box } from '@mui/material';
+import { Box, Checkbox, IconButton, TableCell, TableHead, TableRow, TableSortLabel, Tooltip, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
-const KeywordTableHead = ({ order, orderBy, headLabel, onRequestSort }) => {
+const KeywordTableHead = ({ order, orderBy, headLabel, onRequestSort, numSelected, rowCount, onSelectAllClick }) => {
   const onSort = (property) => (event) => {
     onRequestSort(event, property);
   };
@@ -39,7 +39,16 @@ const KeywordTableHead = ({ order, orderBy, headLabel, onRequestSort }) => {
                 p: '10px 8px'
               }}
             >
-              {headCell.disableSort ? (
+              {headCell.id === 'select' && onSelectAllClick ? (
+                <Checkbox
+                  indeterminate={numSelected > 0 && numSelected < rowCount}
+                  checked={rowCount > 0 && numSelected === rowCount}
+                  onChange={onSelectAllClick}
+                  inputProps={{
+                    'aria-label': 'select all channels'
+                  }}
+                />
+              ) : headCell.disableSort ? (
                 label(headCell)
               ) : (
                 <TableSortLabel
@@ -65,5 +74,8 @@ KeywordTableHead.propTypes = {
   order: PropTypes.oneOf(['asc', 'desc']),
   orderBy: PropTypes.string,
   onRequestSort: PropTypes.func,
-  headLabel: PropTypes.array
+  headLabel: PropTypes.array,
+  numSelected: PropTypes.number,
+  rowCount: PropTypes.number,
+  onSelectAllClick: PropTypes.func
 };

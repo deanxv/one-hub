@@ -94,6 +94,13 @@ func Redeem(key string, userId int, ip string) (quota int, err error) {
 	}
 
 	RecordQuotaLog(userId, LogTypeTopup, redemption.Quota, ip, fmt.Sprintf("通过兑换码充值 %s", common.LogQuota(redemption.Quota)))
+
+	// 处理邀请人充值返利
+	err = ProcessInviterReward(userId, redemption.Quota, ip)
+	if err != nil {
+		logger.SysError("failed to process inviter reward for redemption: " + err.Error())
+	}
+
 	return redemption.Quota, nil
 }
 

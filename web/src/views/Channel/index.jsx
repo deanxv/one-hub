@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { showError, showSuccess, showInfo, trims } from 'utils/common';
+import { useCallback, useEffect, useState } from 'react';
+import { showError, showInfo, showSuccess, trims } from 'utils/common';
 import AdminContainer from 'ui-component/AdminContainer';
 
 import { useTheme } from '@mui/material/styles';
@@ -13,12 +13,12 @@ import Toolbar from '@mui/material/Toolbar';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Alert from '@mui/material/Alert';
 
-import { Button, IconButton, Card, Box, Stack, Container, Typography, Divider } from '@mui/material';
+import { Box, Button, Card, Container, Divider, IconButton, Stack, Typography } from '@mui/material';
 import ChannelTableRow from './component/TableRow';
 import KeywordTableHead from 'ui-component/TableHead';
 import { API } from 'utils/api';
 import EditeModal from './component/EditModal';
-import { PAGE_SIZE_OPTIONS, getPageSize, savePageSize } from 'constants';
+import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants';
 import TableToolBar from './component/TableToolBar';
 import BatchModal from './component/BatchModal';
 import { useTranslation } from 'react-i18next';
@@ -95,6 +95,10 @@ export default function ChannelList() {
   const [editChannelId, setEditChannelId] = useState(0);
   const [openBatchModal, setOpenBatchModal] = useState(false);
   const [prices, setPrices] = useState([]);
+
+  // 批量删除相关状态
+  const [selectedChannels, setSelectedChannels] = useState([]);
+  const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
 
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
@@ -225,7 +229,7 @@ export default function ChannelList() {
       const { success, message } = res.data;
       if (success) {
         showSuccess(t('userPage.operationSuccess'));
-        if (action === 'delete' || action === 'copy' || action == 'delete_tag') {
+        if (action === 'delete' || action === 'copy' || action == 'delete_tag' || action === 'batch_delete') {
           await handleRefresh(false);
         }
       } else {
@@ -393,6 +397,57 @@ export default function ChannelList() {
     fetchPrices().then();
   }, [fetchPrices]);
 
+  // 处理批量删除
+  const handleBatchDelete = () => {
+    if (selectedChannels.length === 0) {
+      showError(t('channel_index.pleaseSelectChannels'));
+      return;
+    }
+    setBatchDeleteConfirm(true);
+  };
+
+  const confirmBatchDelete = async () => {
+    try {
+      const { success, message } = await manageChannel(null, 'batch_delete', selectedChannels);
+      if (success) {
+        showSuccess(t('channel_index.batchDeleteChannelsSuccess', { count: selectedChannels.length }));
+        setSelectedChannels([]);
+      } else {
+        showError(message);
+      }
+    } catch (error) {
+      showError(error.message);
+    }
+    setBatchDeleteConfirm(false);
+  };
+
+  // 处理全选/取消全选
+  const handleSelectAll = () => {
+    if (selectedChannels.length === channels.length) {
+      setSelectedChannels([]);
+    } else {
+      setSelectedChannels(channels.map((channel) => channel.id));
+    }
+  };
+
+  // 处理单个选择
+  const handleSelectChannel = (channelId) => {
+    const selectedIndex = selectedChannels.indexOf(channelId);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selectedChannels, channelId);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selectedChannels.slice(1));
+    } else if (selectedIndex === selectedChannels.length - 1) {
+      newSelected = newSelected.concat(selectedChannels.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(selectedChannels.slice(0, selectedIndex), selectedChannels.slice(selectedIndex + 1));
+    }
+
+    setSelectedChannels(newSelected);
+  };
+
   return (
     <AdminContainer>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
@@ -439,6 +494,24 @@ export default function ChannelList() {
             p: (theme) => theme.spacing(0, 1, 0, 3)
           }}
         >
+          {/* 左侧删除渠道按钮 */}
+          {matchUpMd && (
+            <Button
+              variant="outlined"
+              onClick={handleBatchDelete}
+              disabled={selectedChannels.length === 0}
+              startIcon={<Icon icon="solar:trash-bin-2-bold-duotone" width={18} />}
+              color="error"
+              sx={{
+                minWidth: 'auto',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
+            >
+              {t('channel_index.deleteChannels')} ({selectedChannels.length})
+            </Button>
+          )}
+
           <Container maxWidth="xl">
             {matchUpMd ? (
               <ButtonGroup variant="outlined" aria-label="outlined small primary button group">
@@ -496,6 +569,9 @@ export default function ChannelList() {
                 >
                   <Icon width={20} icon="solar:trash-bin-trash-bold-duotone" />
                 </IconButton>
+                <IconButton onClick={handleBatchDelete} disabled={selectedChannels.length === 0} size="large" color="error">
+                  <Icon width={20} icon="solar:trash-bin-2-bold-duotone" />
+                </IconButton>
               </Stack>
             )}
           </Container>
@@ -507,8 +583,11 @@ export default function ChannelList() {
               order={order}
               orderBy={orderBy}
               onRequestSort={handleSort}
+              numSelected={selectedChannels.length}
+              rowCount={channels.length}
+              onSelectAllClick={handleSelectAll}
               headLabel={[
-                // { id: 'collapse', label: '', disableSort: true, width: '50px' },
+                { id: 'select', label: '', disableSort: true, width: '50px' },
                 { id: 'id', label: 'ID', disableSort: false, width: '80px' },
                 { id: 'name', label: t('channel_index.name'), disableSort: false },
                 { id: 'group', label: t('channel_index.group'), disableSort: true },
@@ -523,19 +602,24 @@ export default function ChannelList() {
               ]}
             />
             <TableBody>
-              {channels.map((row) => (
-                <ChannelTableRow
-                  item={row}
-                  manageChannel={manageChannel}
-                  key={row.id}
-                  // handleOpenModal={handleOpenModal}
-                  // setModalChannelId={setEditChannelId}
-                  groupOptions={groupOptions}
-                  onRefresh={handleRefresh}
-                  modelOptions={modelOptions}
-                  prices={prices}
-                />
-              ))}
+              {channels.map((row) => {
+                const isSelected = selectedChannels.indexOf(row.id) !== -1;
+                return (
+                  <ChannelTableRow
+                    item={row}
+                    manageChannel={manageChannel}
+                    key={row.id}
+                    // handleOpenModal={handleOpenModal}
+                    // setModalChannelId={setEditChannelId}
+                    groupOptions={groupOptions}
+                    onRefresh={handleRefresh}
+                    modelOptions={modelOptions}
+                    prices={prices}
+                    selected={isSelected}
+                    onSelect={() => handleSelectChannel(row.id)}
+                  />
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
@@ -576,6 +660,19 @@ export default function ChannelList() {
             }}
           >
             {t('common.executeConfirm')}
+          </Button>
+        }
+      />
+
+      {/* 批量删除确认对话框 */}
+      <ConfirmDialog
+        open={batchDeleteConfirm}
+        onClose={() => setBatchDeleteConfirm(false)}
+        title={t('channel_index.batchDeleteChannels')}
+        content={t('channel_index.batchDeleteChannelsConfirm', { count: selectedChannels.length })}
+        action={
+          <Button variant="contained" color="error" onClick={confirmBatchDelete}>
+            {t('common.delete')}
           </Button>
         }
       />
