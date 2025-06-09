@@ -4,7 +4,9 @@ WORKDIR /build
 
 # 设置npm镜像源和网络超时配置
 RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm config set network-timeout 300000 && \
+    npm config set fetch-timeout 300000 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
     yarn config set registry https://registry.npmmirror.com/ && \
     yarn config set network-timeout 300000
 
