@@ -5,7 +5,10 @@ WORKDIR /build
 COPY web/package.json .
 COPY web/yarn.lock .
 
-RUN yarn --frozen-lockfile
+RUN yarn config set registry https://registry.npmmirror.com && \
+    yarn config set network-timeout 600000 && \
+    yarn config set network-concurrency 1 && \
+    yarn --frozen-lockfile --network-timeout 600000
 
 COPY ./web .
 COPY ./VERSION .
@@ -15,7 +18,8 @@ FROM golang:1.24.2 AS builder2
 
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \
-    GOOS=linux
+    GOOS=linux \
+    GOPROXY=https://goproxy.cn,direct
 
 WORKDIR /build
 ADD go.mod go.sum ./
