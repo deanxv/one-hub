@@ -264,6 +264,11 @@ func (q *Quota) GetTotalQuota(promptTokens, completionTokens int) (quota int) {
 		quota = 0
 	}
 
+	// 如果禁用了空回复计费且没有输出token，则不计费
+	if !config.EmptyResponseBillingEnabled && completionTokens == 0 {
+		quota = 0
+	}
+
 	return quota
 }
 

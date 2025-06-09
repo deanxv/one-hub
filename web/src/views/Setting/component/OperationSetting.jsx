@@ -1,20 +1,20 @@
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import SubCard from 'ui-component/cards/SubCard';
 import {
-  Stack,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  Checkbox,
-  Button,
-  FormControlLabel,
-  TextField,
   Alert,
-  Select,
+  Button,
+  Checkbox,
+  Chip,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
   MenuItem,
-  Chip
+  OutlinedInput,
+  Select,
+  Stack,
+  TextField
 } from '@mui/material';
-import { showSuccess, showError, verifyJSON } from 'utils/common';
+import { showError, showSuccess, verifyJSON } from 'utils/common';
 import { API } from 'utils/api';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -47,6 +47,7 @@ const OperationSetting = () => {
     LogConsumeEnabled: '',
     DisplayInCurrencyEnabled: '',
     ApproximateTokenEnabled: '',
+    EmptyResponseBillingEnabled: '',
     RetryTimes: 0,
     RetryTimeOut: 0,
     RetryCooldownSeconds: 0,
@@ -239,6 +240,9 @@ const OperationSetting = () => {
           }
           if (originInputs['RetryTimeOut'] !== inputs.RetryTimeOut) {
             await updateOption('RetryTimeOut', inputs.RetryTimeOut);
+          }
+          if (originInputs['EmptyResponseBillingEnabled'] !== inputs.EmptyResponseBillingEnabled) {
+            await updateOption('EmptyResponseBillingEnabled', inputs.EmptyResponseBillingEnabled);
           }
           break;
         case 'other':
@@ -468,6 +472,16 @@ const OperationSetting = () => {
               label={t('setting_index.operationSettings.generalSettings.approximateToken')}
               control={
                 <Checkbox checked={inputs.ApproximateTokenEnabled === 'true'} onChange={handleInputChange} name="ApproximateTokenEnabled" />
+              }
+            />
+            <FormControlLabel
+              label="空回复计费"
+              control={
+                <Checkbox
+                  checked={inputs.EmptyResponseBillingEnabled === 'true'}
+                  onChange={handleInputChange}
+                  name="EmptyResponseBillingEnabled"
+                />
               }
             />
           </Stack>

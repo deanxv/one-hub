@@ -182,6 +182,7 @@ var AutomaticEnableChannelEnabled = false
 var QuotaRemindThreshold = 1000
 var PreConsumedQuota = 500
 var ApproximateTokenEnabled = false
+var EmptyResponseBillingEnabled = true
 var DisableTokenEncoders = false
 var RetryTimes = 0
 var RetryTimeOut = 10
