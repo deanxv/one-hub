@@ -84,7 +84,7 @@ type GeminiPart struct {
 	FileData            *GeminiFileData                `json:"fileData,omitempty"`
 	ExecutableCode      *GeminiPartExecutableCode      `json:"executableCode,omitempty"`
 	CodeExecutionResult *GeminiPartCodeExecutionResult `json:"codeExecutionResult,omitempty"`
-	Thought             bool                           `json:"thought,omitempty"`
+	Thought             bool                           `json:"thought,omitempty"` // 是否是思考内容
 }
 
 type GeminiPartExecutableCode struct {
@@ -116,8 +116,8 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 
 	var content []string
 	isTools := false
-	isThought := false
 	images := make([]types.MultimediaData, 0)
+	reasoningContent := make([]string, 0)
 
 	for _, part := range candidate.Content.Parts {
 		if part.FunctionCall != nil {
@@ -150,14 +150,13 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 			// 		Data: part.InlineData.Data,
 			// 	}
 			// }
-		} else if part.Thought {
-			isThought = true
-			content = append(content, part.Text)
 		} else {
 			if part.ExecutableCode != nil {
 				content = append(content, "```"+part.ExecutableCode.Language+"\n"+part.ExecutableCode.Code+"\n```")
 			} else if part.CodeExecutionResult != nil {
 				content = append(content, "```output\n"+part.CodeExecutionResult.Output+"\n```")
+			} else if part.Thought {
+				reasoningContent = append(reasoningContent, part.Text)
 			} else {
 				content = append(content, part.Text)
 			}
@@ -168,11 +167,12 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 		choice.Delta.Image = images
 	}
 
-	if isThought {
-		choice.Delta.ReasoningContent = strings.Join(content, "\n")
-	} else {
-		choice.Delta.Content = strings.Join(content, "\n")
+	choice.Delta.Content = strings.Join(content, "\n")
+
+	if len(reasoningContent) > 0 {
+		choice.Delta.ReasoningContent = strings.Join(reasoningContent, "\n")
 	}
+
 	if isTools {
 		choice.FinishReason = types.FinishReasonToolCalls
 	}
@@ -202,6 +202,7 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 	var content []string
 	useTools := false
 	images := make([]types.MultimediaData, 0)
+	reasoningContent := make([]string, 0)
 
 	for _, part := range candidate.Content.Parts {
 		if part.FunctionCall != nil {
@@ -234,13 +235,13 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 			// 		Data: part.InlineData.Data,
 			// 	}
 			// }
-		} else if part.Thought {
-			choice.Message.ReasoningContent = part.Text
 		} else {
 			if part.ExecutableCode != nil {
 				content = append(content, "```"+part.ExecutableCode.Language+"\n"+part.ExecutableCode.Code+"\n```")
 			} else if part.CodeExecutionResult != nil {
 				content = append(content, "```output\n"+part.CodeExecutionResult.Output+"\n```")
+			} else if part.Thought {
+				reasoningContent = append(reasoningContent, part.Text)
 			} else {
 				content = append(content, part.Text)
 			}
@@ -248,6 +249,10 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 	}
 
 	choice.Message.Content = strings.Join(content, "\n")
+
+	if len(reasoningContent) > 0 {
+		choice.Message.ReasoningContent = strings.Join(reasoningContent, "\n")
+	}
 
 	if len(images) > 0 {
 		choice.Message.Image = images
@@ -321,7 +326,7 @@ type GeminiChatGenerationConfig struct {
 }
 
 type ThinkingConfig struct {
-	ThinkingBudget  int  `json:"thinkingBudget"`
+	ThinkingBudget  *int `json:"thinkingBudget"`
 	IncludeThoughts bool `json:"includeThoughts,omitempty"`
 }
 
@@ -351,6 +356,7 @@ type GeminiChatResponse struct {
 	UsageMetadata  *GeminiUsageMetadata     `json:"usageMetadata,omitempty"`
 	ModelVersion   string                   `json:"modelVersion,omitempty"`
 	Model          string                   `json:"model,omitempty"`
+	ResponseId     string                   `json:"responseId,omitempty"`
 	GeminiErrorResponse
 }
 
