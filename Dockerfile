@@ -2,19 +2,10 @@ FROM node:18 as builder
 
 WORKDIR /build
 
-# 设置npm镜像源和网络超时配置
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    yarn config set registry https://registry.npmmirror.com/ && \
-    yarn config set network-timeout 300000
-
 COPY web/package.json .
 COPY web/yarn.lock .
 
-# 使用更宽松的安装选项
-RUN yarn install --frozen-lockfile --network-timeout 300000 --network-concurrency 1
+RUN yarn --frozen-lockfile
 
 COPY ./web .
 COPY ./VERSION .
