@@ -39,7 +39,11 @@ func (r *relayImageVariations) setRequest() error {
 }
 
 func (r *relayImageVariations) getPromptTokens() (int, error) {
-	return common.CountTokenImage(r.request)
+	// 图像变换通常没有prompt文本，返回最小值
+	if r.request.Prompt != "" {
+		return common.CountTokenText(r.request.Prompt, r.getOriginalModel()), nil
+	}
+	return 1, nil // 最小计费单位
 }
 
 func (r *relayImageVariations) send() (err *types.OpenAIErrorWithStatusCode, done bool) {

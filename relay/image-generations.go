@@ -1,12 +1,13 @@
 package relay
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"one-api/common"
 	providersBase "one-api/providers/base"
 	"one-api/types"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type relayImageGenerations struct {
@@ -49,7 +50,8 @@ func (r *relayImageGenerations) setRequest() error {
 }
 
 func (r *relayImageGenerations) getPromptTokens() (int, error) {
-	return common.CountTokenImage(r.request)
+	// PromptTokens应该根据请求中的prompt文本计算，而不是图像参数
+	return common.CountTokenText(r.request.Prompt, r.getOriginalModel()), nil
 }
 
 func (r *relayImageGenerations) send() (err *types.OpenAIErrorWithStatusCode, done bool) {

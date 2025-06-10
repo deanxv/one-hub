@@ -51,7 +51,12 @@ func (p *AzureProvider) CreateImageGenerations(request *types.ImageRequest) (*ty
 	if response.Usage != nil && response.Usage.TotalTokens > 0 {
 		*p.Usage = *response.Usage.ToOpenAIUsage()
 	} else {
-		p.Usage.TotalTokens = p.Usage.PromptTokens
+		// 如果没有返回usage信息，计算Azure生图的CompletionTokens
+		imageCount := len(response.Data)
+		// PromptTokens保持之前根据prompt内容计算的值
+		// CompletionTokens根据生成的图像数量计算，避免空回复计费问题
+		p.Usage.CompletionTokens = imageCount * 258
+		p.Usage.TotalTokens = p.Usage.PromptTokens + p.Usage.CompletionTokens
 	}
 
 	return response, nil

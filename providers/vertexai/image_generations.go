@@ -115,9 +115,11 @@ func (p *VertexAIProvider) CreateImageGenerations(request *types.ImageRequest) (
 		})
 	}
 
-	// 设置使用量 - 使用与Gemini相同的计算方式
-	p.Usage.PromptTokens = imageCount * 258
-	p.Usage.TotalTokens = p.Usage.PromptTokens
+	// 设置使用量 - 生图模型的token计算
+	// PromptTokens保持之前根据prompt内容计算的值
+	// CompletionTokens根据生成的图像数量计算，避免空回复计费问题
+	p.Usage.CompletionTokens = imageCount * 258
+	p.Usage.TotalTokens = p.Usage.PromptTokens + p.Usage.CompletionTokens
 
 	return openaiResponse, nil
 }

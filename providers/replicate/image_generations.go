@@ -47,7 +47,11 @@ func (p *ReplicateProvider) CreateImageGenerations(request *types.ImageRequest) 
 		replicateResponse.Output = replicateResponse.Urls.Stream
 	}
 
-	p.Usage.TotalTokens = p.Usage.PromptTokens
+	// PromptTokens保持之前根据prompt内容计算的值
+	// CompletionTokens根据生成的图像数量计算，避免空回复计费问题
+	imageCount := 1 // Replicate通常生成一张图
+	p.Usage.CompletionTokens = imageCount * 258
+	p.Usage.TotalTokens = p.Usage.PromptTokens + p.Usage.CompletionTokens
 
 	return p.convertToImageOpenai(replicateResponse)
 }
