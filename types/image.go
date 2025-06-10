@@ -20,6 +20,9 @@ type ImageRequest struct {
 	Moderation        *string `json:"moderation,omitempty"`
 	OutputCompression *int    `json:"output_compression,omitempty"`
 	OutputFormat      *string `json:"output_format,omitempty"`
+
+	// 透传参数，用于支持特定provider的额外参数
+	ExtraParams map[string]interface{} `json:"extra_params,omitempty"`
 }
 
 type ImageResponse struct {

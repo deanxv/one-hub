@@ -25,7 +25,7 @@ func GetCategory(modelName string) (*Category, error) {
 
 	category := ""
 
-	if strings.HasPrefix(modelName, "gemini") {
+	if strings.HasPrefix(modelName, "gemini") || strings.HasPrefix(modelName, "imagen") {
 		category = "gemini"
 	} else if strings.HasPrefix(modelName, "claude") {
 		category = "claude"

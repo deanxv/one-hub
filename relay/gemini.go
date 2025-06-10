@@ -37,10 +37,17 @@ func NewRelayGeminiOnly(c *gin.Context) *relayGeminiOnly {
 }
 
 func (r *relayGeminiOnly) setRequest() error {
+	// 支持两种格式: /:version/models/:model 和 /:version/models/*action
 	modelAction := r.c.Param("model")
-
 	if modelAction == "" {
-		return errors.New("model is required")
+		// 尝试获取action参数（用于 model:predict 格式）
+		actionPath := r.c.Param("action")
+		if actionPath == "" {
+			return errors.New("model is required")
+		}
+		// 去掉开头的斜杠
+		actionPath = strings.TrimPrefix(actionPath, "/")
+		modelAction = actionPath
 	}
 
 	modelList := strings.Split(modelAction, ":")
@@ -49,7 +56,8 @@ func (r *relayGeminiOnly) setRequest() error {
 	}
 
 	isStream := false
-	if modelList[1] == "streamGenerateContent" {
+	action := modelList[1]
+	if action == "streamGenerateContent" {
 		isStream = true
 	}
 

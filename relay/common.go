@@ -36,7 +36,7 @@ func Path2Relay(c *gin.Context, path string) RelayBaseInterface {
 	} else if strings.HasPrefix(path, "/v1/moderations") {
 		relay = NewRelayModerations(c)
 	} else if strings.HasPrefix(path, "/v1/images/generations") || strings.HasPrefix(path, "/recraftAI/v1/images/generations") {
-		relay = NewRelayImageGenerations(c)
+		relay = newRelayImageGenerations(c)
 	} else if strings.HasPrefix(path, "/v1/images/edits") {
 		relay = NewRelayImageEdits(c)
 	} else if strings.HasPrefix(path, "/v1/images/variations") {
@@ -50,7 +50,12 @@ func Path2Relay(c *gin.Context, path string) RelayBaseInterface {
 	} else if strings.HasPrefix(path, "/claude") {
 		relay = NewRelayClaudeOnly(c)
 	} else if strings.HasPrefix(path, "/gemini") {
-		relay = NewRelayGeminiOnly(c)
+		// 检查是否是图像生成predict请求
+		if strings.Contains(path, ":predict") {
+			relay = newRelayImageGenerations(c)
+		} else {
+			relay = NewRelayGeminiOnly(c)
+		}
 	} else if strings.HasPrefix(path, "/v1/responses") {
 		relay = NewRelayResponses(c)
 	}

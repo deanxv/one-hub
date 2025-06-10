@@ -17,7 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const GeminiImageSymbol = "![one-hub-gemini-image]"
+const GeminiImageSymbol = "![one-api-gemini-image]"
 
 const (
 	ModalityTEXT  = "TEXT"
@@ -27,7 +27,7 @@ const (
 )
 
 var ImageSymbolAcMachines = &goahocorasick.Machine{}
-var imageRegex = regexp.MustCompile(`\!\[one-hub-gemini-image\]\((.*?)\)`)
+var imageRegex = regexp.MustCompile(`\!\[one-api-gemini-image\]\((.*?)\)`)
 
 func init() {
 	ImageSymbolAcMachines.Build([][]rune{[]rune(GeminiImageSymbol)})
@@ -608,8 +608,8 @@ func (e *GeminiErrors) Error() *GeminiErrorResponse {
 }
 
 type GeminiImageRequest struct {
-	Instances  []GeminiImageInstance `json:"instances"`
-	Parameters GeminiImageParameters `json:"parameters"`
+	Instances  []GeminiImageInstance        `json:"instances"`
+	Parameters GeminiImageParametersDynamic `json:"parameters"`
 }
 
 type GeminiImageInstance struct {
@@ -621,6 +621,9 @@ type GeminiImageParameters struct {
 	AspectRatio      string `json:"aspectRatio,omitempty"`
 	SampleCount      int    `json:"sampleCount,omitempty"`
 }
+
+// 动态参数结构，用于完全透传
+type GeminiImageParametersDynamic map[string]interface{}
 
 type GeminiImageResponse struct {
 	Predictions []GeminiImagePrediction `json:"predictions"`

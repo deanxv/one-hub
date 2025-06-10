@@ -8,28 +8,40 @@ import (
 )
 
 func (p *GeminiProvider) CreateImageGenerations(request *types.ImageRequest) (*types.ImageResponse, *types.OpenAIErrorWithStatusCode) {
+	// 创建动态参数map
+	parameters := make(GeminiImageParametersDynamic)
+	parameters["sampleCount"] = request.N
+
+	// 设置默认的personGeneration
+	parameters["personGeneration"] = "allow_adult"
+
+	// 透传所有额外参数
+	if request.ExtraParams != nil {
+		for key, value := range request.ExtraParams {
+			parameters[key] = value
+		}
+	}
+
 	geminiRequest := &GeminiImageRequest{
 		Instances: []GeminiImageInstance{
 			{
 				Prompt: request.Prompt,
 			},
 		},
-		Parameters: GeminiImageParameters{
-			PersonGeneration: "allow_adult",
-			SampleCount:      request.N,
-		},
+		Parameters: parameters,
 	}
 
+	// 处理AspectRatio
 	if request.AspectRatio != nil {
-		geminiRequest.Parameters.AspectRatio = *request.AspectRatio
+		parameters["aspectRatio"] = *request.AspectRatio
 	} else {
 		switch request.Size {
 		case "1024x1792":
-			geminiRequest.Parameters.AspectRatio = "9:16"
+			parameters["aspectRatio"] = "9:16"
 		case "1792x1024":
-			geminiRequest.Parameters.AspectRatio = "16:9"
+			parameters["aspectRatio"] = "16:9"
 		default:
-			geminiRequest.Parameters.AspectRatio = "1:1"
+			parameters["aspectRatio"] = "1:1"
 		}
 	}
 
