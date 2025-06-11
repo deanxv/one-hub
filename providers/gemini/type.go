@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"one-api/common"
 	"one-api/common/image"
 	"one-api/common/storage"
 	"one-api/common/utils"
 	"one-api/types"
+	"path"
 	"regexp"
 	"strings"
 
@@ -28,6 +30,104 @@ const (
 
 var ImageSymbolAcMachines = &goahocorasick.Machine{}
 var imageRegex = regexp.MustCompile(`\!\[one-api-gemini-image\]\((.*?)\)`)
+
+// 视频文件扩展名和常见视频域名
+var videoExtensions = []string{".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm", ".mkv", ".m4v", ".3gp", ".ts"}
+var videoDomains = []string{
+	// 国外主流视频平台
+	"youtube.com", "youtu.be", "www.youtube.com", // YouTube
+	"vimeo.com", "player.vimeo.com", "vimeo.video", // Vimeo
+	"dailymotion.com", "www.dailymotion.com", // Dailymotion
+	"twitch.tv", "www.twitch.tv", "clips.twitch.tv", // Twitch
+	"tiktok.com", "www.tiktok.com", "vm.tiktok.com", // TikTok
+	"instagram.com", "www.instagram.com", // Instagram
+	"facebook.com", "www.facebook.com", "fb.watch", // Facebook
+	"twitter.com", "x.com", "t.co", // Twitter/X
+	"vine.co", "v.ine.co", // Vine
+	"snapchat.com", "www.snapchat.com", // Snapchat
+	"reddit.com", "v.redd.it", // Reddit
+	"streamable.com", "streamja.com", // 其他短视频平台
+
+	// 国内主流视频平台
+	"bilibili.com", "www.bilibili.com", "b23.tv", // B站
+	"douyin.com", "www.douyin.com", "v.douyin.com", // 抖音
+	"kuaishou.com", "www.kuaishou.com", "v.kuaishou.com", // 快手
+	"xiaohongshu.com", "www.xiaohongshu.com", "xhslink.com", // 小红书
+	"weishi.qq.com", "isee.weishi.qq.com", // 微视
+	"huoshan.com", "www.huoshan.com", // 火山小视频
+	"pipigx.com", "h5.pipigx.com", // 皮皮虾
+	"miaopai.com", "www.miaopai.com", // 秒拍
+	"meipai.com", "www.meipai.com", // 美拍
+	"v.qq.com", "qq.com", // 腾讯视频
+	"iqiyi.com", "www.iqiyi.com", "m.iqiyi.com", // 爱奇艺
+	"youku.com", "v.youku.com", "player.youku.com", // 优酷
+	"tudou.com", "www.tudou.com", // 土豆
+	"sohu.com", "tv.sohu.com", "my.tv.sohu.com", // 搜狐视频
+	"le.com", "www.le.com", "yuntv.letv.com", // 乐视视频
+	"pptv.com", "v.pptv.com", // PPTV
+	"56.com", "www.56.com", // 56网
+	"acfun.cn", "www.acfun.cn", // A站
+	"zhihu.com", "www.zhihu.com", "video.zhihu.com", // 知乎视频
+	"weibo.com", "video.weibo.com", "n.sinaimg.cn", // 微博视频
+	"xinpianchang.com", "www.xinpianchang.com", // 新片场
+}
+
+// isVideoURL 判断URL是否为视频URL
+func isVideoURL(urlStr string) (bool, string) {
+	if urlStr == "" {
+		return false, ""
+	}
+
+	// 解析URL
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return false, ""
+	}
+
+	// 检查文件扩展名
+	ext := strings.ToLower(path.Ext(parsedURL.Path))
+	for _, videoExt := range videoExtensions {
+		if ext == videoExt {
+			return true, getMimeTypeFromExtension(ext)
+		}
+	}
+
+	// 检查域名
+	host := strings.ToLower(parsedURL.Host)
+	for _, videoDomain := range videoDomains {
+		if strings.Contains(host, videoDomain) {
+			return true, "video/mp4" // 默认使用mp4作为视频MIME类型
+		}
+	}
+
+	return false, ""
+}
+
+// getMimeTypeFromExtension 根据文件扩展名获取MIME类型
+func getMimeTypeFromExtension(ext string) string {
+	switch ext {
+	case ".mp4", ".m4v":
+		return "video/mp4"
+	case ".avi":
+		return "video/x-msvideo"
+	case ".mov":
+		return "video/quicktime"
+	case ".wmv":
+		return "video/x-ms-wmv"
+	case ".flv":
+		return "video/x-flv"
+	case ".webm":
+		return "video/webm"
+	case ".mkv":
+		return "video/x-matroska"
+	case ".3gp":
+		return "video/3gpp"
+	case ".ts":
+		return "video/mp2t"
+	default:
+		return "video/mp4"
+	}
+}
 
 func init() {
 	ImageSymbolAcMachines.Build([][]rune{[]rune(GeminiImageSymbol)})
@@ -539,20 +639,33 @@ func OpenAIToGeminiChatContent(openaiContents []types.ChatCompletionMessage) ([]
 					}
 
 				} else if openaiPart.Type == types.ContentTypeImageURL {
-					imageNum += 1
-					if imageNum > GeminiVisionMaxImageNum {
-						continue
+					// 检查是否为视频URL
+					isVideo, videoMimeType := isVideoURL(openaiPart.ImageURL.URL)
+					if isVideo {
+						// 视频使用fileData
+						content.Parts = append(content.Parts, GeminiPart{
+							FileData: &GeminiFileData{
+								MimeType: videoMimeType,
+								FileUri:  openaiPart.ImageURL.URL,
+							},
+						})
+					} else {
+						// 图片使用inlineData
+						imageNum += 1
+						if imageNum > GeminiVisionMaxImageNum {
+							continue
+						}
+						mimeType, data, err := image.GetImageFromUrl(openaiPart.ImageURL.URL)
+						if err != nil {
+							return nil, "", common.ErrorWrapper(err, "image_url_invalid", http.StatusBadRequest)
+						}
+						content.Parts = append(content.Parts, GeminiPart{
+							InlineData: &GeminiInlineData{
+								MimeType: mimeType,
+								Data:     data,
+							},
+						})
 					}
-					mimeType, data, err := image.GetImageFromUrl(openaiPart.ImageURL.URL)
-					if err != nil {
-						return nil, "", common.ErrorWrapper(err, "image_url_invalid", http.StatusBadRequest)
-					}
-					content.Parts = append(content.Parts, GeminiPart{
-						InlineData: &GeminiInlineData{
-							MimeType: mimeType,
-							Data:     data,
-						},
-					})
 				}
 			}
 		}
