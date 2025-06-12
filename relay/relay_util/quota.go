@@ -70,20 +70,13 @@ func (q *Quota) PreQuotaConsumption() *types.OpenAIErrorWithStatusCode {
 		return common.ErrorWrapper(err, "get_user_quota_failed", http.StatusInternalServerError)
 	}
 
+	if userQuota > 100*q.preConsumedQuota {
+		q.preConsumedQuota = 0
+		return nil
+	}
+
 	if userQuota < q.preConsumedQuota {
 		return common.ErrorWrapper(errors.New("user quota is not enough"), "insufficient_user_quota", http.StatusPaymentRequired)
-	}
-
-	err = model.CacheDecreaseUserQuota(q.userId, q.preConsumedQuota)
-	if err != nil {
-		return common.ErrorWrapper(err, "decrease_user_quota_failed", http.StatusInternalServerError)
-	}
-
-	if userQuota > 100*q.preConsumedQuota {
-		// in this case, we do not pre-consume quota
-		// because the user has enough quota
-		q.preConsumedQuota = 0
-		// common.LogInfo(c.Request.Context(), fmt.Sprintf("user %d has enough quota %d, trusted and no need to pre-consume", userId, userQuota))
 	}
 
 	if q.preConsumedQuota > 0 {
@@ -91,6 +84,7 @@ func (q *Quota) PreQuotaConsumption() *types.OpenAIErrorWithStatusCode {
 		if err != nil {
 			return common.ErrorWrapper(err, "pre_consume_token_quota_failed", http.StatusForbidden)
 		}
+		_ = model.CacheUpdateUserQuota(q.userId)
 		q.HandelStatus = true
 	}
 
@@ -174,10 +168,11 @@ func (q *Quota) Undo(c *gin.Context) {
 	if q.HandelStatus {
 		go func(ctx context.Context) {
 			// return pre-consumed quota
-			err := model.PostConsumeTokenQuota(tokenId, -q.preConsumedQuota)
-			if err != nil {
+			if err := model.PostConsumeTokenQuota(tokenId, -q.preConsumedQuota); err != nil {
 				logger.LogError(ctx, "error return pre-consumed quota: "+err.Error())
 			}
+			// 刷新缓存配额，保持一致
+			_ = model.CacheUpdateUserQuota(q.userId)
 		}(c.Request.Context())
 	}
 }
