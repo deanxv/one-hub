@@ -33,11 +33,14 @@ export function calculatePrice(ratio, groupDiscount, isTimes) {
 }
 
 // QuotaWithDetailContent is responsible for rendering the detailed content
-export default function QuotaWithDetailContent({ item }) {
+export default function QuotaWithDetailContent({ item, totalInputTokens, totalOutputTokens }) {
   const { t } = useTranslation();
   // Calculate the original quota based on the formula
   const originalQuota = calculateOriginalQuota(item);
   const quota = item.quota || 0;
+
+  const priceType = item.metadata?.price_type || 'tokens';
+  const extraBilling = item?.metadata?.extra_billing || {};
 
   // Get input/output prices from metadata with appropriate defaults
   const originalInputPrice =
@@ -58,11 +61,31 @@ export default function QuotaWithDetailContent({ item }) {
   const inputPriceUnit = inputPrice + ' /M';
   const outputPriceUnit = outputPrice + ' /M';
 
-  const inputTokens = item.prompt_tokens || 0;
-  const outputTokens = item.completion_tokens || 0;
+  let calculateSteps = '';
+  if (priceType === 'tokens') {
+    calculateSteps = `(${totalInputTokens} / 1M × ${inputPrice})`;
+    if (totalOutputTokens > 0) {
+      calculateSteps += ` + (${totalOutputTokens} / 1M × ${outputPrice})`;
+    }
+  } else {
+    calculateSteps = `${inputPrice}`;
+  }
 
-  // Create a calculation explanation string
-  const stepStr = `(${inputTokens} / 1,000,000 * ${inputPrice})${outputTokens > 0 ? ` + (${outputTokens} / 1,000,000 * ${outputPrice})` : ''} = ${renderQuota(quota, 6)}`;
+  const extraBillingSteps = [];
+
+  if (extraBilling && Object.keys(extraBilling).length > 0) {
+    Object.entries(extraBilling).forEach(([key, data]) => {
+      if (data.type !== '') {
+        extraBillingSteps.push(`${key}[${data.type}] : $${data.price} x ${data.call_count}`);
+      } else {
+        extraBillingSteps.push(`${key} : $${data.price} x ${data.call_count}`);
+      }
+    });
+  }
+
+  if (extraBillingSteps.length > 0) {
+    calculateSteps += ` + (${extraBillingSteps.join(' + ')}) x ${groupRatio}`;
+  }
 
   // let savePercent = '';
   // if (originalQuota > 0 && quota > 0) {
@@ -177,37 +200,21 @@ export default function QuotaWithDetailContent({ item }) {
           <CalculateIcon sx={{ fontSize: 20, mr: 1, color: (theme) => theme.palette.success.main }} />
           <Typography sx={{ fontWeight: 600, fontSize: 15 }}>{t('logPage.quotaDetail.finalCalculation')}</Typography>
         </Box>
-        <Typography
-          sx={{
-            fontSize: 13,
-            color: (theme) => theme.palette.text.secondary,
-            mb: 1,
-            textAlign: 'left'
-          }}
-        >
-          {stepStr}
+        <Typography sx={{ fontSize: 13, color: (theme) => theme.palette.text.secondary, mb: 1, textAlign: 'left' }}>
+          {calculateSteps}
         </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            mb: 1
-          }}
-        >
-          {
-            <Typography
-              sx={{
-                fontSize: 13,
-                color: (theme) => theme.palette.text.secondary,
-                mr: 2,
-                mb: { xs: 0.5, sm: 0 },
-                textAlign: 'left'
-              }}
-            >
-              {t('logPage.quotaDetail.originalBilling')}: {renderQuota(originalQuota, 6)}
-            </Typography>
-          }
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, mb: 1 }}>
+          <Typography
+            sx={{
+              fontSize: 13,
+              color: (theme) => theme.palette.text.secondary,
+              mr: 2,
+              mb: { xs: 0.5, sm: 0 },
+              textAlign: 'left'
+            }}
+          >
+            {t('logPage.quotaDetail.originalBilling')}: {renderQuota(originalQuota, 6)}
+          </Typography>
           <Typography
             sx={{
               fontSize: 13,
@@ -261,7 +268,11 @@ QuotaWithDetailContent.propTypes = {
       input_price: PropTypes.string,
       output_price: PropTypes.string,
       original_quota: PropTypes.number,
-      origin_quota: PropTypes.number
+      origin_quota: PropTypes.number,
+      price_type: PropTypes.string,
+      extra_billing: PropTypes.object
     })
-  }).isRequired
+  }).isRequired,
+  totalInputTokens: PropTypes.number.isRequired,
+  totalOutputTokens: PropTypes.number.isRequired
 };

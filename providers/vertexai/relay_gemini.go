@@ -28,7 +28,8 @@ func (p *VertexAIProvider) CreateGeminiChat(request *gemini.GeminiChatRequest) (
 	}
 
 	usage := p.GetUsage()
-	*usage = convertOpenAIUsage(geminiResponse.UsageMetadata)
+	*usage = gemini.ConvertOpenAIUsage(geminiResponse.UsageMetadata)
+	//*usage = convertOpenAIUsage(geminiResponse.UsageMetadata)
 
 	return geminiResponse, nil
 }
@@ -73,12 +74,13 @@ func (p *VertexAIProvider) getGeminiRequest(request *gemini.GeminiChatRequest) (
 	// 获取请求地址
 	fullRequestURL := p.GetFullRequestURL(modelName, otherUrl)
 	if fullRequestURL == "" {
-		return nil, common.ErrorWrapperLocal(nil, "invalid_vertexai_config", http.StatusInternalServerError)
+		return nil, common.StringErrorWrapperLocal("vertexAI config error", "invalid_vertexai_config", http.StatusInternalServerError)
 	}
 
 	headers := p.GetRequestHeaders()
+
 	if headers == nil {
-		return nil, common.ErrorWrapperLocal(nil, "invalid_vertexai_config", http.StatusInternalServerError)
+		return nil, common.StringErrorWrapperLocal("vertexAI config error", "invalid_vertexai_config", http.StatusInternalServerError)
 	}
 
 	// 错误处理

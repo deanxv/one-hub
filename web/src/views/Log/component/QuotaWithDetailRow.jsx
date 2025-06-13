@@ -28,27 +28,35 @@ export function calculateOriginalQuota(item) {
 
 // QuotaWithDetailRow is only responsible for the price in the main row and the small triangle
 export default function QuotaWithDetailRow({ item, open, setOpen }) {
+  const groupRatio = item?.metadata?.group_ratio || 1;
   // Calculate the original quota based on the formula
-  // const originalQuota = calculateOriginalQuota(item);
+  const originalQuota = calculateOriginalQuota(item);
   // Ensure quota has a fallback value
   const quota = item.quota || 0;
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Box onClick={() => setOpen((o) => !o)} sx={{ display: 'flex', flexDirection: 'column', mr: 1, cursor: 'pointer' }}>
-        {/* 注释掉原始计费的显示 */}
-        {/* <Typography
-          variant="caption"
-          sx={{
-            color: (theme) => theme.palette.text.secondary,
-            textDecoration: 'line-through',
-            fontSize: 12
-          }}
-        >
-          {renderQuota(originalQuota, 6)}
-        </Typography> */}
-        <Typography sx={{ color: (theme) => theme.palette.success.main, fontWeight: 500, fontSize: 13 }}>
-          {renderQuota(quota, 6)}
-        </Typography>
+        {groupRatio < 1 ? (
+          <>
+            <Typography
+              variant="caption"
+              sx={{
+                color: (theme) => theme.palette.text.secondary,
+                textDecoration: 'line-through',
+                fontSize: 12
+              }}
+            >
+              {renderQuota(originalQuota, 6)}
+            </Typography>
+            <Typography sx={{ color: (theme) => theme.palette.success.main, fontWeight: 500, fontSize: 13 }}>
+              {renderQuota(quota, 6)}
+            </Typography>
+          </>
+        ) : (
+          <Typography sx={{ color: (theme) => theme.palette.success.main, fontWeight: 500, fontSize: 13 }}>
+            {renderQuota(quota, 6)}
+          </Typography>
+        )}
       </Box>
       <IconButton
         size="small"
