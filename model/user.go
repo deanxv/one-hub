@@ -443,7 +443,15 @@ func IncreaseUserQuota(id int, quota int) (err error) {
 
 func increaseUserQuota(id int, quota int) (err error) {
 	err = DB.Model(&User{}).Where("id = ?", id).Update("quota", gorm.Expr("quota + ?", quota)).Error
-	return err
+	if err != nil {
+		return err
+	}
+	// 刷新缓存，避免额度变动后读取到旧值
+	if config.RedisEnabled {
+		// 直接删除缓存键，下次读取时会重新写入最新值
+		redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
+	}
+	return nil
 }
 
 func DecreaseUserQuota(id int, quota int) (err error) {
@@ -459,7 +467,14 @@ func DecreaseUserQuota(id int, quota int) (err error) {
 
 func decreaseUserQuota(id int, quota int) (err error) {
 	err = DB.Model(&User{}).Where("id = ?", id).Update("quota", gorm.Expr("quota - ?", quota)).Error
-	return err
+	if err != nil {
+		return err
+	}
+	// 刷新缓存，保持数据一致性
+	if config.RedisEnabled {
+		redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
+	}
+	return nil
 }
 
 func GetRootUserEmail() (email string) {
