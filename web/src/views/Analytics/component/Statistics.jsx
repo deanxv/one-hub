@@ -5,9 +5,11 @@ import { gridSpacing } from 'store/constant';
 import { renderQuota, showError } from 'utils/common';
 import { API } from 'utils/api';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 
 export default function Overview() {
   const { t } = useTranslation();
+  const siteInfo = useSelector((state) => state.siteInfo); // 获取站点配置信息
   const [userLoading, setUserLoading] = useState(true);
   const [channelLoading, setChannelLoading] = useState(true);
   const [rechargeLoading, setRechargeLoading] = useState(true);
@@ -29,7 +31,8 @@ export default function Overview() {
 
   const [rpmTpmStatistics, setRpmTpmStatistics] = useState({
     rpm: 0,
-    tpm: 0
+    tpm: 0,
+    cpm: 0
   });
 
   const [rpmTpmLoading, setRpmTpmLoading] = useState(true);
@@ -190,7 +193,9 @@ export default function Overview() {
           subContent={
             <>
               {t('analytics_index.tpmDescription')}: {rpmTpmStatistics.tpm.toLocaleString()} <br />
-              {t('analytics_index.last60SecondsStats')}
+              {t('analytics_index.cpmDescription')}: ${rpmTpmStatistics.cpm.toFixed(4)}{' '}
+              {siteInfo.PaymentUSDRate ? ` / CNY: ${(rpmTpmStatistics.cpm * siteInfo.PaymentUSDRate).toFixed(4)}` : ''} <br />
+              {/*{t('analytics_index.last60SecondsStats')}*/}
             </>
           }
         />

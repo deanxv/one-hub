@@ -526,6 +526,13 @@ func GetUsernameById(id int) (username string) {
 	return username
 }
 
+// GetUserInviteCount 获取用户的邀请人数
+func GetUserInviteCount(userId int) (int64, error) {
+	var count int64
+	err := DB.Model(&User{}).Where("inviter_id = ?", userId).Count(&count).Error
+	return count, err
+}
+
 type StatisticsUser struct {
 	TotalQuota       int64 `json:"total_quota"`
 	TotalUsedQuota   int64 `json:"total_used_quota"`

@@ -137,7 +137,8 @@
     "redemptionCode": "兑换码",
     "order": "订单",
     "realTimeTraffic": "实时流量",
-    "tpmDescription": "TPM (Token/分钟)",
+    "tpmDescription": "TPM",
+    "cpmDescription": "CPM",
     "last60SecondsStats": "最近60秒统计"
   },
   "channel_index": {
@@ -715,6 +716,7 @@
         "displayInCurrency": "以货币形式显示额度",
         "displayTokenStat": "Billing 相关 API 显示令牌额度而非用户额度",
         "approximateToken": "使用近似的方式估算 token 数以减少计算量",
+        "emptyResponseBilling": "空回复计费",
         "saveButton": "保存通用设置"
       },
       "invoice": {

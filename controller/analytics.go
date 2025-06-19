@@ -65,8 +65,9 @@ type StatisticsDetail struct {
 }
 
 type RpmTpmStatistics struct {
-	RPM int64 `json:"rpm"`
-	TPM int64 `json:"tpm"`
+	RPM int64   `json:"rpm"`
+	TPM int64   `json:"tpm"`
+	CPM float64 `json:"cpm"` // Cost Per Minute (美元)
 }
 
 func GetStatisticsDetail(c *gin.Context) {
@@ -98,6 +99,7 @@ func GetStatisticsDetail(c *gin.Context) {
 		statisticsDetail.RpmTpmStatistics = &RpmTpmStatistics{
 			RPM: rpmTpmStats.RPM,
 			TPM: rpmTpmStats.TPM,
+			CPM: rpmTpmStats.CPM,
 		}
 	}
 

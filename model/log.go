@@ -269,19 +269,24 @@ type LogStatisticGroupChannel struct {
 }
 
 type RpmTpmStatistics struct {
-	RPM int64 `json:"rpm"`
-	TPM int64 `json:"tpm"`
+	RPM int64   `json:"rpm"`
+	TPM int64   `json:"tpm"`
+	CPM float64 `json:"cpm"`
 }
 
 func GetRpmTpmStatistics() (*RpmTpmStatistics, error) {
-	var result RpmTpmStatistics
+	var result struct {
+		RPM        int64 `gorm:"column:rpm"`
+		TPM        int64 `gorm:"column:tpm"`
+		TotalQuota int64 `gorm:"column:total_quota"`
+	}
 
 	// 获取最近60秒的统计数据
 	now := time.Now().Unix()
 	startTime := now - 60
 
 	err := DB.Table("logs").
-		Select("COUNT(*) as rpm, COALESCE(SUM(prompt_tokens + completion_tokens), 0) as tpm").
+		Select("COUNT(*) as rpm, COALESCE(SUM(prompt_tokens + completion_tokens), 0) as tpm, COALESCE(SUM(quota), 0) as total_quota").
 		Where("type = ? AND created_at >= ?", LogTypeConsume, startTime).
 		Scan(&result).Error
 
@@ -289,5 +294,13 @@ func GetRpmTpmStatistics() (*RpmTpmStatistics, error) {
 		return nil, err
 	}
 
-	return &result, nil
+	// 计算每分钟消费金额 (美元)
+	// total_quota 是系统内部的配额单位，需要转换为美元
+	cpm := float64(result.TotalQuota) / float64(config.QuotaPerUnit)
+
+	return &RpmTpmStatistics{
+		RPM: result.RPM,
+		TPM: result.TPM,
+		CPM: cpm,
+	}, nil
 }

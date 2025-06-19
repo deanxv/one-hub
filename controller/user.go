@@ -377,6 +377,13 @@ func GetSelf(c *gin.Context) {
 		})
 		return
 	}
+
+	// 实时计算邀请人数
+	affCount, err := model.GetUserInviteCount(id)
+	if err == nil {
+		user.AffCount = int(affCount)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
