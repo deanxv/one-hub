@@ -70,13 +70,14 @@ func (pc *ProviderConfig) SetAPIUri(customMapping map[string]interface{}) {
 }
 
 type BaseProvider struct {
-	OriginalModel string
-	Usage         *types.Usage
-	Config        ProviderConfig
-	Context       *gin.Context
-	Channel       *model.Channel
-	Requester     *requester.HTTPRequester
-	OtherArg      string
+	OriginalModel   string
+	Usage           *types.Usage
+	Config          ProviderConfig
+	Context         *gin.Context
+	Channel         *model.Channel
+	Requester       *requester.HTTPRequester
+	OtherArg        string
+	SupportResponse bool
 }
 
 // 获取基础URL
@@ -378,4 +379,8 @@ func (p *BaseProvider) deepMergeMap(existing map[string]interface{}, new map[str
 	}
 
 	return result
+}
+
+func (p *BaseProvider) GetSupportedResponse() bool {
+	return p.SupportResponse
 }
