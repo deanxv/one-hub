@@ -440,7 +440,7 @@ const typeConfig = {
     },
     prompt: {
       key: '请参考wiki中的文档获取key. https://github.com/MartialBE/one-hub/wiki/VertexAI',
-      other: 'Region|ProjectID',
+      other: 'Region|ProjectID 或 Region1|Region2|Region3|ProjectID（支持多个Region随机选择）',
       base_url: ''
     },
     modelGroup: 'VertexAI'

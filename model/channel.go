@@ -226,6 +226,59 @@ func BatchDelModelChannels(params *BatchChannelsParams) (int64, error) {
 	return count, nil
 }
 
+// BatchAddUserGroupToChannels 批量添加用户分组到渠道
+func BatchAddUserGroupToChannels(params *BatchChannelsParams) (int64, error) {
+	var count int64
+
+	var channels []*Channel
+	err := DB.Select("id, "+quotePostgresField("group")).Find(&channels, "id IN ?", params.Ids).Error
+	if err != nil {
+		return 0, err
+	}
+
+	for _, channel := range channels {
+		// 获取当前渠道的用户分组列表
+		currentGroups := strings.Split(channel.Group, ",")
+
+		// 清理空字符串并去重
+		uniqueGroups := make(map[string]bool)
+		for _, group := range currentGroups {
+			group = strings.TrimSpace(group)
+			if group != "" {
+				uniqueGroups[group] = true
+			}
+		}
+
+		// 检查要添加的分组是否已存在
+		newGroup := strings.TrimSpace(params.Value)
+		if newGroup != "" && !uniqueGroups[newGroup] {
+			// 分组不存在，添加到渠道
+			uniqueGroups[newGroup] = true
+
+			// 重新构建分组字符串
+			var groupSlice []string
+			for group := range uniqueGroups {
+				groupSlice = append(groupSlice, group)
+			}
+
+			newGroupString := strings.Join(groupSlice, ",")
+
+			// 更新渠道分组
+			err = DB.Model(&Channel{}).Where("id = ?", channel.Id).Update("group", newGroupString).Error
+			if err != nil {
+				return count, err
+			}
+			count++
+		}
+	}
+
+	if count > 0 {
+		ChannelGroup.Load()
+	}
+
+	return count, nil
+}
+
 func (c *Channel) SetProxy() {
 	if c.Proxy == nil {
 		return

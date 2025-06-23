@@ -220,7 +220,23 @@
     "updateEnabledBalance": "Update Enabled Balance",
     "usedBalance": "Used Balance/Remaining Balance",
     "weight": "Weight",
-    "onlyTags": "Display tags only"
+    "onlyTags": "Display tags only",
+    "batchAddUserGroup": "Batch Add User Group",
+    "batchAddUserGroupTip": "Select channels and add user groups. If a channel already has the group, it will be skipped.",
+    "searchChannelPlaceholder": "Enter channel name to search (leave empty to get all channels)",
+    "searchChannelLabel": "Search channels",
+    "noMatchingChannels": "No matching channels found",
+    "clickSearchToGetChannels": "Click search button to get channel list",
+    "selectedChannelsCount": "Selected {{selected}} / {{total}} channels",
+    "channelAlreadyHasGroup": "(Already has this group)",
+    "currentGroup": "Current group",
+    "noGroup": "None",
+    "selectUserGroupToAdd": "Select user group to add",
+    "pleaseSelectUserGroup": "Please select user group",
+    "pleaseSelectChannelsForUserGroup": "Please select at least one channel",
+    "addingUserGroup": "Adding...",
+    "addUserGroupToChannels": "Add user group to {{count}} channels",
+    "batchAddUserGroupSuccess": "Successfully added user group \"{{group}}\" to {{count}} channels"
   },
   "channel_row": {
     "auto": "automatic",
@@ -841,7 +857,8 @@
         "retryTimeOut": {
           "label": "Retry Timeout (seconds)",
           "placeholder": "Retry Timeout (seconds)"
-        }
+        },
+        "emptyResponseBilling": "Empty Response Billing"
       },
       "logSettings": {
         "clearLogs": "Clear Historical Logs",
@@ -972,6 +989,14 @@
           "placeholder": "Please enter the default MaxToken quantity in JSON format, where \"default\" represents the default value. For example: {\"default\": 1000, \"claude-3-7-sonnet-latest\": 128000}"
         },
         "save": "Save Claude's settings"
+      },
+      "geminiSettings": {
+        "title": "Gemini Settings",
+        "geminiOpenThink": {
+          "label": "Models with reasoning output enabled",
+          "placeholder": "Please enter the models that need reasoning output enabled in JSON format, for example: {\"gemini-2.5-pro-preview-05-06\": true}"
+        },
+        "save": "Save Gemini Settings"
       }
     },
     "otherSettings": {

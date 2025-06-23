@@ -194,7 +194,23 @@
     "batchDeleteChannels": "批量删除渠道",
     "batchDeleteChannelsConfirm": "确定要删除选中的 {{count}} 个渠道吗？此操作不可撤销。",
     "pleaseSelectChannels": "请先选择要删除的渠道",
-    "batchDeleteChannelsSuccess": "成功删除 {{count}} 个渠道"
+    "batchDeleteChannelsSuccess": "成功删除 {{count}} 个渠道",
+    "batchAddUserGroup": "批量添加用户分组",
+    "batchAddUserGroupTip": "选择渠道并添加用户分组。如果渠道已有该分组，将跳过该渠道。",
+    "searchChannelPlaceholder": "输入渠道名称搜索（留空获取所有渠道）",
+    "searchChannelLabel": "搜索渠道",
+    "noMatchingChannels": "未找到匹配的渠道",
+    "clickSearchToGetChannels": "请点击搜索按钮获取渠道列表",
+    "selectedChannelsCount": "已选择 {{selected}} / {{total}} 个渠道",
+    "channelAlreadyHasGroup": "（已有该分组）",
+    "currentGroup": "当前分组",
+    "noGroup": "无",
+    "selectUserGroupToAdd": "选择要添加的用户分组",
+    "pleaseSelectUserGroup": "请选择用户分组",
+    "pleaseSelectChannelsForUserGroup": "请选择至少一个渠道",
+    "addingUserGroup": "添加中...",
+    "addUserGroupToChannels": "为 {{count}} 个渠道添加用户分组",
+    "batchAddUserGroupSuccess": "成功为 {{count}} 个渠道添加用户分组 \"{{group}}\""
   },
   "channel_edit": {
     "customModelTip": "自定义：点击或回车输入",
@@ -969,7 +985,6 @@
         "usernameClaimsPlaceholder": "请输入用户名声明(例如username)",
         "saveButton": "保存OIDC设置"
       },
-
       "configureTurnstile": {
         "title": "配置 Turnstile",
         "subTitle": "用以支持用户校验，",
@@ -1049,11 +1064,9 @@
     "githubError": "操作失败，重定向至登录界面中...",
     "githubCountError": "出现错误，第 {{count}} 次重试中...",
     "githubLogin": "GitHub 登录",
-
     "oidcError": "操作失败，重定向至登录界面中...",
     "oidcCountError": "出现错误，第 {{count}} 次重试中...",
     "oidcLogin": "OIDC 登录",
-
     "larkLogin": "飞书 登录",
     "passwordRest": "密码重置确认",
     "useGithubLogin": "使用 Github 登录",

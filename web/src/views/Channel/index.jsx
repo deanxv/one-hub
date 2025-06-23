@@ -1,31 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
-import { showError, showInfo, showSuccess, trims } from 'utils/common';
-import AdminContainer from 'ui-component/AdminContainer';
+import { useCallback, useEffect, useState } from 'react'
+import { showError, showInfo, showSuccess, trims } from 'utils/common'
+import AdminContainer from 'ui-component/AdminContainer'
 
-import { useTheme } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-import LinearProgress from '@mui/material/LinearProgress';
-import ButtonGroup from '@mui/material/ButtonGroup';
-import Toolbar from '@mui/material/Toolbar';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import Alert from '@mui/material/Alert';
+import { useTheme } from '@mui/material/styles'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableContainer from '@mui/material/TableContainer'
+import TablePagination from '@mui/material/TablePagination'
+import LinearProgress from '@mui/material/LinearProgress'
+import ButtonGroup from '@mui/material/ButtonGroup'
+import Toolbar from '@mui/material/Toolbar'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import Alert from '@mui/material/Alert'
 
-import { Box, Button, Card, Container, Divider, IconButton, Stack, Typography } from '@mui/material';
-import ChannelTableRow from './component/TableRow';
-import KeywordTableHead from 'ui-component/TableHead';
-import { API } from 'utils/api';
-import EditeModal from './component/EditModal';
-import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants';
-import TableToolBar from './component/TableToolBar';
-import BatchModal from './component/BatchModal';
-import { useTranslation } from 'react-i18next';
+import { Box, Button, Card, Container, Divider, IconButton, Stack, Typography } from '@mui/material'
+import ChannelTableRow from './component/TableRow'
+import KeywordTableHead from 'ui-component/TableHead'
+import { API } from 'utils/api'
+import EditeModal from './component/EditModal'
+import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants'
+import TableToolBar from './component/TableToolBar'
+import BatchModal from './component/BatchModal'
+import { useTranslation } from 'react-i18next'
 
-import { useBoolean } from 'hooks/use-boolean';
-import ConfirmDialog from 'ui-component/confirm-dialog';
-import { Icon } from '@iconify/react';
+import { useBoolean } from 'hooks/use-boolean'
+import ConfirmDialog from 'ui-component/confirm-dialog'
+import { Icon } from '@iconify/react'
 
 const originalKeyword = {
   type: 0,
@@ -38,12 +38,12 @@ const originalKeyword = {
   other: '',
   filter_tag: 0,
   tag: ''
-};
+}
 
 export async function fetchChannelData(page, rowsPerPage, keyword, order, orderBy) {
   try {
     if (orderBy) {
-      orderBy = order === 'desc' ? '-' + orderBy : orderBy;
+      orderBy = order === 'desc' ? '-' + orderBy : orderBy
     }
     const res = await API.get(`/api/channel/`, {
       params: {
@@ -52,401 +52,401 @@ export async function fetchChannelData(page, rowsPerPage, keyword, order, orderB
         order: orderBy,
         ...keyword
       }
-    });
-    const { success, message, data } = res.data;
+    })
+    const { success, message, data } = res.data
     if (success) {
-      return data;
+      return data
     } else {
-      showError(message);
+      showError(message)
     }
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
 
-  return false;
+  return false
 }
 
 // ----------------------------------------------------------------------
 // CHANNEL_OPTIONS,
 export default function ChannelList() {
-  const { t } = useTranslation();
-  const [page, setPage] = useState(0);
-  const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('id');
-  const [rowsPerPage, setRowsPerPage] = useState(() => getPageSize('channel'));
-  const [listCount, setListCount] = useState(0);
-  const [searching, setSearching] = useState(false);
-  const [channels, setChannels] = useState([]);
-  const [refreshFlag, setRefreshFlag] = useState(false);
-  const [tags, setTags] = useState([]);
-  const [modelOptions, setModelOptions] = useState([]);
+  const { t } = useTranslation()
+  const [page, setPage] = useState(0)
+  const [order, setOrder] = useState('desc')
+  const [orderBy, setOrderBy] = useState('id')
+  const [rowsPerPage, setRowsPerPage] = useState(() => getPageSize('channel'))
+  const [listCount, setListCount] = useState(0)
+  const [searching, setSearching] = useState(false)
+  const [channels, setChannels] = useState([])
+  const [refreshFlag, setRefreshFlag] = useState(false)
+  const [tags, setTags] = useState([])
+  const [modelOptions, setModelOptions] = useState([])
 
-  const confirm = useBoolean();
-  const [confirmTitle, setConfirmTitle] = useState('');
-  const [confirmConfirm, setConfirmConfirm] = useState(() => {});
+  const confirm = useBoolean()
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmConfirm, setConfirmConfirm] = useState(() => {})
 
-  const [groupOptions, setGroupOptions] = useState([]);
-  const [toolBarValue, setToolBarValue] = useState(originalKeyword);
-  const [searchKeyword, setSearchKeyword] = useState(originalKeyword);
+  const [groupOptions, setGroupOptions] = useState([])
+  const [toolBarValue, setToolBarValue] = useState(originalKeyword)
+  const [searchKeyword, setSearchKeyword] = useState(originalKeyword)
 
-  const theme = useTheme();
-  const matchUpMd = useMediaQuery(theme.breakpoints.up('sm'));
-  const [openModal, setOpenModal] = useState(false);
-  const [editChannelId, setEditChannelId] = useState(0);
-  const [openBatchModal, setOpenBatchModal] = useState(false);
-  const [prices, setPrices] = useState([]);
+  const theme = useTheme()
+  const matchUpMd = useMediaQuery(theme.breakpoints.up('sm'))
+  const [openModal, setOpenModal] = useState(false)
+  const [editChannelId, setEditChannelId] = useState(0)
+  const [openBatchModal, setOpenBatchModal] = useState(false)
+  const [prices, setPrices] = useState([])
 
   // 批量删除相关状态
-  const [selectedChannels, setSelectedChannels] = useState([]);
-  const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
+  const [selectedChannels, setSelectedChannels] = useState([])
+  const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false)
 
   const handleSort = (event, id) => {
-    const isAsc = orderBy === id && order === 'asc';
+    const isAsc = orderBy === id && order === 'asc'
     if (id !== '') {
-      setOrder(isAsc ? 'desc' : 'asc');
-      setOrderBy(id);
+      setOrder(isAsc ? 'desc' : 'asc')
+      setOrderBy(id)
     }
-  };
+  }
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    setPage(newPage)
+  }
 
   const handleChangeRowsPerPage = (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setPage(0);
-    setRowsPerPage(newRowsPerPage);
-    savePageSize('channel', newRowsPerPage);
-  };
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setPage(0)
+    setRowsPerPage(newRowsPerPage)
+    savePageSize('channel', newRowsPerPage)
+  }
 
-  const fetchPrices = useCallback(async () => {
+  const fetchPrices = useCallback(async() => {
     try {
-      const res = await API.get('/api/prices');
-      const { success, message, data } = res.data;
+      const res = await API.get('/api/prices')
+      const { success, message, data } = res.data
       if (success) {
-        setPrices(data);
+        setPrices(data)
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  }, []);
+  }, [])
 
-  const searchChannels = async () => {
+  const searchChannels = async() => {
     // event.preventDefault();
     // const formData = new FormData(event.target);
-    setPage(0);
-    setSearchKeyword(toolBarValue);
-  };
+    setPage(0)
+    setSearchKeyword(toolBarValue)
+  }
 
   const handleToolBarValue = (event) => {
-    setToolBarValue({ ...toolBarValue, [event.target.name]: event.target.value });
-  };
+    setToolBarValue({ ...toolBarValue, [event.target.name]: event.target.value })
+  }
 
-  const manageChannel = async (id, action, value, tag = false) => {
-    let url = '/api/channel/';
+  const manageChannel = async(id, action, value, tag = false) => {
+    let url = '/api/channel/'
     if (tag) {
-      url = '/api/channel_tag/';
+      url = '/api/channel_tag/'
     }
 
-    let data = { id };
-    let res;
+    let data = { id }
+    let res
 
     try {
       switch (action) {
         case 'copy': {
-          let oldRes = await API.get(`/api/channel/${id}`);
-          const { success, message, data } = oldRes.data;
+          let oldRes = await API.get(`/api/channel/${id}`)
+          const { success, message, data } = oldRes.data
           if (!success) {
-            showError(message);
-            return { success: false, message };
+            showError(message)
+            return { success: false, message }
           }
           // 删除 data.id
-          delete data.id;
-          delete data.test_time;
-          delete data.balance_updated_time;
-          delete data.used_quota;
-          delete data.response_time;
-          data.name = data.name + '_copy';
-          res = await API.post(`/api/channel/`, { ...data });
-          break;
+          delete data.id
+          delete data.test_time
+          delete data.balance_updated_time
+          delete data.used_quota
+          delete data.response_time
+          data.name = data.name + '_copy'
+          res = await API.post(`/api/channel/`, { ...data })
+          break
         }
         case 'delete':
           if (tag) {
-            res = await API.delete(url + encodeURIComponent(id));
+            res = await API.delete(url + encodeURIComponent(id))
           } else {
-            res = await API.delete(`${url}${id}`);
+            res = await API.delete(`${url}${id}`)
           }
-          break;
+          break
         case 'delete_tag':
-          res = await API.delete(url + id + '/tag');
-          break;
+          res = await API.delete(url + id + '/tag')
+          break
         case 'status':
           res = await API.put(url, {
             ...data,
             status: value
-          });
-          break;
+          })
+          break
         case 'priority':
         case 'weight':
           if (value === '') {
-            return { success: false, message: '值不能为空' };
+            return { success: false, message: '值不能为空' }
           }
 
           if (!tag) {
             res = await API.put(url, {
               ...data,
               [action]: Number(value)
-            });
+            })
           } else {
             res = await API.put(`${url + encodeURIComponent(id)}/priority`, {
               type: 'priority',
               value
-            });
+            })
           }
-          break;
+          break
         case 'test':
           res = await API.get(url + `test/${id}`, {
             params: { model: value }
-          });
-          break;
+          })
+          break
         case 'batch_delete':
           res = await API.delete('/api/channel/batch', {
             data: {
               value: 'batch_delete',
               ids: value
             }
-          });
-          break;
+          })
+          break
         case 'tag_change_status':
-          res = await API.put(`/api/channel_tag/${id}/status/${value}`);
-          break;
+          res = await API.put(`/api/channel_tag/${id}/status/${value}`)
+          break
         default:
-          showError('无效操作');
-          return { success: false, message: '无效操作' };
+          showError('无效操作')
+          return { success: false, message: '无效操作' }
       }
-      const { success, message } = res.data;
+      const { success, message } = res.data
       if (success) {
-        showSuccess(t('userPage.operationSuccess'));
+        showSuccess(t('userPage.operationSuccess'))
         if (action === 'delete' || action === 'copy' || action == 'delete_tag' || action === 'batch_delete') {
-          await handleRefresh(false);
+          await handleRefresh(false)
         }
       } else {
-        showError(message);
+        showError(message)
       }
 
-      return res.data;
+      return res.data
     } catch (error) {
-      return { success: false, message: error.message };
+      return { success: false, message: error.message }
     }
-  };
+  }
 
   // 处理刷新
-  const handleRefresh = async (reset) => {
+  const handleRefresh = async(reset) => {
     if (reset) {
-      setOrderBy('id');
-      setOrder('desc');
-      setToolBarValue(originalKeyword);
-      setSearchKeyword(originalKeyword);
+      setOrderBy('id')
+      setOrder('desc')
+      setToolBarValue(originalKeyword)
+      setSearchKeyword(originalKeyword)
     }
-    setRefreshFlag(!refreshFlag);
-  };
+    setRefreshFlag(!refreshFlag)
+  }
 
   const handlePopoverOpen = useCallback(
     (title, onConfirm) => {
-      setConfirmTitle(title);
-      setConfirmConfirm(() => onConfirm);
-      confirm.onTrue();
+      setConfirmTitle(title)
+      setConfirmConfirm(() => onConfirm)
+      confirm.onTrue()
     },
     [confirm]
-  );
+  )
 
   // 处理测试所有启用渠道
-  const testAllChannels = async () => {
+  const testAllChannels = async() => {
     try {
-      const res = await API.get(`/api/channel/test`);
-      const { success, message } = res.data;
+      const res = await API.get(`/api/channel/test`)
+      const { success, message } = res.data
       if (success) {
-        showInfo(t('channel_row.testAllChannel'));
+        showInfo(t('channel_row.testAllChannel'))
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      return;
+
     }
-  };
+  }
 
   // 处理删除所有禁用渠道
-  const deleteAllDisabledChannels = async () => {
+  const deleteAllDisabledChannels = async() => {
     try {
-      const res = await API.delete(`/api/channel/disabled`);
-      const { success, message, data } = res.data;
+      const res = await API.delete(`/api/channel/disabled`)
+      const { success, message, data } = res.data
       if (success) {
-        showSuccess(t('channel_row.delChannelCount', { count: data }));
-        await handleRefresh();
+        showSuccess(t('channel_row.delChannelCount', { count: data }))
+        await handleRefresh()
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      return;
+
     }
-  };
+  }
 
   // 处理更新所有启用渠道余额
-  const updateAllChannelsBalance = async () => {
-    setSearching(true);
+  const updateAllChannelsBalance = async() => {
+    setSearching(true)
     try {
-      const res = await API.get(`/api/channel/update_balance`);
-      const { success, message } = res.data;
+      const res = await API.get(`/api/channel/update_balance`)
+      const { success, message } = res.data
       if (success) {
-        showInfo(t('channel_row.updateChannelBalance'));
+        showInfo(t('channel_row.updateChannelBalance'))
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
 
-    setSearching(false);
-  };
+    setSearching(false)
+  }
 
   const handleOpenModal = (channelId) => {
-    setEditChannelId(channelId);
-    setOpenModal(true);
-  };
+    setEditChannelId(channelId)
+    setOpenModal(true)
+  }
 
   const handleCloseModal = () => {
-    setOpenModal(false);
-    setEditChannelId(0);
-  };
+    setOpenModal(false)
+    setEditChannelId(0)
+  }
 
   const handleOkModal = (status) => {
     if (status === true) {
-      handleCloseModal();
-      handleRefresh(false);
+      handleCloseModal()
+      handleRefresh(false)
     }
-  };
+  }
 
-  const fetchData = async (page, rowsPerPage, keyword, order, orderBy) => {
-    setSearching(true);
-    keyword = trims(keyword);
-    const data = await fetchChannelData(page, rowsPerPage, keyword, order, orderBy);
+  const fetchData = async(page, rowsPerPage, keyword, order, orderBy) => {
+    setSearching(true)
+    keyword = trims(keyword)
+    const data = await fetchChannelData(page, rowsPerPage, keyword, order, orderBy)
 
     if (data) {
-      setListCount(data.total_count);
-      setChannels(data.data);
+      setListCount(data.total_count)
+      setChannels(data.data)
     }
-    setSearching(false);
-  };
+    setSearching(false)
+  }
 
-  const fetchGroups = async () => {
+  const fetchGroups = async() => {
     try {
-      let res = await API.get(`/api/group/`);
-      setGroupOptions(res.data.data);
+      let res = await API.get(`/api/group/`)
+      setGroupOptions(res.data.data)
     } catch (error) {
-      showError(error.message);
+      showError(error.message)
     }
-  };
+  }
 
-  const fetchTags = async () => {
+  const fetchTags = async() => {
     try {
-      let res = await API.get(`/api/channel_tag/_all`);
-      const { success, data } = res.data;
+      let res = await API.get(`/api/channel_tag/_all`)
+      const { success, data } = res.data
       if (success) {
-        setTags(data);
+        setTags(data)
       }
     } catch (error) {
-      showError(error.message);
+      showError(error.message)
     }
-  };
+  }
 
-  const fetchModels = async () => {
+  const fetchModels = async() => {
     try {
-      let res = await API.get(`/api/channel/models`);
-      const { data } = res.data;
+      let res = await API.get(`/api/channel/models`)
+      const { data } = res.data
       // 先对data排序
       data.sort((a, b) => {
-        const ownedByComparison = a.owned_by.localeCompare(b.owned_by);
+        const ownedByComparison = a.owned_by.localeCompare(b.owned_by)
         if (ownedByComparison === 0) {
-          return a.id.localeCompare(b.id);
+          return a.id.localeCompare(b.id)
         }
-        return ownedByComparison;
-      });
+        return ownedByComparison
+      })
       setModelOptions(
         data.map((model) => {
           return {
             id: model.id,
             group: model.owned_by
-          };
+          }
         })
-      );
+      )
     } catch (error) {
-      showError(error.message);
+      showError(error.message)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchData(page, rowsPerPage, searchKeyword, order, orderBy);
-  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag]);
+    fetchData(page, rowsPerPage, searchKeyword, order, orderBy)
+  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag])
 
   useEffect(() => {
-    fetchGroups().then();
-    fetchTags().then();
-    fetchModels().then();
-    fetchPrices().then();
-  }, [fetchPrices]);
+    fetchGroups().then()
+    fetchTags().then()
+    fetchModels().then()
+    fetchPrices().then()
+  }, [fetchPrices])
 
   // 处理批量删除
   const handleBatchDelete = () => {
     if (selectedChannels.length === 0) {
-      showError(t('channel_index.pleaseSelectChannels'));
-      return;
+      showError(t('channel_index.pleaseSelectChannels'))
+      return
     }
-    setBatchDeleteConfirm(true);
-  };
+    setBatchDeleteConfirm(true)
+  }
 
-  const confirmBatchDelete = async () => {
+  const confirmBatchDelete = async() => {
     try {
-      const { success, message } = await manageChannel(null, 'batch_delete', selectedChannels);
+      const { success, message } = await manageChannel(null, 'batch_delete', selectedChannels)
       if (success) {
-        showSuccess(t('channel_index.batchDeleteChannelsSuccess', { count: selectedChannels.length }));
-        setSelectedChannels([]);
+        showSuccess(t('channel_index.batchDeleteChannelsSuccess', { count: selectedChannels.length }))
+        setSelectedChannels([])
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      showError(error.message);
+      showError(error.message)
     }
-    setBatchDeleteConfirm(false);
-  };
+    setBatchDeleteConfirm(false)
+  }
 
   // 处理全选/取消全选
   const handleSelectAll = () => {
     if (selectedChannels.length === channels.length) {
-      setSelectedChannels([]);
+      setSelectedChannels([])
     } else {
-      setSelectedChannels(channels.map((channel) => channel.id));
+      setSelectedChannels(channels.map((channel) => channel.id))
     }
-  };
+  }
 
   // 处理单个选择
   const handleSelectChannel = (channelId) => {
-    const selectedIndex = selectedChannels.indexOf(channelId);
-    let newSelected = [];
+    const selectedIndex = selectedChannels.indexOf(channelId)
+    let newSelected = []
 
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selectedChannels, channelId);
+      newSelected = newSelected.concat(selectedChannels, channelId)
     } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selectedChannels.slice(1));
+      newSelected = newSelected.concat(selectedChannels.slice(1))
     } else if (selectedIndex === selectedChannels.length - 1) {
-      newSelected = newSelected.concat(selectedChannels.slice(0, -1));
+      newSelected = newSelected.concat(selectedChannels.slice(0, -1))
     } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selectedChannels.slice(0, selectedIndex), selectedChannels.slice(selectedIndex + 1));
+      newSelected = newSelected.concat(selectedChannels.slice(0, selectedIndex), selectedChannels.slice(selectedIndex + 1))
     }
 
-    setSelectedChannels(newSelected);
-  };
+    setSelectedChannels(newSelected)
+  }
 
   return (
     <AdminContainer>
@@ -459,10 +459,12 @@ export default function ChannelList() {
         </Stack>
 
         <ButtonGroup variant="contained" aria-label="outlined small primary button group">
-          <Button color="primary" startIcon={<Icon icon="solar:add-circle-line-duotone" />} onClick={() => handleOpenModal(0)}>
+          <Button color="primary" startIcon={<Icon icon="solar:add-circle-line-duotone"/>}
+                  onClick={() => handleOpenModal(0)}>
             {t('channel_index.newChannel')}
           </Button>
-          <Button color="primary" startIcon={<Icon icon="solar:menu-dots-bold-duotone" />} onClick={() => setOpenBatchModal(true)}>
+          <Button color="primary" startIcon={<Icon icon="solar:menu-dots-bold-duotone"/>}
+                  onClick={() => setOpenBatchModal(true)}>
             {t('channel_index.batchProcessing')}
           </Button>
         </ButtonGroup>
@@ -470,19 +472,20 @@ export default function ChannelList() {
       <Stack mb={5}>
         <Alert severity="info">
           {t('channel_index.priorityWeightExplanation')}
-          <br />
+          <br/>
           {t('channel_index.description1')}
-          <br />
+          <br/>
           {t('channel_index.description2')}
-          <br />
+          <br/>
           {t('channel_index.description3')}
-          <br />
+          <br/>
           {t('channel_index.description4')}
         </Alert>
       </Stack>
       <Card>
         <Box component="form" noValidate>
-          <TableToolBar filterName={toolBarValue} handleFilterName={handleToolBarValue} groupOptions={groupOptions} tags={tags} />
+          <TableToolBar filterName={toolBarValue} handleFilterName={handleToolBarValue} groupOptions={groupOptions}
+                        tags={tags}/>
         </Box>
 
         <Toolbar
@@ -500,7 +503,7 @@ export default function ChannelList() {
               variant="outlined"
               onClick={handleBatchDelete}
               disabled={selectedChannels.length === 0}
-              startIcon={<Icon icon="solar:trash-bin-2-bold-duotone" width={18} />}
+              startIcon={<Icon icon="solar:trash-bin-2-bold-duotone" width={18}/>}
               color="error"
               sx={{
                 minWidth: 'auto',
@@ -515,27 +518,28 @@ export default function ChannelList() {
           <Container maxWidth="xl">
             {matchUpMd ? (
               <ButtonGroup variant="outlined" aria-label="outlined small primary button group">
-                <Button onClick={() => handleRefresh(true)} startIcon={<Icon icon="solar:refresh-circle-bold-duotone" width={18} />}>
+                <Button onClick={() => handleRefresh(true)}
+                        startIcon={<Icon icon="solar:refresh-circle-bold-duotone" width={18}/>}>
                   {t('channel_index.refreshClearSearchConditions')}
                 </Button>
-                <Button onClick={searchChannels} startIcon={<Icon icon="solar:magnifer-bold-duotone" width={18} />}>
+                <Button onClick={searchChannels} startIcon={<Icon icon="solar:magnifer-bold-duotone" width={18}/>}>
                   {t('channel_index.search')}
                 </Button>
                 <Button
                   onClick={() => handlePopoverOpen(t('channel_index.testAllChannels'), testAllChannels)}
-                  startIcon={<Icon icon="solar:test-tube-bold-duotone" width={18} />}
+                  startIcon={<Icon icon="solar:test-tube-bold-duotone" width={18}/>}
                 >
                   {t('channel_index.testAllChannels')}
                 </Button>
                 <Button
                   onClick={() => handlePopoverOpen(t('channel_index.updateEnabledBalance'), updateAllChannelsBalance)}
-                  startIcon={<Icon icon="solar:dollar-minimalistic-bold-duotone" width={18} />}
+                  startIcon={<Icon icon="solar:dollar-minimalistic-bold-duotone" width={18}/>}
                 >
                   {t('channel_index.updateEnabledBalance')}
                 </Button>
                 <Button
                   onClick={() => handlePopoverOpen(t('channel_index.deleteDisabledChannels'), deleteAllDisabledChannels)}
-                  startIcon={<Icon icon="solar:trash-bin-trash-bold-duotone" width={18} />}
+                  startIcon={<Icon icon="solar:trash-bin-trash-bold-duotone" width={18}/>}
                 >
                   {t('channel_index.deleteDisabledChannels')}
                 </Button>
@@ -544,39 +548,41 @@ export default function ChannelList() {
               <Stack
                 direction="row"
                 spacing={0.5}
-                divider={<Divider orientation="vertical" flexItem />}
+                divider={<Divider orientation="vertical" flexItem/>}
                 justifyContent="space-around"
                 alignItems="center"
               >
                 <IconButton onClick={() => handleRefresh(true)} size="large">
-                  <Icon width={20} icon="solar:refresh-circle-bold-duotone" />
+                  <Icon width={20} icon="solar:refresh-circle-bold-duotone"/>
                 </IconButton>
                 <IconButton onClick={searchChannels} size="large">
-                  <Icon width={20} icon="solar:magnifer-bold-duotone" />
+                  <Icon width={20} icon="solar:magnifer-bold-duotone"/>
                 </IconButton>
-                <IconButton onClick={() => handlePopoverOpen(t('channel_index.testAllChannels'), testAllChannels)} size="large">
-                  <Icon width={20} icon="solar:test-tube-bold-duotone" />
+                <IconButton onClick={() => handlePopoverOpen(t('channel_index.testAllChannels'), testAllChannels)}
+                            size="large">
+                  <Icon width={20} icon="solar:test-tube-bold-duotone"/>
                 </IconButton>
                 <IconButton
                   onClick={() => handlePopoverOpen(t('channel_index.updateEnabledBalance'), updateAllChannelsBalance)}
                   size="large"
                 >
-                  <Icon width={20} icon="solar:dollar-minimalistic-bold-duotone" />
+                  <Icon width={20} icon="solar:dollar-minimalistic-bold-duotone"/>
                 </IconButton>
                 <IconButton
                   onClick={() => handlePopoverOpen(t('channel_index.deleteDisabledChannels'), deleteAllDisabledChannels)}
                   size="large"
                 >
-                  <Icon width={20} icon="solar:trash-bin-trash-bold-duotone" />
+                  <Icon width={20} icon="solar:trash-bin-trash-bold-duotone"/>
                 </IconButton>
-                <IconButton onClick={handleBatchDelete} disabled={selectedChannels.length === 0} size="large" color="error">
-                  <Icon width={20} icon="solar:trash-bin-2-bold-duotone" />
+                <IconButton onClick={handleBatchDelete} disabled={selectedChannels.length === 0} size="large"
+                            color="error">
+                  <Icon width={20} icon="solar:trash-bin-2-bold-duotone"/>
                 </IconButton>
               </Stack>
             )}
           </Container>
         </Toolbar>
-        {searching && <LinearProgress />}
+        {searching && <LinearProgress/>}
         <TableContainer>
           <Table sx={{ minWidth: 800 }}>
             <KeywordTableHead
@@ -603,7 +609,7 @@ export default function ChannelList() {
             />
             <TableBody>
               {channels.map((row) => {
-                const isSelected = selectedChannels.indexOf(row.id) !== -1;
+                const isSelected = selectedChannels.indexOf(row.id) !== -1
                 return (
                   <ChannelTableRow
                     item={row}
@@ -618,7 +624,7 @@ export default function ChannelList() {
                     selected={isSelected}
                     onSelect={() => handleSelectChannel(row.id)}
                   />
-                );
+                )
               })}
             </TableBody>
           </Table>
@@ -644,7 +650,7 @@ export default function ChannelList() {
         modelOptions={modelOptions}
         prices={prices}
       />
-      <BatchModal open={openBatchModal} setOpen={setOpenBatchModal} />
+      <BatchModal open={openBatchModal} setOpen={setOpenBatchModal} groupOptions={groupOptions}/>
 
       <ConfirmDialog
         open={confirm.value}
@@ -655,8 +661,8 @@ export default function ChannelList() {
           <Button
             variant="contained"
             onClick={() => {
-              confirmConfirm();
-              confirm.onFalse();
+              confirmConfirm()
+              confirm.onFalse()
             }}
           >
             {t('common.executeConfirm')}
@@ -677,5 +683,5 @@ export default function ChannelList() {
         }
       />
     </AdminContainer>
-  );
+  )
 }

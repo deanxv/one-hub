@@ -3,9 +3,11 @@ package vertexai
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -63,12 +65,26 @@ func getConfig() base.ProviderConfig {
 
 func getKeyConfig(vertexAI *VertexAIProvider) {
 	keys := strings.Split(vertexAI.Channel.Other, "|")
-	if len(keys) != 2 {
+	if len(keys) < 2 {
 		return
 	}
 
-	vertexAI.Region = keys[0]
-	vertexAI.ProjectID = keys[1]
+	vertexAI.ProjectID = keys[len(keys)-1]
+
+	regions := keys[:len(keys)-1]
+	if len(regions) == 0 {
+		return
+	}
+
+	randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(regions))))
+	if err != nil {
+		// 如果随机数生成失败，使用第一个region作为fallback
+		logger.SysError("Failed to generate random number for region selection: " + err.Error())
+		vertexAI.Region = regions[0]
+		return
+	}
+
+	vertexAI.Region = regions[randomIndex.Int64()]
 }
 
 func (p *VertexAIProvider) GetFullRequestURL(modelName string, other string) string {
