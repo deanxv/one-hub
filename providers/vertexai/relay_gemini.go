@@ -29,7 +29,6 @@ func (p *VertexAIProvider) CreateGeminiChat(request *gemini.GeminiChatRequest) (
 
 	usage := p.GetUsage()
 	*usage = gemini.ConvertOpenAIUsage(geminiResponse.UsageMetadata)
-	//*usage = convertOpenAIUsage(geminiResponse.UsageMetadata)
 
 	return geminiResponse, nil
 }
@@ -85,6 +84,15 @@ func (p *VertexAIProvider) getGeminiRequest(request *gemini.GeminiChatRequest) (
 
 	if headers == nil {
 		return nil, common.StringErrorWrapperLocal("vertexAI config error", "invalid_vertexai_config", http.StatusInternalServerError)
+	}
+
+	if request.Stream {
+		headers["Accept"] = "text/event-stream"
+	}
+
+	body, exists := p.GetRawBody()
+	if !exists {
+		return nil, common.StringErrorWrapperLocal("request body not found", "request_body_not_found", http.StatusInternalServerError)
 	}
 
 	// 错误处理

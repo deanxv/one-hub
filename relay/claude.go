@@ -6,11 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"one-api/common"
 	"one-api/common/config"
-	"one-api/common/image"
 	"one-api/common/logger"
 	"one-api/common/requester"
 	"one-api/common/utils"
@@ -202,21 +200,7 @@ func CountTokenMessages(request *claude.ClaudeRequest, preCostType int) (int, er
 				switch content["type"] {
 				case "text":
 					textMsg.WriteString(content["text"].(string))
-				case "image":
-					if preCostType == config.PreCostNotImage {
-						continue
-					}
-					imageSource, ok := content["source"].(map[string]any)
-					if !ok {
-						continue
-					}
-
-					width, height, err := image.GetImageSizeFromBase64(imageSource["data"].(string))
-					if err != nil {
-						return 0, err
-					}
-					tokenNum += int(math.Ceil((float64(width) * float64(height)) / 750))
-				case "tool_result", "tool_use":
+				default:
 					// 不算了  就只算他50吧
 					tokenNum += 50
 				}

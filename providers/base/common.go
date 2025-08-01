@@ -395,3 +395,12 @@ func (p *BaseProvider) deepMergeMap(existing map[string]interface{}, new map[str
 func (p *BaseProvider) GetSupportedResponse() bool {
 	return p.SupportResponse
 }
+
+func (p *BaseProvider) GetRawBody() ([]byte, bool) {
+	if raw, exists := p.Context.Get(config.GinRequestBodyKey); exists {
+		if bytes, ok := raw.([]byte); ok {
+			return bytes, true
+		}
+	}
+	return nil, false
+}

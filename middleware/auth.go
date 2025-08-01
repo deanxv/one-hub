@@ -184,11 +184,8 @@ func OpenaiAuth() func(c *gin.Context) {
 func ClaudeAuth() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		key := c.Request.Header.Get("x-api-key")
-		ua := c.Request.Header.Get("user-agent")
-		if strings.HasPrefix(ua, "claude-cli/") {
-			if key == "" {
-				key = c.Request.Header.Get("Authorization")
-			}
+		if key == "" {
+			key = c.Request.Header.Get("Authorization")
 		}
 		tokenAuth(c, key)
 	}
@@ -200,6 +197,10 @@ func GeminiAuth() func(c *gin.Context) {
 		if key == "" {
 			// 查询GET参数
 			key = c.Query("key")
+
+			if key == "" {
+				key = c.Request.Header.Get("Authorization")
+			}
 		}
 		tokenAuth(c, key)
 	}

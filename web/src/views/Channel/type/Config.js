@@ -91,6 +91,17 @@ const typeConfig = {
       other: '请输入默认API版本，例如：2024-05-01-preview'
     }
   },
+  55: {
+    inputLabel: {
+      base_url: 'AZURE_OPENAI_ENDPOINT',
+      other: '默认 API 版本',
+      provider_models_list: '从Azure获取已部署模型列表'
+    },
+    prompt: {
+      base_url: '请填写AZURE_OPENAI_ENDPOINT',
+      other: '请输入默认API版本，例如：preview OR latest'
+    }
+  },
   11: {
     input: {
       models: ['PaLM-2'],
@@ -521,6 +532,16 @@ const typeConfig = {
       key: '官方密钥格式： accessKey|secretKey'
     },
     modelGroup: 'Kling'
+  },
+  54: {
+    inputLabel: {
+      base_url: 'Azure Databricks Endpoint',
+      key: 'DATABRICKS_TOKEN'
+    },
+    prompt: {
+      base_url: '请填写Azure Databricks Endpoint',
+      key: '请输入DATABRICKS_TOKEN'
+    }
   },
   20: {
     inputLabel: {

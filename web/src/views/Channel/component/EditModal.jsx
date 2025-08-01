@@ -1,9 +1,9 @@
-import PropTypes from 'prop-types'
-import { useEffect, useRef, useState } from 'react'
-import { CHANNEL_OPTIONS } from 'constants/ChannelConstants'
-import { useTheme } from '@mui/material/styles'
-import { API } from 'utils/api'
-import { copy, showError, showSuccess, trims } from 'utils/common'
+import PropTypes from 'prop-types';
+import { useEffect, useRef, useState } from 'react';
+import { CHANNEL_OPTIONS } from 'constants/ChannelConstants';
+import { useTheme } from '@mui/material/styles';
+import { API } from 'utils/api';
+import { copy, showError, showSuccess, trims } from 'utils/common';
 import {
   Autocomplete,
   Box,
@@ -30,26 +30,26 @@ import {
   Tooltip,
   Typography,
   useMediaQuery
-} from '@mui/material'
-import { Formik } from 'formik'
-import * as Yup from 'yup'
-import { defaultConfig, typeConfig } from '../type/Config' //typeConfig
-import { createFilterOptions } from '@mui/material/Autocomplete'
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
-import CheckBoxIcon from '@mui/icons-material/CheckBox'
-import { useTranslation } from 'react-i18next'
-import useCustomizeT from 'hooks/useCustomizeT'
-import { PreCostType } from '../type/other'
-import MapInput from './MapInput'
-import ListInput from './ListInput'
-import ModelSelectorModal from './ModelSelectorModal'
-import pluginList from '../type/Plugin.json'
-import { Icon } from '@iconify/react'
+} from '@mui/material';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { defaultConfig, typeConfig } from '../type/Config'; //typeConfig
+import { createFilterOptions } from '@mui/material/Autocomplete';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { useTranslation } from 'react-i18next';
+import useCustomizeT from 'hooks/useCustomizeT';
+import { PreCostType } from '../type/other';
+import MapInput from './MapInput';
+import ListInput from './ListInput';
+import ModelSelectorModal from './ModelSelectorModal';
+import pluginList from '../type/Plugin.json';
+import { Icon } from '@iconify/react';
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>
-const checkedIcon = <CheckBoxIcon fontSize="small"/>
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-const filter = createFilterOptions()
+const filter = createFilterOptions();
 const getValidationSchema = (t) =>
   Yup.object().shape({
     is_edit: Yup.boolean(),
@@ -70,62 +70,62 @@ const getValidationSchema = (t) =>
     model_mapping: Yup.array(),
     model_headers: Yup.array(),
     custom_parameter: Yup.string().nullable()
-  })
+  });
 
 const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, modelOptions, prices }) => {
-  const { t } = useTranslation()
-  const { t: customizeT } = useCustomizeT()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const { t } = useTranslation();
+  const { t: customizeT } = useCustomizeT();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   // const [loading, setLoading] = useState(false);
-  const [initialInput, setInitialInput] = useState(defaultConfig.input)
-  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel) //
-  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt)
-  const [batchAdd, setBatchAdd] = useState(false)
-  const [hasTag, setHasTag] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-  const [inputValue, setInputValue] = useState('')
-  const [parameterFocused, setParameterFocused] = useState(false)
-  const parameterInputRef = useRef(null)
-  const removeDuplicates = (array) => [...new Set(array)]
-  const [modelSelectorOpen, setModelSelectorOpen] = useState(false)
-  const [tempFormikValues, setTempFormikValues] = useState(null)
-  const [tempSetFieldValue, setTempSetFieldValue] = useState(null)
+  const [initialInput, setInitialInput] = useState(defaultConfig.input);
+  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel); //
+  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt);
+  const [batchAdd, setBatchAdd] = useState(false);
+  const [hasTag, setHasTag] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [parameterFocused, setParameterFocused] = useState(false);
+  const parameterInputRef = useRef(null);
+  const removeDuplicates = (array) => [...new Set(array)];
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const [tempFormikValues, setTempFormikValues] = useState(null);
+  const [tempSetFieldValue, setTempSetFieldValue] = useState(null);
 
   const initChannel = (typeValue) => {
     if (typeConfig[typeValue]?.inputLabel) {
-      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel })
+      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel });
     } else {
-      setInputLabel(defaultConfig.inputLabel)
+      setInputLabel(defaultConfig.inputLabel);
     }
 
     if (typeConfig[typeValue]?.prompt) {
-      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt })
+      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt });
     } else {
-      setInputPrompt(defaultConfig.prompt)
+      setInputPrompt(defaultConfig.prompt);
     }
 
-    return typeConfig[typeValue]?.input
-  }
+    return typeConfig[typeValue]?.input;
+  };
 
   const handleTypeChange = (setFieldValue, typeValue, values) => {
     // 处理插件事务
     if (pluginList[typeValue]) {
-      const newPluginValues = {}
-      const pluginConfig = pluginList[typeValue]
+      const newPluginValues = {};
+      const pluginConfig = pluginList[typeValue];
       for (const pluginName in pluginConfig) {
-        const plugin = pluginConfig[pluginName]
-        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {}
-        newPluginValues[pluginName] = {}
+        const plugin = pluginConfig[pluginName];
+        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {};
+        newPluginValues[pluginName] = {};
         for (const paramName in plugin.params) {
-          const param = plugin.params[paramName]
-          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '')
+          const param = plugin.params[paramName];
+          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '');
         }
       }
-      setFieldValue('plugin', newPluginValues)
+      setFieldValue('plugin', newPluginValues);
     }
 
-    const newInput = initChannel(typeValue)
+    const newInput = initChannel(typeValue);
 
     if (newInput) {
       Object.keys(newInput).forEach((key) => {
@@ -133,103 +133,103 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
           (!Array.isArray(values[key]) && values[key] !== null && values[key] !== undefined && values[key] !== '') ||
           (Array.isArray(values[key]) && values[key].length > 0)
         ) {
-          return
+          return;
         }
 
         if (key === 'models') {
-          setFieldValue(key, initialModel(newInput[key]))
-          return
+          setFieldValue(key, initialModel(newInput[key]));
+          return;
         }
-        setFieldValue(key, newInput[key])
-      })
+        setFieldValue(key, newInput[key]);
+      });
     }
-  }
+  };
 
   const basicModels = (channelType) => {
-    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup
+    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup;
     // 循环 modelOptions，找到 modelGroup 对应的模型
-    let modelList = []
+    let modelList = [];
     modelOptions.forEach((model) => {
       if (model.group === modelGroup) {
-        modelList.push(model)
+        modelList.push(model);
       }
-    })
-    return modelList
-  }
+    });
+    return modelList;
+  };
 
   const handleModelSelectorConfirm = (selectedModels, overwriteModels) => {
     if (tempSetFieldValue && tempFormikValues) {
       if (overwriteModels) {
         // 覆盖模式：清空现有的模型列表，使用选择器中的模型
-        tempSetFieldValue('models', selectedModels)
+        tempSetFieldValue('models', selectedModels);
       } else {
         // 追加模式：合并现有模型和新选择的模型，避免重复
-        const existingModels = tempFormikValues.models || []
-        const existingModelIds = new Set(existingModels.map((model) => model.id))
+        const existingModels = tempFormikValues.models || [];
+        const existingModelIds = new Set(existingModels.map((model) => model.id));
 
         // 过滤掉已存在的模型，避免重复
-        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id))
+        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id));
 
         // 合并模型列表
-        tempSetFieldValue('models', [...existingModels, ...newModels])
+        tempSetFieldValue('models', [...existingModels, ...newModels]);
       }
     }
-  }
+  };
 
-  const submit = async(values, { setErrors, setStatus, setSubmitting }) => {
-    setSubmitting(true)
-    values = trims(values)
+  const submit = async (values, { setErrors, setStatus, setSubmitting }) => {
+    setSubmitting(true);
+    values = trims(values);
     if (values.base_url && values.base_url.endsWith('/')) {
-      values.base_url = values.base_url.slice(0, values.base_url.length - 1)
+      values.base_url = values.base_url.slice(0, values.base_url.length - 1);
     }
     if (values.type === 3 && values.other === '') {
-      values.other = '2024-05-01-preview'
+      values.other = '2024-05-01-preview';
     }
     if (values.type === 18 && values.other === '') {
-      values.other = 'v2.1'
+      values.other = 'v2.1';
     }
-    let res
+    let res;
 
-    let modelMappingModel = []
+    let modelMappingModel = [];
 
     if (values.model_mapping) {
       try {
         const modelMapping = values.model_mapping.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value
+            acc[item.key] = item.value;
           }
-          return acc
-        }, {})
-        const cleanedMapping = {}
+          return acc;
+        }, {});
+        const cleanedMapping = {};
 
         for (const [key, value] of Object.entries(modelMapping)) {
           if (key && value && !(key in cleanedMapping)) {
-            cleanedMapping[key] = value
-            modelMappingModel.push(key)
+            cleanedMapping[key] = value;
+            modelMappingModel.push(key);
           }
         }
 
-        values.model_mapping = JSON.stringify(cleanedMapping, null, 2)
+        values.model_mapping = JSON.stringify(cleanedMapping, null, 2);
       } catch (error) {
-        showError('Error parsing model_mapping:' + error.message)
+        showError('Error parsing model_mapping:' + error.message);
       }
     }
-    let modelHeadersKey = []
+    let modelHeadersKey = [];
 
     if (values.model_headers) {
       try {
         const modelHeader = values.model_headers.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value
+            acc[item.key] = item.value;
           }
-          return acc
-        }, {})
-        const cleanedHeader = {}
+          return acc;
+        }, {});
+        const cleanedHeader = {};
 
         for (const [key, value] of Object.entries(modelHeader)) {
           if (key && value && !(key in cleanedHeader)) {
-            cleanedHeader[key] = value
-            modelHeadersKey.push(key)
+            cleanedHeader[key] = value;
+            modelHeadersKey.push(key);
           }
         }
 
@@ -515,25 +515,12 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.name}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText
-                        id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
+                      <FormHelperText id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
-                {channelId === 0 && (
-                  <Container
-                    sx={{
-                      textAlign: 'right'
-                    }}
-                  >
-                    <Switch checked={Boolean(batchAdd)} onChange={(e) => setBatchAdd(e.target.checked)}/>
-                    {t('channel_edit.batchAdd')}
-                  </Container>
-                )}
-
                 {inputPrompt.base_url && (
-                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)}
-                               sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)} sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-base_url-label">{customizeT(inputLabel.base_url)}</InputLabel>
                     <OutlinedInput
                       id="channel-base_url-label"
@@ -552,15 +539,13 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.base_url}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText
-                        id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
+                      <FormHelperText id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
 
                 {inputPrompt.other && (
-                  <FormControl fullWidth error={Boolean(touched.other && errors.other)}
-                               sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.other && errors.other)} sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-other-label">{customizeT(inputLabel.other)}</InputLabel>
                     <OutlinedInput
                       id="channel-other-label"
@@ -835,7 +820,21 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       {errors.key}
                     </FormHelperText>
                   ) : (
-                    <FormHelperText id="helper-tex-channel-key-label"> {customizeT(inputPrompt.key)} </FormHelperText>
+                    <FormHelperText id="helper-tex-channel-key-label">
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{customizeT(inputPrompt.key)}</span>
+                        {channelId === 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Switch
+                              size="small"
+                              checked={Boolean(batchAdd)}
+                              onChange={(e) => setBatchAdd(e.target.checked)}
+                            />
+                            <Typography variant="body2">{t('channel_edit.batchAdd')}</Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </FormHelperText>
                   )}
                 </FormControl>
 
