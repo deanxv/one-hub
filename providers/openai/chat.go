@@ -26,6 +26,11 @@ type OpenAIStreamHandler struct {
 func (p *OpenAIProvider) CreateChatCompletion(request *types.ChatCompletionRequest) (openaiResponse *types.ChatCompletionResponse, errWithCode *types.OpenAIErrorWithStatusCode) {
 	otherProcessing(request, p.GetOtherArg())
 
+	// 对于自定义渠道，过滤空content的消息以保持与其他渠道一致的行为
+	if p.Channel.Type == config.ChannelTypeCustom {
+		request.Messages = common.FilterEmptyContentMessages(request.Messages)
+	}
+
 	req, errWithCode := p.GetRequestTextBody(config.RelayModeChatCompletions, request.Model, request)
 	if errWithCode != nil {
 		return nil, errWithCode
@@ -69,6 +74,12 @@ func (p *OpenAIProvider) CreateChatCompletion(request *types.ChatCompletionReque
 
 func (p *OpenAIProvider) CreateChatCompletionStream(request *types.ChatCompletionRequest) (requester.StreamReaderInterface[string], *types.OpenAIErrorWithStatusCode) {
 	otherProcessing(request, p.GetOtherArg())
+
+	// 对于自定义渠道，过滤空content的消息以保持与其他渠道一致的行为
+	if p.Channel.Type == config.ChannelTypeCustom {
+		request.Messages = common.FilterEmptyContentMessages(request.Messages)
+	}
+
 	streamOptions := request.StreamOptions
 	// 如果支持流式返回Usage 则需要更改配置：
 	if p.SupportStreamOptions {
@@ -162,8 +173,14 @@ func (h *OpenAIStreamHandler) HandlerChatStream(rawLine *[]byte, dataChan chan s
 			if h.Usage.TotalTokens == 0 {
 				h.Usage.TotalTokens = h.Usage.PromptTokens
 			}
-			h.Usage.TextBuilder.WriteString(openaiResponse.GetResponseText())
 		}
+	}
+
+	// 始终累积流式内容到 TextBuilder，用于流中断时的 token 计算备用
+	// 即使上游返回了 Usage 信息，流中断时最终的 Usage 可能不完整
+	responseText := openaiResponse.GetResponseText()
+	if responseText != "" {
+		h.Usage.TextBuilder.WriteString(responseText)
 	}
 
 	if h.ReasoningHandler && len(openaiResponse.Choices) > 0 {

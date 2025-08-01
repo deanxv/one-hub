@@ -1,55 +1,55 @@
-import PropTypes from 'prop-types';
-import { useState, useEffect, useRef } from 'react';
-import { CHANNEL_OPTIONS } from 'constants/ChannelConstants';
-import { useTheme } from '@mui/material/styles';
-import { API } from 'utils/api';
-import { showError, showSuccess, trims, copy } from 'utils/common';
+import PropTypes from 'prop-types'
+import { useEffect, useRef, useState } from 'react'
+import { CHANNEL_OPTIONS } from 'constants/ChannelConstants'
+import { useTheme } from '@mui/material/styles'
+import { API } from 'utils/api'
+import { copy, showError, showSuccess, trims } from 'utils/common'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Divider,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  ButtonGroup,
-  Container,
   Autocomplete,
-  FormHelperText,
-  Checkbox,
-  Switch,
-  FormControlLabel,
-  Typography,
-  Tooltip,
-  Collapse,
   Box,
+  Button,
+  ButtonGroup,
+  Checkbox,
   Chip,
+  Collapse,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
   useMediaQuery
-} from '@mui/material';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { defaultConfig, typeConfig } from '../type/Config'; //typeConfig
-import { createFilterOptions } from '@mui/material/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { useTranslation } from 'react-i18next';
-import useCustomizeT from 'hooks/useCustomizeT';
-import { PreCostType } from '../type/other';
-import MapInput from './MapInput';
-import ListInput from './ListInput';
-import ModelSelectorModal from './ModelSelectorModal';
-import pluginList from '../type/Plugin.json';
-import { Icon } from '@iconify/react';
+} from '@mui/material'
+import { Formik } from 'formik'
+import * as Yup from 'yup'
+import { defaultConfig, typeConfig } from '../type/Config' //typeConfig
+import { createFilterOptions } from '@mui/material/Autocomplete'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import { useTranslation } from 'react-i18next'
+import useCustomizeT from 'hooks/useCustomizeT'
+import { PreCostType } from '../type/other'
+import MapInput from './MapInput'
+import ListInput from './ListInput'
+import ModelSelectorModal from './ModelSelectorModal'
+import pluginList from '../type/Plugin.json'
+import { Icon } from '@iconify/react'
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>
+const checkedIcon = <CheckBoxIcon fontSize="small"/>
 
-const filter = createFilterOptions();
+const filter = createFilterOptions()
 const getValidationSchema = (t) =>
   Yup.object().shape({
     is_edit: Yup.boolean(),
@@ -70,62 +70,62 @@ const getValidationSchema = (t) =>
     model_mapping: Yup.array(),
     model_headers: Yup.array(),
     custom_parameter: Yup.string().nullable()
-  });
+  })
 
 const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, modelOptions, prices }) => {
-  const { t } = useTranslation();
-  const { t: customizeT } = useCustomizeT();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t } = useTranslation()
+  const { t: customizeT } = useCustomizeT()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   // const [loading, setLoading] = useState(false);
-  const [initialInput, setInitialInput] = useState(defaultConfig.input);
-  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel); //
-  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt);
-  const [batchAdd, setBatchAdd] = useState(false);
-  const [hasTag, setHasTag] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [parameterFocused, setParameterFocused] = useState(false);
-  const parameterInputRef = useRef(null);
-  const removeDuplicates = (array) => [...new Set(array)];
-  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
-  const [tempFormikValues, setTempFormikValues] = useState(null);
-  const [tempSetFieldValue, setTempSetFieldValue] = useState(null);
+  const [initialInput, setInitialInput] = useState(defaultConfig.input)
+  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel) //
+  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt)
+  const [batchAdd, setBatchAdd] = useState(false)
+  const [hasTag, setHasTag] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [parameterFocused, setParameterFocused] = useState(false)
+  const parameterInputRef = useRef(null)
+  const removeDuplicates = (array) => [...new Set(array)]
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false)
+  const [tempFormikValues, setTempFormikValues] = useState(null)
+  const [tempSetFieldValue, setTempSetFieldValue] = useState(null)
 
   const initChannel = (typeValue) => {
     if (typeConfig[typeValue]?.inputLabel) {
-      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel });
+      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel })
     } else {
-      setInputLabel(defaultConfig.inputLabel);
+      setInputLabel(defaultConfig.inputLabel)
     }
 
     if (typeConfig[typeValue]?.prompt) {
-      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt });
+      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt })
     } else {
-      setInputPrompt(defaultConfig.prompt);
+      setInputPrompt(defaultConfig.prompt)
     }
 
-    return typeConfig[typeValue]?.input;
-  };
+    return typeConfig[typeValue]?.input
+  }
 
   const handleTypeChange = (setFieldValue, typeValue, values) => {
     // 处理插件事务
     if (pluginList[typeValue]) {
-      const newPluginValues = {};
-      const pluginConfig = pluginList[typeValue];
+      const newPluginValues = {}
+      const pluginConfig = pluginList[typeValue]
       for (const pluginName in pluginConfig) {
-        const plugin = pluginConfig[pluginName];
-        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {};
-        newPluginValues[pluginName] = {};
+        const plugin = pluginConfig[pluginName]
+        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {}
+        newPluginValues[pluginName] = {}
         for (const paramName in plugin.params) {
-          const param = plugin.params[paramName];
-          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '');
+          const param = plugin.params[paramName]
+          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '')
         }
       }
-      setFieldValue('plugin', newPluginValues);
+      setFieldValue('plugin', newPluginValues)
     }
 
-    const newInput = initChannel(typeValue);
+    const newInput = initChannel(typeValue)
 
     if (newInput) {
       Object.keys(newInput).forEach((key) => {
@@ -133,303 +133,306 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
           (!Array.isArray(values[key]) && values[key] !== null && values[key] !== undefined && values[key] !== '') ||
           (Array.isArray(values[key]) && values[key].length > 0)
         ) {
-          return;
+          return
         }
 
         if (key === 'models') {
-          setFieldValue(key, initialModel(newInput[key]));
-          return;
+          setFieldValue(key, initialModel(newInput[key]))
+          return
         }
-        setFieldValue(key, newInput[key]);
-      });
+        setFieldValue(key, newInput[key])
+      })
     }
-  };
+  }
 
   const basicModels = (channelType) => {
-    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup;
+    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup
     // 循环 modelOptions，找到 modelGroup 对应的模型
-    let modelList = [];
+    let modelList = []
     modelOptions.forEach((model) => {
       if (model.group === modelGroup) {
-        modelList.push(model);
+        modelList.push(model)
       }
-    });
-    return modelList;
-  };
+    })
+    return modelList
+  }
 
   const handleModelSelectorConfirm = (selectedModels, overwriteModels) => {
     if (tempSetFieldValue && tempFormikValues) {
       if (overwriteModels) {
         // 覆盖模式：清空现有的模型列表，使用选择器中的模型
-        tempSetFieldValue('models', selectedModels);
+        tempSetFieldValue('models', selectedModels)
       } else {
         // 追加模式：合并现有模型和新选择的模型，避免重复
-        const existingModels = tempFormikValues.models || [];
-        const existingModelIds = new Set(existingModels.map((model) => model.id));
+        const existingModels = tempFormikValues.models || []
+        const existingModelIds = new Set(existingModels.map((model) => model.id))
 
         // 过滤掉已存在的模型，避免重复
-        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id));
+        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id))
 
         // 合并模型列表
-        tempSetFieldValue('models', [...existingModels, ...newModels]);
+        tempSetFieldValue('models', [...existingModels, ...newModels])
       }
     }
-  };
+  }
 
-  const submit = async (values, { setErrors, setStatus, setSubmitting }) => {
-    setSubmitting(true);
-    values = trims(values);
+  const submit = async(values, { setErrors, setStatus, setSubmitting }) => {
+    setSubmitting(true)
+    values = trims(values)
     if (values.base_url && values.base_url.endsWith('/')) {
-      values.base_url = values.base_url.slice(0, values.base_url.length - 1);
+      values.base_url = values.base_url.slice(0, values.base_url.length - 1)
     }
     if (values.type === 3 && values.other === '') {
-      values.other = '2024-05-01-preview';
+      values.other = '2024-05-01-preview'
     }
     if (values.type === 18 && values.other === '') {
-      values.other = 'v2.1';
+      values.other = 'v2.1'
     }
-    let res;
+    let res
 
-    let modelMappingModel = [];
+    let modelMappingModel = []
 
     if (values.model_mapping) {
       try {
         const modelMapping = values.model_mapping.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value;
+            acc[item.key] = item.value
           }
-          return acc;
-        }, {});
-        const cleanedMapping = {};
+          return acc
+        }, {})
+        const cleanedMapping = {}
 
         for (const [key, value] of Object.entries(modelMapping)) {
           if (key && value && !(key in cleanedMapping)) {
-            cleanedMapping[key] = value;
-            modelMappingModel.push(key);
+            cleanedMapping[key] = value
+            modelMappingModel.push(key)
           }
         }
 
-        values.model_mapping = JSON.stringify(cleanedMapping, null, 2);
+        values.model_mapping = JSON.stringify(cleanedMapping, null, 2)
       } catch (error) {
-        showError('Error parsing model_mapping:' + error.message);
+        showError('Error parsing model_mapping:' + error.message)
       }
     }
-    let modelHeadersKey = [];
+    let modelHeadersKey = []
 
     if (values.model_headers) {
       try {
         const modelHeader = values.model_headers.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value;
+            acc[item.key] = item.value
           }
-          return acc;
-        }, {});
-        const cleanedHeader = {};
+          return acc
+        }, {})
+        const cleanedHeader = {}
 
         for (const [key, value] of Object.entries(modelHeader)) {
           if (key && value && !(key in cleanedHeader)) {
-            cleanedHeader[key] = value;
-            modelHeadersKey.push(key);
+            cleanedHeader[key] = value
+            modelHeadersKey.push(key)
           }
         }
 
-        values.model_headers = JSON.stringify(cleanedHeader, null, 2);
+        values.model_headers = JSON.stringify(cleanedHeader, null, 2)
       } catch (error) {
-        showError('Error parsing model_headers:' + error.message);
+        showError('Error parsing model_headers:' + error.message)
       }
     }
 
     if (values.custom_parameter) {
       try {
         // Validate that the custom_parameter is valid JSON
-        JSON.parse(values.custom_parameter);
+        JSON.parse(values.custom_parameter)
       } catch (error) {
-        showError('Error parsing custom_parameter: ' + error.message);
-        return;
+        showError('Error parsing custom_parameter: ' + error.message)
+        return
       }
     }
 
     if (values.disabled_stream) {
-      values.disabled_stream = removeDuplicates(values.disabled_stream);
+      values.disabled_stream = removeDuplicates(values.disabled_stream)
     }
 
     // 获取现有的模型 ID
-    const existingModelIds = values.models.map((model) => model.id);
+    const existingModelIds = values.models.map((model) => model.id)
 
     // 找出在 modelMappingModel 中存在但不在 existingModelIds 中的模型
-    const newModelIds = modelMappingModel.filter((id) => !existingModelIds.includes(id));
+    const newModelIds = modelMappingModel.filter((id) => !existingModelIds.includes(id))
 
     // 合并现有的模型 ID 和新的模型 ID，并去重
-    const allUniqueModelIds = Array.from(new Set([...existingModelIds, ...newModelIds]));
+    const allUniqueModelIds = Array.from(new Set([...existingModelIds, ...newModelIds]))
 
     // 创建新的 modelsStr
-    const modelsStr = allUniqueModelIds.join(',');
-    values.group = values.groups.join(',');
+    const modelsStr = allUniqueModelIds.join(',')
+    values.group = values.groups.join(',')
 
-    let baseApiUrl = '/api/channel/';
+    let baseApiUrl = '/api/channel/'
 
     if (isTag) {
-      baseApiUrl = '/api/channel_tag/' + encodeURIComponent(channelId);
+      baseApiUrl = '/api/channel_tag/' + encodeURIComponent(channelId)
     }
 
     try {
       if (channelId) {
-        res = await API.put(baseApiUrl, { ...values, id: parseInt(channelId), models: modelsStr });
+        res = await API.put(baseApiUrl, { ...values, id: parseInt(channelId), models: modelsStr })
       } else {
-        res = await API.post(baseApiUrl, { ...values, models: modelsStr });
+        res = await API.post(baseApiUrl, { ...values, models: modelsStr })
       }
-      const { success, message } = res.data;
+      const { success, message } = res.data
       if (success) {
         if (channelId) {
-          showSuccess(t('channel_edit.editSuccess'));
+          showSuccess(t('channel_edit.editSuccess'))
         } else {
-          showSuccess(t('channel_edit.addSuccess'));
+          showSuccess(t('channel_edit.addSuccess'))
         }
-        setSubmitting(false);
-        setStatus({ success: true });
-        onOk(true);
-        return;
+        setSubmitting(false)
+        setStatus({ success: true })
+        onOk(true)
+
       } else {
-        setStatus({ success: false });
-        showError(message);
-        setErrors({ submit: message });
+        setStatus({ success: false })
+        showError(message)
+        setErrors({ submit: message })
       }
     } catch (error) {
-      setStatus({ success: false });
-      showError(error.message);
-      setErrors({ submit: error.message });
-      return;
+      setStatus({ success: false })
+      showError(error.message)
+      setErrors({ submit: error.message })
+
     }
-  };
+  }
 
   function initialModel(channelModel) {
     if (!channelModel) {
-      return [];
+      return []
     }
 
     // 如果 channelModel 是一个字符串
     if (typeof channelModel === 'string') {
-      channelModel = channelModel.split(',');
+      channelModel = channelModel.split(',')
     }
     let modelList = channelModel.map((model) => {
-      const modelOption = modelOptions.find((option) => option.id === model);
+      const modelOption = modelOptions.find((option) => option.id === model)
       if (modelOption) {
-        return modelOption;
+        return modelOption
       }
-      return { id: model, group: t('channel_edit.customModelTip') };
-    });
-    return modelList;
+      return { id: model, group: t('channel_edit.customModelTip') }
+    })
+    return modelList
   }
 
-  const loadChannel = async () => {
+  const loadChannel = async() => {
     try {
-      let baseApiUrl = `/api/channel/${channelId}`;
+      let baseApiUrl = `/api/channel/${channelId}`
 
       if (isTag) {
-        baseApiUrl = '/api/channel_tag/' + encodeURIComponent(channelId);
+        baseApiUrl = '/api/channel_tag/' + encodeURIComponent(channelId)
       }
 
-      let res = await API.get(baseApiUrl);
-      const { success, message, data } = res.data;
+      let res = await API.get(baseApiUrl)
+      const { success, message, data } = res.data
       if (success) {
         if (data.models === '') {
-          data.models = [];
+          data.models = []
         } else {
-          data.models = initialModel(data.models);
+          data.models = initialModel(data.models)
         }
         if (data.group === '') {
-          data.groups = [];
+          data.groups = []
         } else {
-          data.groups = data.group.split(',');
+          data.groups = data.group.split(',')
         }
 
         data.model_mapping =
           data.model_mapping !== ''
             ? Object.entries(JSON.parse(data.model_mapping)).map(([key, value], index) => ({
-                index,
-                key,
-                value
-              }))
-            : [];
+              index,
+              key,
+              value
+            }))
+            : []
         // if (data.model_headers) {
         data.model_headers =
           data.model_headers !== ''
             ? Object.entries(JSON.parse(data.model_headers)).map(([key, value], index) => ({
-                index,
-                key,
-                value
-              }))
-            : [];
+              index,
+              key,
+              value
+            }))
+            : []
         // }
 
         // Format the custom_parameter JSON for better readability if it's not empty
         if (data.custom_parameter !== '') {
           try {
             // Parse and then stringify with indentation for formatting
-            const parsedJson = JSON.parse(data.custom_parameter);
-            data.custom_parameter = JSON.stringify(parsedJson, null, 2);
+            const parsedJson = JSON.parse(data.custom_parameter)
+            data.custom_parameter = JSON.stringify(parsedJson, null, 2)
           } catch (error) {
             // If parsing fails, keep the original string
-            console.log('Error parsing custom_parameter JSON:', error);
+            console.log('Error parsing custom_parameter JSON:', error)
           }
         } else {
-          data.custom_parameter = '';
+          data.custom_parameter = ''
         }
 
-        data.base_url = data.base_url ?? '';
-        data.is_edit = true;
+        data.base_url = data.base_url ?? ''
+        data.is_edit = true
         if (data.plugin === null) {
-          data.plugin = {};
+          data.plugin = {}
         }
-        initChannel(data.type);
-        setInitialInput(data);
+        initChannel(data.type)
+        setInitialInput(data)
 
         if (!isTag && data.tag) {
-          setHasTag(true);
+          setHasTag(true)
         }
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      return;
+
     }
-  };
+  }
 
   useEffect(() => {
     if (open) {
-      setBatchAdd(isTag);
+      setBatchAdd(isTag)
       if (channelId) {
-        loadChannel().then();
+        loadChannel().then()
       } else {
-        setHasTag(false);
-        initChannel(1);
-        setInitialInput({ ...defaultConfig.input, is_edit: false });
+        setHasTag(false)
+        initChannel(1)
+        setInitialInput({ ...defaultConfig.input, is_edit: false })
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelId, open]);
+  }, [channelId, open])
 
   return (
     <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
-      <DialogTitle sx={{ margin: '0px', fontWeight: 700, lineHeight: '1.55556', padding: '24px', fontSize: '1.125rem' }}>
+      <DialogTitle
+        sx={{ margin: '0px', fontWeight: 700, lineHeight: '1.55556', padding: '24px', fontSize: '1.125rem' }}>
         {channelId ? t('common.edit') : t('common.create')}
       </DialogTitle>
-      <Divider />
+      <Divider/>
       <DialogContent>
-        <Formik initialValues={initialInput} enableReinitialize validationSchema={getValidationSchema(t)} onSubmit={submit}>
+        <Formik initialValues={initialInput} enableReinitialize validationSchema={getValidationSchema(t)}
+                onSubmit={submit}>
           {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values, setFieldValue }) => {
             // 保存当前Formik状态，以便在模型选择器中使用
             const openModelSelector = () => {
-              setTempFormikValues({ ...values });
-              setTempSetFieldValue(() => setFieldValue); // 保存函数引用
-              setModelSelectorOpen(true);
-            };
+              setTempFormikValues({ ...values })
+              setTempSetFieldValue(() => setFieldValue) // 保存函数引用
+              setModelSelectorOpen(true)
+            }
 
             return (
               <form noValidate onSubmit={handleSubmit}>
                 {!isTag && (
-                  <FormControl fullWidth error={Boolean(touched.type && errors.type)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.type && errors.type)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-type-label">{customizeT(inputLabel.type)}</InputLabel>
                     <Select
                       id="channel-type-label"
@@ -438,8 +441,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       name="type"
                       onBlur={handleBlur}
                       onChange={(e) => {
-                        handleChange(e);
-                        handleTypeChange(setFieldValue, e.target.value, values);
+                        handleChange(e)
+                        handleTypeChange(setFieldValue, e.target.value, values)
                       }}
                       disabled={hasTag}
                       MenuProps={{
@@ -455,7 +458,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           <MenuItem key={option.value} value={option.value}>
                             {option.text}
                           </MenuItem>
-                        );
+                        )
                       })}
                     </Select>
                     {touched.type && errors.type ? (
@@ -463,12 +466,14 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.type}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-type-label"> {customizeT(inputPrompt.type)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-type-label"> {customizeT(inputPrompt.type)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
 
-                <FormControl fullWidth error={Boolean(touched.tag && errors.tag)} sx={{ ...theme.typography.otherInput }}>
+                <FormControl fullWidth error={Boolean(touched.tag && errors.tag)}
+                             sx={{ ...theme.typography.otherInput }}>
                   <InputLabel htmlFor="channel-tag-label">{customizeT(inputLabel.tag)}</InputLabel>
                   <OutlinedInput
                     id="channel-tag-label"
@@ -491,7 +496,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                 </FormControl>
 
                 {!isTag && (
-                  <FormControl fullWidth error={Boolean(touched.name && errors.name)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.name && errors.name)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-name-label">{customizeT(inputLabel.name)}</InputLabel>
                     <OutlinedInput
                       id="channel-name-label"
@@ -509,7 +515,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.name}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -519,13 +526,14 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       textAlign: 'right'
                     }}
                   >
-                    <Switch checked={Boolean(batchAdd)} onChange={(e) => setBatchAdd(e.target.checked)} />
+                    <Switch checked={Boolean(batchAdd)} onChange={(e) => setBatchAdd(e.target.checked)}/>
                     {t('channel_edit.batchAdd')}
                   </Container>
                 )}
 
                 {inputPrompt.base_url && (
-                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-base_url-label">{customizeT(inputLabel.base_url)}</InputLabel>
                     <OutlinedInput
                       id="channel-base_url-label"
@@ -544,13 +552,15 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.base_url}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
 
                 {inputPrompt.other && (
-                  <FormControl fullWidth error={Boolean(touched.other && errors.other)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.other && errors.other)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-other-label">{customizeT(inputLabel.other)}</InputLabel>
                     <OutlinedInput
                       id="channel-other-label"
@@ -569,7 +579,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.other}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-other-label"> {customizeT(inputPrompt.other)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-other-label"> {customizeT(inputPrompt.other)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -587,13 +598,14 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           name: 'groups',
                           value: value
                         }
-                      };
-                      handleChange(event);
+                      }
+                      handleChange(event)
                     }}
                     onBlur={handleBlur}
                     filterSelectedOptions
                     renderInput={(params) => (
-                      <TextField {...params} name="groups" error={Boolean(errors.groups)} label={customizeT(inputLabel.groups)} />
+                      <TextField {...params} name="groups" error={Boolean(errors.groups)}
+                                 label={customizeT(inputLabel.groups)}/>
                     )}
                     aria-describedby="helper-text-channel-groups-label"
                   />
@@ -602,7 +614,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       {errors.groups}
                     </FormHelperText>
                   ) : (
-                    <FormHelperText id="helper-tex-channel-groups-label"> {customizeT(inputPrompt.groups)} </FormHelperText>
+                    <FormHelperText
+                      id="helper-tex-channel-groups-label"> {customizeT(inputPrompt.groups)} </FormHelperText>
                   )}
                 </FormControl>
 
@@ -625,19 +638,19 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                               id: item.trim(),
                               group: t('channel_edit.customModelTip')
                             }))
-                            .filter((item) => item.id);
+                            .filter((item) => item.id)
 
-                          const updatedModels = [...new Set([...values.models, ...modelsList])];
+                          const updatedModels = [...new Set([...values.models, ...modelsList])]
                           const event = {
                             target: {
                               name: 'models',
                               value: updatedModels
                             }
-                          };
-                          handleChange(event);
-                          setInputValue('');
+                          }
+                          handleChange(event)
+                          setInputValue('')
                         } else {
-                          setInputValue(newInputValue);
+                          setInputValue(newInputValue)
                         }
                       }}
                       onChange={(e, value) => {
@@ -648,8 +661,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                               typeof item === 'string' ? { id: item, group: t('channel_edit.customModelTip') } : item
                             )
                           }
-                        };
-                        handleChange(event);
+                        }
+                        handleChange(event)
                       }}
                       renderInput={(params) => (
                         <TextField
@@ -665,34 +678,35 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       groupBy={(option) => option.group}
                       getOptionLabel={(option) => {
                         if (typeof option === 'string') {
-                          return option;
+                          return option
                         }
                         if (option.inputValue) {
-                          return option.inputValue;
+                          return option.inputValue
                         }
-                        return option.id;
+                        return option.id
                       }}
                       filterOptions={(options, params) => {
-                        const filtered = filter(options, params);
-                        const { inputValue } = params;
-                        const isExisting = options.some((option) => inputValue === option.id);
+                        const filtered = filter(options, params)
+                        const { inputValue } = params
+                        const isExisting = options.some((option) => inputValue === option.id)
                         if (inputValue !== '' && !isExisting) {
                           filtered.push({
                             id: inputValue,
                             group: t('channel_edit.customModelTip')
-                          });
+                          })
                         }
-                        return filtered;
+                        return filtered
                       }}
                       renderOption={(props, option, { selected }) => (
                         <li {...props}>
-                          <Checkbox icon={icon} checkedIcon={checkedIcon} style={{ marginRight: 8 }} checked={selected} />
+                          <Checkbox icon={icon} checkedIcon={checkedIcon} style={{ marginRight: 8 }}
+                                    checked={selected}/>
                           {option.id}
                         </li>
                       )}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => {
-                          const tagProps = getTagProps({ index });
+                          const tagProps = getTagProps({ index })
                           return (
                             <Chip
                               key={index}
@@ -715,7 +729,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                                 }
                               }}
                             />
-                          );
+                          )
                         })
                       }
                       sx={{
@@ -733,7 +747,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       {errors.models}
                     </FormHelperText>
                   ) : (
-                    <FormHelperText id="helper-tex-channel-models-label"> {customizeT(inputPrompt.models)} </FormHelperText>
+                    <FormHelperText
+                      id="helper-tex-channel-models-label"> {customizeT(inputPrompt.models)} </FormHelperText>
                   )}
                 </FormControl>
                 <Container
@@ -745,20 +760,20 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                     <Button
                       size="small"
                       onClick={() => {
-                        const modelString = values.models.map((model) => model.id).join(',');
-                        copy(modelString);
+                        const modelString = values.models.map((model) => model.id).join(',')
+                        copy(modelString)
                       }}
                     >
-                      {isMobile ? <Icon icon="mdi:content-copy" /> : t('channel_edit.copyModels')}
+                      {isMobile ? <Icon icon="mdi:content-copy"/> : t('channel_edit.copyModels')}
                     </Button>
                     <Button
                       disabled={hasTag}
                       size="small"
                       onClick={() => {
-                        setFieldValue('models', basicModels(values.type));
+                        setFieldValue('models', basicModels(values.type))
                       }}
                     >
-                      {isMobile ? <Icon icon="mdi:playlist-plus" /> : t('channel_edit.inputChannelModel')}
+                      {isMobile ? <Icon icon="mdi:playlist-plus"/> : t('channel_edit.inputChannelModel')}
                     </Button>
                     {/* <Button
                       disabled={hasTag}
@@ -775,15 +790,16 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           disabled={hasTag}
                           size="small"
                           onClick={openModelSelector}
-                          startIcon={!isMobile && <Icon icon="mdi:cloud-download" />}
+                          startIcon={!isMobile && <Icon icon="mdi:cloud-download"/>}
                         >
-                          {isMobile ? <Icon icon="mdi:cloud-download" /> : customizeT(inputLabel.provider_models_list)}
+                          {isMobile ? <Icon icon="mdi:cloud-download"/> : customizeT(inputLabel.provider_models_list)}
                         </Button>
                       </Tooltip>
                     )}
                   </ButtonGroup>
                 </Container>
-                <FormControl fullWidth error={Boolean(touched.key && errors.key)} sx={{ ...theme.typography.otherInput }}>
+                <FormControl fullWidth error={Boolean(touched.key && errors.key)}
+                             sx={{ ...theme.typography.otherInput }}>
                   {!batchAdd ? (
                     <>
                       <InputLabel htmlFor="channel-key-label">{customizeT(inputLabel.key)}</InputLabel>
@@ -832,7 +848,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                     <MapInput
                       mapValue={values.model_mapping}
                       onChange={(newValue) => {
-                        setFieldValue('model_mapping', newValue);
+                        setFieldValue('model_mapping', newValue)
                       }}
                       disabled={hasTag}
                       error={Boolean(touched.model_mapping && errors.model_mapping)}
@@ -847,7 +863,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.model_mapping}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-model_mapping-label">{customizeT(inputPrompt.model_mapping)}</FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-model_mapping-label">{customizeT(inputPrompt.model_mapping)}</FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -860,7 +877,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                     <MapInput
                       mapValue={values.model_headers}
                       onChange={(newValue) => {
-                        setFieldValue('model_headers', newValue);
+                        setFieldValue('model_headers', newValue)
                       }}
                       disabled={hasTag}
                       error={Boolean(touched.model_headers && errors.model_headers)}
@@ -875,7 +892,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.model_headers}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-model_headers-label">{customizeT(inputPrompt.model_headers)}</FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-model_headers-label">{customizeT(inputPrompt.model_headers)}</FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -897,17 +915,17 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       onChange={handleChange}
                       inputRef={parameterInputRef}
                       onBlur={(e) => {
-                        handleBlur(e);
-                        setParameterFocused(false);
+                        handleBlur(e)
+                        setParameterFocused(false)
                       }}
                       onFocus={() => {
-                        setParameterFocused(true);
+                        setParameterFocused(true)
                         // 使用setTimeout确保状态更新后重新聚焦
                         setTimeout(() => {
                           if (parameterInputRef.current) {
-                            parameterInputRef.current.focus();
+                            parameterInputRef.current.focus()
                           }
-                        }, 0);
+                        }, 0)
                       }}
                       placeholder={
                         parameterFocused
@@ -935,7 +953,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                     <ListInput
                       listValue={values.disabled_stream}
                       onChange={(newValue) => {
-                        setFieldValue('disabled_stream', newValue);
+                        setFieldValue('disabled_stream', newValue)
                       }}
                       disabled={hasTag}
                       error={Boolean(touched.disabled_stream && errors.disabled_stream)}
@@ -947,7 +965,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                   </FormControl>
                 )}
 
-                <FormControl fullWidth error={Boolean(touched.proxy && errors.proxy)} sx={{ ...theme.typography.otherInput }}>
+                <FormControl fullWidth error={Boolean(touched.proxy && errors.proxy)}
+                             sx={{ ...theme.typography.otherInput }}>
                   <InputLabel htmlFor="channel-proxy-label">{customizeT(inputLabel.proxy)}</InputLabel>
                   <OutlinedInput
                     id="channel-proxy-label"
@@ -966,11 +985,13 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       {errors.proxy}
                     </FormHelperText>
                   ) : (
-                    <FormHelperText id="helper-tex-channel-proxy-label"> {customizeT(inputPrompt.proxy)} </FormHelperText>
+                    <FormHelperText
+                      id="helper-tex-channel-proxy-label"> {customizeT(inputPrompt.proxy)} </FormHelperText>
                   )}
                 </FormControl>
                 {inputPrompt.test_model && (
-                  <FormControl fullWidth error={Boolean(touched.test_model && errors.test_model)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.test_model && errors.test_model)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-test_model-label">{customizeT(inputLabel.test_model)}</InputLabel>
                     <OutlinedInput
                       id="channel-test_model-label"
@@ -989,7 +1010,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.test_model}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-test_model-label"> {customizeT(inputPrompt.test_model)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-test_model-label"> {customizeT(inputPrompt.test_model)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -1001,17 +1023,20 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           disabled={hasTag}
                           checked={Boolean(values.only_chat)}
                           onChange={(event) => {
-                            setFieldValue('only_chat', event.target.checked);
+                            setFieldValue('only_chat', event.target.checked)
                           }}
                         />
                       }
                       label={customizeT(inputLabel.only_chat)}
                     />
-                    <FormHelperText id="helper-tex-only_chat_model-label"> {customizeT(inputPrompt.only_chat)} </FormHelperText>
+                    <FormHelperText
+                      id="helper-tex-only_chat_model-label"> {customizeT(inputPrompt.only_chat)} </FormHelperText>
                   </FormControl>
                 )}
+
                 {inputPrompt.pre_cost && (
-                  <FormControl fullWidth error={Boolean(touched.pre_cost && errors.pre_cost)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.pre_cost && errors.pre_cost)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-pre_cost-label">{customizeT(inputLabel.pre_cost)}</InputLabel>
                     <Select
                       id="channel-pre_cost-label"
@@ -1034,7 +1059,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           <MenuItem key={option.value} value={option.value}>
                             {option.label}
                           </MenuItem>
-                        );
+                        )
                       })}
                     </Select>
                     {touched.pre_cost && errors.pre_cost ? (
@@ -1042,7 +1067,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.pre_cost}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-pre_cost-label"> {customizeT(inputPrompt.pre_cost)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-pre_cost-label"> {customizeT(inputPrompt.pre_cost)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
@@ -1054,7 +1080,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           disabled={hasTag}
                           checked={Boolean(values.compatible_response)}
                           onChange={(event) => {
-                            setFieldValue('compatible_response', event.target.checked);
+                            setFieldValue('compatible_response', event.target.checked)
                           }}
                         />
                       }
@@ -1065,7 +1091,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                 )}
                 {pluginList[values.type] &&
                   Object.keys(pluginList[values.type]).map((pluginId) => {
-                    const plugin = pluginList[values.type][pluginId];
+                    const plugin = pluginList[values.type][pluginId]
                     return (
                       <>
                         <Box
@@ -1093,9 +1119,9 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                               onClick={() => setExpanded(!expanded)}
                               endIcon={
                                 expanded ? (
-                                  <Icon icon="solar:alt-arrow-up-line-duotone" />
+                                  <Icon icon="solar:alt-arrow-up-line-duotone"/>
                                 ) : (
-                                  <Icon icon="solar:alt-arrow-down-line-duotone" />
+                                  <Icon icon="solar:alt-arrow-down-line-duotone"/>
                                 )
                               }
                               sx={{ textTransform: 'none', marginLeft: 2 }}
@@ -1107,8 +1133,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                           <Collapse in={expanded}>
                             <Box sx={{ padding: 2, marginTop: -3 }}>
                               {Object.keys(plugin.params).map((paramId) => {
-                                const param = plugin.params[paramId];
-                                const name = `plugin.${pluginId}.${paramId}`;
+                                const param = plugin.params[paramId]
+                                const name = `plugin.${pluginId}.${paramId}`
                                 return param.type === 'bool' ? (
                                   <FormControl key={name} fullWidth sx={{ ...theme.typography.otherInput }}>
                                     <FormControlLabel
@@ -1121,13 +1147,14 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                                           disabled={hasTag}
                                           checked={values.plugin?.[pluginId]?.[paramId] || false}
                                           onChange={(event) => {
-                                            setFieldValue(name, event.target.checked);
+                                            setFieldValue(name, event.target.checked)
                                           }}
                                         />
                                       }
                                       label={t('channel_edit.isEnable')}
                                     />
-                                    <FormHelperText id="helper-tex-channel-key-label"> {customizeT(param.description)} </FormHelperText>
+                                    <FormHelperText
+                                      id="helper-tex-channel-key-label"> {customizeT(param.description)} </FormHelperText>
                                   </FormControl>
                                 ) : (
                                   <FormControl key={name} fullWidth sx={{ ...theme.typography.otherInput }}>
@@ -1141,15 +1168,16 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                                       placeholder={customizeT(param.description)}
                                       onChange={handleChange}
                                     />
-                                    <FormHelperText id="helper-tex-channel-key-label"> {customizeT(param.description)} </FormHelperText>
+                                    <FormHelperText
+                                      id="helper-tex-channel-key-label"> {customizeT(param.description)} </FormHelperText>
                                   </FormControl>
-                                );
+                                )
                               })}
                             </Box>
                           </Collapse>
                         </Box>
                       </>
-                    );
+                    )
                   })}
                 <DialogActions>
                   <Button onClick={onCancel}>{t('common.cancel')}</Button>
@@ -1158,7 +1186,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                   </Button>
                 </DialogActions>
               </form>
-            );
+            )
           }}
         </Formik>
 
@@ -1168,23 +1196,23 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
           onClose={() => setModelSelectorOpen(false)}
           onConfirm={(selectedModels, mappings, overwriteModels, overwriteMappings) => {
             // 处理普通模型选择
-            handleModelSelectorConfirm(selectedModels, overwriteModels);
+            handleModelSelectorConfirm(selectedModels, overwriteModels)
 
             // 处理映射关系
             if (mappings && mappings.length > 0) {
               if (overwriteMappings) {
                 // 覆盖映射模式：清空现有映射，使用新的
-                tempSetFieldValue('model_mapping', mappings);
+                tempSetFieldValue('model_mapping', mappings)
               } else {
                 // 追加映射模式：
-                const existingMappings = tempFormikValues?.model_mapping || [];
-                const existingKeys = new Set(existingMappings.map((item) => item.key));
-                const newMappings = mappings.filter((item) => !existingKeys.has(item.key));
+                const existingMappings = tempFormikValues?.model_mapping || []
+                const existingKeys = new Set(existingMappings.map((item) => item.key))
+                const newMappings = mappings.filter((item) => !existingKeys.has(item.key))
                 const mergedMappings = [...existingMappings, ...newMappings].map((item, index) => ({
                   ...item,
                   index
-                }));
-                tempSetFieldValue('model_mapping', mergedMappings);
+                }))
+                tempSetFieldValue('model_mapping', mergedMappings)
               }
             }
           }}
@@ -1193,10 +1221,10 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
         />
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default EditModal;
+export default EditModal
 
 EditModal.propTypes = {
   open: PropTypes.bool,
@@ -1207,4 +1235,4 @@ EditModal.propTypes = {
   isTag: PropTypes.bool,
   modelOptions: PropTypes.array,
   prices: PropTypes.array
-};
+}

@@ -320,10 +320,21 @@ func (p *BaseProvider) mergeCustomParams(requestMap map[string]interface{}, cust
 		}
 	}
 
+	// 处理参数删除
+	if removeParams, exists := customParamsModel["remove_params"]; exists {
+		if paramsList, ok := removeParams.([]interface{}); ok {
+			for _, param := range paramsList {
+				if paramName, ok := param.(string); ok {
+					delete(requestMap, paramName)
+				}
+			}
+		}
+	}
+
 	// 添加额外参数
 	for key, value := range customParamsModel {
 		// 忽略控制参数
-		if key == "stream" || key == "overwrite" || key == "per_model" {
+		if key == "stream" || key == "overwrite" || key == "per_model" || key == "remove_params" {
 			continue
 		}
 		// 根据覆盖设置决定如何添加参数

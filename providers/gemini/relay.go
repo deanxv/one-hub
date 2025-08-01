@@ -15,7 +15,7 @@ type GeminiRelayStreamHandler struct {
 	Prefix    string
 	ModelName string
 
-	key string
+	Key string
 }
 
 func (p *GeminiProvider) CreateGeminiChat(request *GeminiChatRequest) (*GeminiChatResponse, *types.OpenAIErrorWithStatusCode) {
@@ -56,7 +56,7 @@ func (p *GeminiProvider) CreateGeminiChatStream(request *GeminiChatRequest) (req
 		ModelName: request.Model,
 		Prefix:    `data: `,
 
-		key: channel.Key,
+		Key: channel.Key,
 	}
 
 	// 发送请求
@@ -92,7 +92,7 @@ func (h *GeminiRelayStreamHandler) HandlerStream(rawLine *[]byte, dataChan chan 
 	}
 
 	if geminiResponse.ErrorInfo != nil {
-		cleaningError(geminiResponse.ErrorInfo, h.key)
+		cleaningError(geminiResponse.ErrorInfo, h.Key)
 		errChan <- geminiResponse.ErrorInfo
 		return
 	}

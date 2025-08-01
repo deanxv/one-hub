@@ -124,6 +124,11 @@ func (p *OpenAIProvider) GetFullRequestURL(requestURL string, modelName string) 
 			requestURL += fmt.Sprintf("?model=%s", modelName)
 		}
 
+		// 处理 {model} 占位符替换（realtime 模式）
+		if strings.Contains(baseURL, "{model}") && modelName != "" {
+			baseURL = strings.ReplaceAll(baseURL, "{model}", modelName)
+		}
+
 		return fmt.Sprintf("%s%s", baseURL, requestURL)
 	}
 
@@ -158,6 +163,12 @@ func (p *OpenAIProvider) GetFullRequestURL(requestURL string, modelName string) 
 		} else {
 			requestURL = strings.TrimPrefix(requestURL, "/v1")
 		}
+	}
+
+	// 处理 {model} 占位符替换（适用于自定义渠道）
+	// 检查 baseURL 中是否包含 {model} 占位符，如果包含且 modelName 不为空，则进行替换
+	if strings.Contains(baseURL, "{model}") && modelName != "" {
+		baseURL = strings.ReplaceAll(baseURL, "{model}", modelName)
 	}
 
 	return fmt.Sprintf("%s%s", baseURL, requestURL)
@@ -214,10 +225,21 @@ func (p *OpenAIProvider) mergeCustomParams(requestMap map[string]interface{}, cu
 		}
 	}
 
+	// 处理参数删除
+	if removeParams, exists := customParamsModel["remove_params"]; exists {
+		if paramsList, ok := removeParams.([]interface{}); ok {
+			for _, param := range paramsList {
+				if paramName, ok := param.(string); ok {
+					delete(requestMap, paramName)
+				}
+			}
+		}
+	}
+
 	// 添加额外参数
 	for key, value := range customParamsModel {
-		// 忽略 keys "stream", "overwrite", and "per_model"
-		if key == "stream" || key == "overwrite" || key == "per_model" || key == "pre_add" {
+		// 忽略 keys "stream", "overwrite", "per_model", "pre_add", and "remove_params"
+		if key == "stream" || key == "overwrite" || key == "per_model" || key == "pre_add" || key == "remove_params" {
 			continue
 		}
 		// 根据覆盖设置决定如何添加参数

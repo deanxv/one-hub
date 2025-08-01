@@ -200,6 +200,7 @@ type GeminiPartCodeExecutionResult struct {
 type GeminiFunctionCall struct {
 	Name string                 `json:"name,omitempty"`
 	Args map[string]interface{} `json:"args,omitempty"`
+	Id   string                 `json:"-"` // 忽略 OpenAI 格式的 id 字段
 }
 
 func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCompletionRequest) types.ChatCompletionStreamChoice {
@@ -404,8 +405,8 @@ type GeminiChatSafetySettings struct {
 type GeminiChatTools struct {
 	FunctionDeclarations  []types.ChatCompletionFunction `json:"functionDeclarations,omitempty"`
 	CodeExecution         *GeminiCodeExecution           `json:"codeExecution,omitempty"`
-	GoogleSearch          any                            `json:"googleSearch,omitempty"`
-	UrlContext            any                            `json:"urlContext,omitempty"`
+	GoogleSearch          *GeminiCodeExecution           `json:"googleSearch,omitempty"`
+	UrlContext            *GeminiCodeExecution           `json:"urlContext,omitempty"`
 	GoogleSearchRetrieval any                            `json:"googleSearchRetrieval,omitempty"`
 }
 
@@ -552,6 +553,12 @@ func OpenAIToGeminiChatContent(openaiContents []types.ChatCompletionMessage) ([]
 				if toolName, exists := toolCallId[openaiContent.ToolCallID]; exists {
 					openaiContent.Name = &toolName
 				}
+			}
+
+			// 安全检查：如果 Name 仍然为 nil，跳过这个工具结果
+			if openaiContent.Name == nil {
+				// 跳过没有名称的工具结果消息
+				continue
 			}
 
 			functionPart := GeminiPart{
