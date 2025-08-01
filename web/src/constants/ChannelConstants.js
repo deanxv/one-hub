@@ -20,6 +20,13 @@ export const CHANNEL_OPTIONS = {
     color: 'orange',
     url: 'https://oai.azure.com/'
   },
+  55: {
+    key: 55,
+    text: 'Azure OpenAI V1',
+    value: 55,
+    color: 'secondary',
+    url: 'https://oai.azure.com/'
+  },
   11: {
     key: 11,
     text: 'Google PaLM2',
@@ -249,6 +256,20 @@ export const CHANNEL_OPTIONS = {
     value: 53,
     color: 'warning',
     url: 'https://api.kling.ai'
+  },
+  54: {
+    key: 54,
+    text: 'Azure Databricks',
+    value: 54,
+    color: 'orange',
+    url: ''
+  },
+  56: {
+    key: 56,
+    text: 'xAI',
+    value: 56,
+    color: 'orange',
+    url: 'https://x.ai'
   },
   8: {
     key: 8,
