@@ -90,7 +90,7 @@ func (p *VertexAIProvider) getGeminiRequest(request *gemini.GeminiChatRequest) (
 		headers["Accept"] = "text/event-stream"
 	}
 
-	body, exists := p.GetRawBody()
+	rawData, exists := p.GetRawBody()
 	if !exists {
 		return nil, common.StringErrorWrapperLocal("request body not found", "request_body_not_found", http.StatusInternalServerError)
 	}
@@ -99,7 +99,6 @@ func (p *VertexAIProvider) getGeminiRequest(request *gemini.GeminiChatRequest) (
 	p.Requester.ErrorHandler = RequestErrorHandle(p.Category.ErrorHandler)
 
 	// 清理原始 JSON 数据中不兼容的字段
-	rawData := request.GetJsonRaw()
 	cleanedData, err := gemini.CleanGeminiRequestData(rawData, true)
 	if err != nil {
 		return nil, common.ErrorWrapper(err, "clean_vertexai_gemini_data_failed", http.StatusInternalServerError)

@@ -105,7 +105,7 @@ func (p *GeminiProvider) getChatRequest(geminiRequest *GeminiChatRequest, isRela
 	var body any
 	if isRelay {
 		var exists bool
-		body, exists = p.GetRawBody()
+		rawData, exists := p.GetRawBody()
 		if !exists {
 			return nil, common.StringErrorWrapperLocal("request body not found", "request_body_not_found", http.StatusInternalServerError)
 		}
