@@ -430,6 +430,11 @@
     "quotaLabel": "額度",
     "refreshButton": "刷新/清除搜尋條件",
     "searchButton": "搜尋",
+    "searching": "搜尋中...",
+    "exportButton": "導出CSV",
+    "exporting": "導出中...",
+    "exportSuccess": "導出成功",
+    "exportError": "導出失敗",
     "searchLogsInfo": "充值記錄以及邀請記錄請在日誌中查詢。充值記錄請在日誌中選擇類型【充值】查詢；邀請記錄請在日誌中選擇【系統】查詢",
     "timeLabel": "時間",
     "title": "日誌",
@@ -502,7 +507,8 @@
     "usernameOrEmail": "用戶名/電郵",
     "usernameRequired": "用戶名/電郵為必填項",
     "wechatLoginInfo": "請使用微信掃描二維碼關注公眾號，輸入「驗證碼」獲取驗證碼（有效期三分鐘）",
-    "wechatVerificationCodeLogin": "微信驗證碼登錄"
+    "wechatVerificationCodeLogin": "微信驗證碼登錄",
+    "useLinuxDoLogin": "使用 LINUX DO 登入"
   },
   "menu": {
     "about": "關於",
@@ -740,7 +746,8 @@
     "usernameMinLength": "用戶名不能少於 3 個字符",
     "usernameRequired": "用戶名不能為空",
     "wechatBindSuccess": "微信帳戶綁定成功！",
-    "yourTokenIs": "你的訪問令牌是："
+    "yourTokenIs": "你的訪問令牌是：",
+    "bindLinuxDoAccount": "綁定LINUX DO帳號"
   },
   "redemption": "兌換",
   "redemptionPage": {
@@ -794,10 +801,16 @@
     "testClick": "點擊測速（僅支持chat模型）"
   },
   "setting": "設定",
+  "theme": {
+    "auto": "跟隨系統",
+    "light": "淺色模式",
+    "dark": "深色模式"
+  },
   "setting_index": {
     "operationSettings": {
       "chatLinkSettings": {
         "info": "配置聊天鏈接，該配置在令牌中的聊天生效以及首頁的 Playground 中的聊天生效. <br />鏈接中可以使&#123;key&#125;替換用戶的令牌，&#123;server&#125;替換伺服器地址。例如：{'https://chat.oneapi.pro/#/?settings={\"key\":\"sk-{key}\",\"url\":\"{server}\"}'}<br />如果未配置，會默認配置以下4個鏈接：<br />ChatGPT Next ： {'https://chat.oneapi.pro/#/?settings={\"key\":\"{key}\",\"url\":\"{server}\"}'}<br />chatgpt-web-midjourney-proxy ： {'https://vercel.ddaiai.com/#/?settings={\"key\":\"{key}\",\"url\":\"{server}\"}'}<br />AMA 問天 ： {'ama://set-api-key?server={server}&key={key}'}<br />opencat ： {'opencat://team/join?domain={server}&token={key}'}<br />排序規則：值越大越靠前，值相同則按照配置順序",
+        "builtinChatEnabled": "啟用內置聊天",
         "save": "保存聊天鏈接設置",
         "title": "聊天鏈接設置"
       },
@@ -830,7 +843,10 @@
         "retryTimeOut": {
           "label": "重試超時時間(秒)",
           "placeholder": "重試超時時間(秒)"
-        }
+        },
+        "emptyResponseBilling": "空回覆計費",
+        "unifiedRequestResponseModel": "統一請求響應模型",
+        "unifiedRequestResponseModelTooltip": "當存在模型映射時，響應中的model值為請求的model值，而非實際調用的模型名稱"
       },
       "logSettings": {
         "clearLogs": "清理歷史日誌",
@@ -903,6 +919,16 @@
           "label": "邀請新用戶獎勵額度",
           "placeholder": "例如：2000"
         },
+        "rechargeRewardType": {
+          "label": "充值返利類型",
+          "fixed": "固定",
+          "percentage": "百分比"
+        },
+        "rechargeRewardValue": {
+          "label": "充值返利值",
+          "fixedPlaceholder": "例如：2000",
+          "percentagePlaceholder": "例如：10"
+        },
         "quotaForNewUser": {
           "label": "新用戶初始額度",
           "placeholder": "例如：100"
@@ -952,13 +978,21 @@
         },
         "save": "保留Claude設置",
         "title": "克勞德設置"
+      },
+      "geminiSettings": {
+        "title": "Gemini設置",
+        "geminiOpenThink": {
+          "label": "開啟輸出推理的模型",
+          "placeholder": "請輸入需要開啟推理輸出的模型，JSON格式，例如：{\"gemini-2.5-pro-preview-05-06\": true}"
+        },
+        "save": "保存Gemini設置"
       }
     },
     "otherSettings": {
       "customSettings": {
         "aboutLabel": "關於",
         "aboutPlaceholder": "在此輸入新的關於內容，支持 Markdown & HTML 代碼。如果輸入的是一個鏈接，則會使用該鏈接作為 iframe 的 src 屬性，這允許你設置任意網頁作為關於頁面。",
-        "copyrightWarning": "移除 One Hub 的版權標識必須首先獲得授權，項目維護需要花費大量精力，如果本項目對你有意義，請主動支持本項目。",
+        "copyrightWarning": "移除 Done Hub 的版權標識必須首先獲得授權，項目維護需要花費大量精力，如果本項目對你有意義，請主動支持本項目。",
         "footerLabel": "頁腳設置",
         "footerPlaceholder": "在此輸入新的頁腳，留空則使用默認頁腳，支持 HTML 代碼",
         "homePageContentLabel": "首頁內容",
@@ -1099,7 +1133,22 @@
         "title": "系統設置",
         "updateServerAddress": "更新伺服器地址"
       },
-      "title": "系統設置"
+      "title": "系統設置",
+      "configureLinuxDoOAuthApp": {
+        "title": "配置 LINUX DO OAuth 應用程式",
+        "subTitle": "用以支援透過 LINUX DO 進行登入註冊，",
+        "manageLink": "點擊此處",
+        "manage": "管理你的 LINUX DO App",
+        "alert1": "Homepage URL 填寫",
+        "alert2": "，Authorization callback URL 填寫",
+        "clientId": "LINUX DO 用戶端 ID",
+        "clientSecret": "LINUX DO 用戶端密鑰",
+        "lowestTrustLevel": "LINUX DO 信任等級",
+        "clientIdPlaceholder": "輸入你註冊的 LINUX DO OAuth APP 的 ID",
+        "clientSecretPlaceholder": "敏感資訊不會傳送到前端顯示",
+        "lowestTrustLevelPlaceholder": "輸入需要限制的最低信任等級",
+        "saveButton": "儲存 LINUX DO OAuth 設定"
+      }
     }
   },
   "shimmer 映射": "shimmer 映射",
@@ -1320,7 +1369,7 @@
   "使用代码执行功能，开启后，计算tokens不准确，建议个人使用开启": "使用代碼執行功能，開啟後，計算tokens不準確，建議個人使用開啟",
   "使用网页搜索功能，对用户输入的内容进行搜索": "使用網頁搜索功能，對用戶輸入的內容進行搜索",
   "其他参数": "其他參數",
-  "可空，请输入中转API地址，例如通过cloudflare中转": "可空，請輸入中轉API地址，例如通過cloudflare中轉",
+  "可空，请输入中转API地址，例如通过cloudflare中转": "可空，請輸入中轉API地址，例如通過cloudflare中轉。支持使用{model}變數，例如：https://api.example.com/v1/{model}/chat",
   "启用": "啟用",
   "地址填写Suno-API部署的地址": "地址填寫Suno-API部署的地址",
   "地址填写midjourney-proxy部署的地址": "地址填寫midjourney-proxy部署的地址",

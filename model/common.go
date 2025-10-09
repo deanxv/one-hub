@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"one-api/common"
 	"one-api/common/config"
+	"os"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -111,12 +113,67 @@ func getTimestampGroupsSelect(fieldName, groupType, alias string) string {
 	dateFormat := getDateFormat(groupType)
 	var groupSelect string
 
+	// 获取系统时区偏移
+	getTimezoneOffset := func() (string, string) {
+		// 优先使用系统本地时区（Docker中通过TZ环境变量设置）
+		location := time.Local
+
+		// 也可以通过环境变量TZ覆盖
+		if tzEnv := os.Getenv("TZ"); tzEnv != "" {
+			if loc, err := time.LoadLocation(tzEnv); err == nil {
+				location = loc
+			}
+		}
+
+		// 获取当前时间在指定时区的偏移量
+		now := time.Now().In(location)
+		_, offset := now.Zone()
+
+		// 计算小时偏移
+		hours := offset / 3600
+		minutes := (offset % 3600) / 60
+
+		// 生成不同数据库需要的格式
+		var sqliteOffset, mysqlOffset string
+		if hours >= 0 {
+			sqliteOffset = fmt.Sprintf("+%d hours", hours)
+			if minutes != 0 {
+				sqliteOffset += fmt.Sprintf(" %d minutes", minutes)
+			}
+			mysqlOffset = fmt.Sprintf("+%02d:%02d", hours, minutes)
+		} else {
+			sqliteOffset = fmt.Sprintf("%d hours", hours) // 负数自带减号
+			if minutes != 0 {
+				sqliteOffset += fmt.Sprintf(" %d minutes", -minutes) // 分钟也要是负数
+			}
+			mysqlOffset = fmt.Sprintf("-%02d:%02d", -hours, -minutes)
+		}
+
+		return sqliteOffset, mysqlOffset
+	}
+
 	if common.UsingPostgreSQL {
-		groupSelect = fmt.Sprintf(`TO_CHAR(date_trunc('%s', to_timestamp(%s)), '%s') as %s`, groupType, fieldName, dateFormat, alias)
+		// PostgreSQL: 使用系统时区或TZ环境变量
+		tzName := "UTC"
+		if tzEnv := os.Getenv("TZ"); tzEnv != "" {
+			tzName = tzEnv
+		} else {
+			// 尝试获取系统时区名称
+			now := time.Now()
+			zone, _ := now.Zone()
+			if zone != "" {
+				tzName = zone
+			}
+		}
+		groupSelect = fmt.Sprintf(`TO_CHAR(date_trunc('%s', to_timestamp(%s) AT TIME ZONE '%s'), '%s') as %s`, groupType, fieldName, tzName, dateFormat, alias)
 	} else if common.UsingSQLite {
-		groupSelect = fmt.Sprintf(`strftime('%s', datetime(%s, 'unixepoch')) as %s`, dateFormat, fieldName, alias)
+		// SQLite: 动态计算时区偏移
+		sqliteOffset, _ := getTimezoneOffset()
+		groupSelect = fmt.Sprintf(`strftime('%s', datetime(%s, 'unixepoch', '%s')) as %s`, dateFormat, fieldName, sqliteOffset, alias)
 	} else {
-		groupSelect = fmt.Sprintf(`DATE_FORMAT(FROM_UNIXTIME(%s), '%s') as %s`, fieldName, dateFormat, alias)
+		// MySQL: 动态计算时区偏移
+		_, mysqlOffset := getTimezoneOffset()
+		groupSelect = fmt.Sprintf(`DATE_FORMAT(CONVERT_TZ(FROM_UNIXTIME(%s), '+00:00', '%s'), '%s') as %s`, fieldName, mysqlOffset, dateFormat, alias)
 	}
 
 	return groupSelect
@@ -145,6 +202,17 @@ func assembleSumSelectStr(selectStr string) string {
 func RecordExists(table interface{}, fieldName string, fieldValue interface{}, excludeID interface{}) bool {
 	var count int64
 	query := DB.Model(table).Where(fmt.Sprintf("%s = ?", fieldName), fieldValue)
+	if excludeID != nil {
+		query = query.Not("id", excludeID)
+	}
+	query.Count(&count)
+	return count > 0
+}
+
+// RecordExistsWithTx 在指定事务中检查记录是否存在
+func RecordExistsWithTx(tx *gorm.DB, table interface{}, fieldName string, fieldValue interface{}, excludeID interface{}) bool {
+	var count int64
+	query := tx.Model(table).Where(fmt.Sprintf("%s = ?", fieldName), fieldValue)
 	if excludeID != nil {
 		query = query.Not("id", excludeID)
 	}

@@ -426,6 +426,11 @@
     "quotaLabel": "クォータ",
     "refreshButton": "更新/検索条件をクリア",
     "searchButton": "検索",
+    "searching": "検索中...",
+    "exportButton": "CSVエクスポート",
+    "exporting": "エクスポート中...",
+    "exportSuccess": "エクスポート成功",
+    "exportError": "エクスポート失敗",
     "searchLogsInfo": "チャージ記録および招待記録はログで確認してください。チャージ記録はログでタイプ【チャージ】を選択して確認してください；招待記録はログで【システム】を選択して確認してください",
     "timeLabel": "時間",
     "title": "ログ",
@@ -498,7 +503,8 @@
     "usernameOrEmail": "ユーザー名/メール",
     "usernameRequired": "ユーザー名/メールは必須です",
     "wechatLoginInfo": "WeChatでQRコードをスキャンして公式アカウントをフォローし、「認証コード」を入力して認証コードを取得してください（3分以内有効）",
-    "wechatVerificationCodeLogin": "WeChat認証コードログイン"
+    "wechatVerificationCodeLogin": "WeChat認証コードログイン",
+    "useLinuxDoLogin": "LINUX DOでログイン"
   },
   "menu": {
     "about": "概要",
@@ -739,7 +745,8 @@
     "usernameMinLength": "ユーザー名は3文字以上でなければなりません",
     "usernameRequired": "ユーザー名は空にできません",
     "wechatBindSuccess": "WeChatアカウントのバインドに成功しました！",
-    "yourTokenIs": "あなたのアクセストークンは次の通りです："
+    "yourTokenIs": "あなたのアクセストークンは次の通りです：",
+    "bindLinuxDoAccount": "LINUX DOアカウントを紐付ける"
   },
   "redemption": "引き換え",
   "redemptionPage": {
@@ -829,7 +836,8 @@
         "retryTimeOut": {
           "label": "再試行のタイムアウト時間（秒）",
           "placeholder": "再試行のタイムアウト時間（秒）"
-        }
+        },
+        "emptyResponseBilling": "空応答課金"
       },
       "logSettings": {
         "clearLogs": "履歴ログをクリア",
@@ -902,6 +910,16 @@
           "label": "招待者への報酬クォータ",
           "placeholder": "例：2000"
         },
+        "rechargeRewardType": {
+          "label": "チャージ返利タイプ",
+          "fixed": "固定",
+          "percentage": "パーセンテージ"
+        },
+        "rechargeRewardValue": {
+          "label": "チャージ返利値",
+          "fixedPlaceholder": "例：2000",
+          "percentagePlaceholder": "例：10"
+        },
         "quotaForNewUser": {
           "label": "新規ユーザーの初期クォータ",
           "placeholder": "例：100"
@@ -951,6 +969,14 @@
         },
         "save": "クロードの設定を保存します",
         "title": "クロードの設定"
+      },
+      "geminiSettings": {
+        "title": "Gemini設定",
+        "geminiOpenThink": {
+          "label": "推論出力を有効にするモデル",
+          "placeholder": "推論出力を有効にするモデルをJSON形式で入力してください。例：{\"gemini-2.5-pro-preview-05-06\": true}"
+        },
+        "save": "Gemini設定を保存"
       }
     },
     "otherSettings": {
@@ -1098,7 +1124,22 @@
         "title": "システム設定",
         "updateServerAddress": "サーバーアドレスを更新"
       },
-      "title": "システム設定"
+      "title": "システム設定",
+      "configureLinuxDoOAuthApp": {
+        "title": "LINUX DO OAuthアプリケーションを設定する",
+        "subTitle": "LINUX DO経由でのログイン登録をサポートするために、",
+        "manageLink": "ここをクリック",
+        "manage": "あなたのLINUX DOアプリを管理する",
+        "alert1": "ホームページURLには",
+        "alert2": "、認証コールバックURLには",
+        "clientId": "LINUX DOクライアントID",
+        "clientSecret": "LINUX DOクライアントシークレット",
+        "lowestTrustLevel": "LINUX DOトラストレベル",
+        "clientIdPlaceholder": "登録したLINUX DO OAuthアプリのIDを入力してください",
+        "clientSecretPlaceholder": "機密情報はフロントエンドに表示されません",
+        "lowestTrustLevelPlaceholder": "制限する最低トラストレベルを入力してください",
+        "saveButton": "LINUX DO OAuth設定を保存"
+      }
     }
   },
   "shimmer 映射": "シマーマッピング",
@@ -1319,7 +1360,7 @@
   "使用代码执行功能，开启后，计算tokens不准确，建议个人使用开启": "コード実行機能を使用する場合、オンにするとトークンの計算が不正確になるため、個人で使用することを推奨します。",
   "使用网页搜索功能，对用户输入的内容进行搜索": "Web検索機能を使用して、ユーザーが入力したコンテンツを検索します。",
   "其他参数": "その他のパラメータ",
-  "可空，请输入中转API地址，例如通过cloudflare中转": "空のままにすることもできます。たとえば、cloudflare 転送を通じて転送 API アドレスを入力してください。",
+  "可空，请输入中转API地址，例如通过cloudflare中转": "空のままにすることもできます。たとえば、cloudflare 転送を通じて転送 API アドレスを入力してください。{model}変数をサポートしています、例：https://api.example.com/v1/{model}/chat",
   "启用": "有効にする",
   "地址填写Suno-API部署的地址": "アドレス: Suno-API デプロイメントのアドレスを入力します。",
   "地址填写midjourney-proxy部署的地址": "アドレス: Midjourney-Proxy デプロイメントのアドレスを入力します。",

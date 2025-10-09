@@ -8,6 +8,7 @@ import (
 	"one-api/common"
 	"one-api/common/config"
 	"one-api/common/image"
+	"one-api/common/model_utils"
 	"one-api/common/requester"
 	"one-api/common/utils"
 	"one-api/providers/base"
@@ -15,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -28,6 +30,7 @@ type ClaudeStreamHandler struct {
 	Request     *types.ChatCompletionRequest
 	StreamTolls int
 	Prefix      string
+	Context     *gin.Context // 添加 Context 用于获取响应模型名称
 }
 
 func (p *ClaudeProvider) CreateChatCompletion(request *types.ChatCompletionRequest) (*types.ChatCompletionResponse, *types.OpenAIErrorWithStatusCode) {
@@ -76,6 +79,7 @@ func (p *ClaudeProvider) CreateChatCompletionStream(request *types.ChatCompletio
 		Usage:   p.Usage,
 		Request: request,
 		Prefix:  `data: {"type"`,
+		Context: p.Context, // 传递 Context
 	}
 
 	eventstream.NewDecoder()
@@ -100,11 +104,11 @@ func (p *ClaudeProvider) getChatRequest(claudeRequest *ClaudeRequest) (*http.Req
 		headers["Accept"] = "text/event-stream"
 	}
 
-	if strings.HasPrefix(claudeRequest.Model, "claude-3-5-sonnet") {
+	if model_utils.HasPrefixCaseInsensitive(claudeRequest.Model, "claude-3-5-sonnet") {
 		headers["anthropic-beta"] = "max-tokens-3-5-sonnet-2024-07-15"
 	}
 
-	if strings.HasPrefix(claudeRequest.Model, "claude-3-7-sonnet") {
+	if model_utils.HasPrefixCaseInsensitive(claudeRequest.Model, "claude-3-7-sonnet") {
 		headers["anthropic-beta"] = "output-128k-2025-02-19"
 	}
 
@@ -143,7 +147,7 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*ClaudeRequest
 
 	systemMessage := ""
 	mgsLen := len(request.Messages) - 1
-	isThink := (request.OneOtherArg == "thinking" || request.Reasoning != nil)
+	isThink := request.OneOtherArg == "thinking" || request.Reasoning != nil
 
 	for index, msg := range request.Messages {
 		if isThink && index == mgsLen && (msg.Role == types.ChatMessageRoleAssistant || msg.Role == types.ChatMessageRoleSystem) {
@@ -401,12 +405,15 @@ func ConvertToChatOpenai(provider base.ProviderInterface, response *ClaudeRespon
 		})
 	}
 
+	// 获取响应中应该使用的模型名称
+	responseModel := provider.GetResponseModelName(request.Model)
+
 	openaiResponse = &types.ChatCompletionResponse{
 		ID:      response.Id,
 		Object:  "chat.completion",
 		Created: utils.GetTimestamp(),
 		Choices: choices,
-		Model:   request.Model,
+		Model:   responseModel,
 		Usage: &types.Usage{
 			CompletionTokens: 0,
 			PromptTokens:     0,
@@ -546,11 +553,17 @@ func (h *ClaudeStreamHandler) convertToOpenaiStream(claudeResponse *ClaudeStream
 	if finishReason != "" {
 		choice.FinishReason = &finishReason
 	}
+	// 获取响应中应该使用的模型名称
+	responseModel := h.Request.Model
+	if h.Context != nil {
+		responseModel = base.GetResponseModelNameFromContext(h.Context, h.Request.Model)
+	}
+
 	chatCompletion := types.ChatCompletionStreamResponse{
 		ID:      fmt.Sprintf("chatcmpl-%s", utils.GetUUID()),
 		Object:  "chat.completion.chunk",
 		Created: utils.GetTimestamp(),
-		Model:   h.Request.Model,
+		Model:   responseModel,
 		Choices: []types.ChatCompletionStreamChoice{choice},
 	}
 

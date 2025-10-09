@@ -23,6 +23,7 @@ import (
 	"one-api/relay/task"
 	"one-api/router"
 	"one-api/safty"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -38,6 +39,16 @@ var buildFS embed.FS
 var indexPage []byte
 
 func main() {
+	if tz := os.Getenv("TZ"); tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			time.Local = loc
+		}
+	} else {
+		if loc, err := time.LoadLocation("Asia/Shanghai"); err == nil {
+			time.Local = loc
+		}
+	}
+
 	cli.InitCli()
 	config.InitConf()
 	if viper.GetString("log_level") == "debug" {
@@ -45,7 +56,7 @@ func main() {
 	}
 
 	logger.SetupLogger()
-	logger.SysLog("One Hub " + config.Version + " started")
+	logger.SysLog("Done Hub " + config.Version + " started")
 
 	// Initialize user token
 	err := common.InitUserToken()
@@ -59,6 +70,8 @@ func main() {
 	// Initialize Redis
 	redis.InitRedisClient()
 	cache.InitCacheManager()
+	// Initialize invite code lock system
+	model.InitInviteCodeLock()
 	// Initialize options
 	model.InitOptionMap()
 	// Initialize oidc
@@ -129,13 +142,18 @@ func initHttpServer() {
 	}
 
 	store := cookie.NewStore([]byte(config.SessionSecret))
+
+	// 检测是否在 HTTPS 环境下运行
+	isHTTPS := viper.GetBool("https") || viper.GetString("trusted_header") == "CF-Connecting-IP"
+
 	store.Options(sessions.Options{
 		Path:     "/",
 		MaxAge:   2592000, // 30 days
 		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   isHTTPS,                 // 在 HTTPS 环境下启用 Secure
+		SameSite: http.SameSiteStrictMode, // 改为 Lax 模式，兼容 CDN 环境
 	})
+
 	server.Use(sessions.Sessions("session", store))
 
 	router.SetRouter(server, buildFS, indexPage)

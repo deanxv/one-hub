@@ -57,6 +57,7 @@ func ClaudeChatCompleteStrem(provider base.ProviderInterface, request *types.Cha
 		Usage:   provider.GetUsage(),
 		Request: request,
 		Prefix:  `{"type"`,
+		Context: provider.GetContext(), // 传递 Context
 	}
 
 	return chatHandler.HandlerStream

@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 
 export function getSystemName() {
   let system_name = localStorage.getItem('system_name');
-  if (!system_name) return 'One Hub';
+  if (!system_name) return 'Done Hub';
   return system_name;
 }
 
@@ -138,6 +138,17 @@ export async function onLarkOAuthClicked(lark_client_id) {
   if (!state) return;
   let redirect_uri = `${window.location.origin}/oauth/lark`;
   window.open(`https://open.feishu.cn/open-apis/authen/v1/authorize?redirect_uri=${redirect_uri}&app_id=${lark_client_id}&state=${state}`);
+}
+
+export async function onLinuxDoOAuthClicked(client_id, openInNewTab = false) {
+  const state = await getOAuthState();
+  if (!state) return;
+  let url = `https://connect.linux.do/oauth2/authorize?response_type=code&client_id=${client_id}&state=${state}`;
+  if (openInNewTab) {
+    window.open(url);
+  } else {
+    window.location.href = url;
+  }
 }
 
 export function useIsAdmin() {

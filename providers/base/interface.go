@@ -28,10 +28,14 @@ type ProviderInterface interface {
 	SetUsage(usage *types.Usage)
 	// 设置Context
 	SetContext(c *gin.Context)
+	// 获取Context (用于流式响应等场景)
+	GetContext() *gin.Context
 	// 设置原始模型
 	SetOriginalModel(ModelName string)
 	// 获取原始模型
 	GetOriginalModel() string
+	// 获取响应中应该使用的模型名称
+	GetResponseModelName(requestModel string) string
 
 	// SupportAPI(relayMode int) bool
 	GetChannel() *model.Channel

@@ -130,12 +130,44 @@ func (p *BaseProvider) SetContext(c *gin.Context) {
 	p.Context = c
 }
 
+func (p *BaseProvider) GetContext() *gin.Context {
+	return p.Context
+}
+
 func (p *BaseProvider) SetOriginalModel(ModelName string) {
 	p.OriginalModel = ModelName
 }
 
 func (p *BaseProvider) GetOriginalModel() string {
 	return p.OriginalModel
+}
+
+// GetResponseModelName 获取响应中应该使用的模型名称
+// 默认使用原始模型名称（用户友好），保持用户体验一致性
+func (p *BaseProvider) GetResponseModelName(requestModel string) string {
+	return GetResponseModelNameFromContext(p.Context, requestModel)
+}
+
+// GetResponseModelNameFromContext 从 Context 获取响应模型名称的静态函数
+// 用于流式响应等无法访问 BaseProvider 的场景
+func GetResponseModelNameFromContext(ctx *gin.Context, fallbackModel string) string {
+	if ctx == nil {
+		return fallbackModel
+	}
+
+	// 检查是否启用了统一请求响应模型功能
+	if !config.UnifiedRequestResponseModelEnabled {
+		return fallbackModel
+	}
+
+	// 优先使用存储的原始模型名称
+	if originalModel, exists := ctx.Get("original_model"); exists {
+		if originalModelStr, ok := originalModel.(string); ok && originalModelStr != "" {
+			return originalModelStr
+		}
+	}
+
+	return fallbackModel
 }
 
 func (p *BaseProvider) GetChannel() *model.Channel {

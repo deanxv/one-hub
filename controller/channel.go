@@ -265,6 +265,37 @@ func BatchAddUserGroupToChannels(c *gin.Context) {
 	})
 }
 
+func BatchAddModelToChannels(c *gin.Context) {
+	var params model.BatchChannelsParams
+	err := c.ShouldBindJSON(&params)
+	if err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+
+	if params.Ids == nil || len(params.Ids) == 0 {
+		common.APIRespondWithError(c, http.StatusOK, errors.New("ids不能为空"))
+		return
+	}
+
+	if params.Value == "" {
+		common.APIRespondWithError(c, http.StatusOK, errors.New("模型不能为空"))
+		return
+	}
+
+	var count int64
+	count, err = model.BatchAddModelToChannels(&params)
+	if err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data":    count,
+		"success": true,
+		"message": "批量添加模型成功",
+	})
+}
+
 func BatchDeleteChannel(c *gin.Context) {
 	var params model.BatchChannelsParams
 	err := c.ShouldBindJSON(&params)

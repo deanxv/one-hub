@@ -32,7 +32,8 @@ func (p *GeminiProvider) CreateGeminiChat(request *GeminiChatRequest) (*GeminiCh
 		return nil, errWithCode
 	}
 
-	if len(geminiResponse.Candidates) == 0 {
+	// 只有非 countTokens 请求才检查 candidates
+	if request.Action != "countTokens" && len(geminiResponse.Candidates) == 0 {
 		return nil, common.StringErrorWrapper("no candidates", "no_candidates", http.StatusInternalServerError)
 	}
 
@@ -103,9 +104,21 @@ func (h *GeminiRelayStreamHandler) HandlerStream(rawLine *[]byte, dataChan chan 
 	}
 
 	h.Usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
-	h.Usage.CompletionTokens = geminiResponse.UsageMetadata.CandidatesTokenCount + geminiResponse.UsageMetadata.ThoughtsTokenCount
+
+	// 计算 completion tokens，确保不为负数
+	completionTokens := geminiResponse.UsageMetadata.CandidatesTokenCount + geminiResponse.UsageMetadata.ThoughtsTokenCount
+	if completionTokens < 0 {
+		completionTokens = 0
+	}
+	h.Usage.CompletionTokens = completionTokens
 	h.Usage.CompletionTokensDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-	h.Usage.TotalTokens = geminiResponse.UsageMetadata.TotalTokenCount
+
+	// 如果 TotalTokenCount 为 0 但有 PromptTokenCount，则计算总数
+	totalTokens := geminiResponse.UsageMetadata.TotalTokenCount
+	if totalTokens == 0 && geminiResponse.UsageMetadata.PromptTokenCount > 0 {
+		totalTokens = geminiResponse.UsageMetadata.PromptTokenCount + completionTokens
+	}
+	h.Usage.TotalTokens = totalTokens
 
 	dataChan <- rawStr
 }

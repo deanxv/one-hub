@@ -101,7 +101,14 @@
     "order": "Order",
     "realTimeTraffic": "Real-time Traffic",
     "tpmDescription": "TPM (Token/min)",
-    "last60SecondsStats": "Last 60 seconds statistics"
+    "last60SecondsStats": "Last 60 seconds statistics",
+    "timeFilter": {
+      "all": "All",
+      "year": "This Year",
+      "month": "This Month",
+      "week": "This Week",
+      "day": "Today"
+    }
   },
   "auth": {
     "invalidLink": "Invalid link",
@@ -236,7 +243,20 @@
     "pleaseSelectChannelsForUserGroup": "Please select at least one channel",
     "addingUserGroup": "Adding...",
     "addUserGroupToChannels": "Add user group to {{count}} channels",
-    "batchAddUserGroupSuccess": "Successfully added user group \"{{group}}\" to {{count}} channels"
+    "batchAddUserGroupSuccess": "Successfully added user group \"{{group}}\" to {{count}} channels",
+    "batchAddModel": "Batch Add Model",
+    "batchAddModelTip": "Select channels and add models. Supports inputting multiple models. If a channel already has a certain model, that model will be skipped.",
+    "selectModelToAdd": "Select or input models to add",
+    "pleaseSelectModel": "Please select or input models",
+    "pleaseSelectChannelsForModel": "Please select at least one channel",
+    "channelAlreadyHasModel": "(Already has some models)",
+    "currentModels": "Current models",
+    "noModels": "None",
+    "addingModel": "Adding...",
+    "addModelToChannels": "Add models to {{count}} channels",
+    "batchAddModelSuccess": "Successfully added models \"{{model}}\" to {{count}} channels",
+    "modelInputTip": "Supports multiple models, separated by commas",
+    "loadingChannels": "Loading channels..."
   },
   "channel_row": {
     "auto": "automatic",
@@ -465,6 +485,11 @@
     "quotaLabel": "Quota",
     "refreshButton": "Refresh/Clear Search",
     "searchButton": "Search",
+    "searching": "Searching...",
+    "exportButton": "Export CSV",
+    "exporting": "Exporting...",
+    "exportSuccess": "Export successful",
+    "exportError": "Export failed",
     "searchLogsInfo": "Please check the recharge records and invitation records in the logs. For recharge records, select the type [Recharge] in the log; for invitation records, select [System] in the log.",
     "timeLabel": "Time",
     "title": "Logs",
@@ -538,7 +563,9 @@
     "usernameOrEmail": "Username/Email",
     "usernameRequired": "Username/Email is required",
     "wechatLoginInfo": "Please use WeChat to scan the QR code to follow the official account and enter the \"verification code\" to obtain the verification code (valid within three minutes)",
-    "wechatVerificationCodeLogin": "WeChat verification code login"
+    "wechatVerificationCodeLogin": "WeChat verification code login",
+    "useLinuxDoLogin": "Log in with LINUX DO",
+    "loggingIn": "Logging in..."
   },
   "midjourneyPage": {
     "channel": "Channel",
@@ -767,7 +794,8 @@
     "usernameMinLength": "Username must be at least 3 characters long",
     "usernameRequired": "Username cannot be empty",
     "wechatBindSuccess": "WeChat account successfully bound!",
-    "yourTokenIs": "Your access token is:"
+    "yourTokenIs": "Your access token is:",
+    "bindLinuxDoAccount": "Bind LINUX DO Account"
   },
   "redemption": "Redemption",
   "redemptionPage": {
@@ -809,7 +837,9 @@
     "usernameRequired": "Username is required",
     "validEmailRequired": "Must be a valid email address",
     "verificationCodeRequired": "Verification code is required",
-    "verificationInfo": "Please try again in a few seconds, Turnstile is checking the user environment!"
+    "verificationInfo": "Please try again in a few seconds, Turnstile is checking the user environment!",
+    "registering": "Registering...",
+    "inviteCodeRequired": "Invite code is required"
   },
   "registerPage": {
     "alreadyHaveAccount": "Already have an account? Click to login"
@@ -821,6 +851,11 @@
     "testClick": "Click speed test (only supports chat model)"
   },
   "setting": "Setting",
+  "theme": {
+    "auto": "Follow System",
+    "light": "Light Mode",
+    "dark": "Dark Mode"
+  },
   "setting_index": {
     "operationSettings": {
       "chatLinkSettings": {
@@ -858,7 +893,11 @@
           "label": "Retry Timeout (seconds)",
           "placeholder": "Retry Timeout (seconds)"
         },
-        "emptyResponseBilling": "Empty Response Billing"
+        "emptyResponseBilling": "Empty Response Billing",
+        "unifiedRequestResponseModel": "Unified Request Response Model",
+        "unifiedRequestResponseModelTooltip": "When model mapping exists, the model value in the response will be the requested model value instead of the actual called model name",
+        "modelNameCaseInsensitive": "Model Name Case Insensitive",
+        "modelNameCaseInsensitiveTooltip": "When enabled, model matching will ignore case sensitivity, e.g., GPT-4, gpt-4, Gpt-4 will all match the same model"
       },
       "logSettings": {
         "clearLogs": "Clear Historical Logs",
@@ -1003,7 +1042,7 @@
       "customSettings": {
         "aboutLabel": "About",
         "aboutPlaceholder": "Enter new about content here, supports Markdown & HTML code. If a link is entered, it will be used as the src attribute of the iframe, allowing you to set any web page as the about page.",
-        "copyrightWarning": "Removing the One Hub copyright must be authorized first. Maintaining the project requires a lot of effort. If this project is meaningful to you, please support it.",
+        "copyrightWarning": "Removing the Done Hub copyright must be authorized first. Maintaining the project requires a lot of effort. If this project is meaningful to you, please support it.",
         "footerLabel": "Footer Settings",
         "footerPlaceholder": "Enter new footer here, leave blank to use the default footer, supports HTML code",
         "homePageContentLabel": "Home Page Content",
@@ -1144,7 +1183,22 @@
         "title": "System Settings",
         "updateServerAddress": "Update Server Address"
       },
-      "title": "System Settings"
+      "title": "System Settings",
+      "configureLinuxDoOAuthApp": {
+        "title": "Configure LINUX DO OAuth App",
+        "subTitle": "Used to support login and registration via LINUX DO,",
+        "manageLink": "Click here",
+        "manage": "Manage your LINUX DO App",
+        "alert1": "Homepage URL: ",
+        "alert2": ", Authorization callback URL: ",
+        "clientId": "LINUX DO Client ID",
+        "clientSecret": "LINUX DO Client Secret",
+        "lowestTrustLevel": "LINUX DO Trust Level",
+        "clientIdPlaceholder": "Enter the ID of your registered LINUX DO OAuth APP",
+        "clientSecretPlaceholder": "Sensitive information will not be sent to the frontend for display",
+        "lowestTrustLevelPlaceholder": "Enter the minimum trust level to restrict",
+        "saveButton": "Save LINUX DO OAuth Settings"
+      }
     }
   },
   "shimmer 映射": "shimmer mapping",
@@ -1365,7 +1419,7 @@
   "使用代码执行功能，开启后，计算tokens不准确，建议个人使用开启": "When using the code execution function, the calculation of tokens is inaccurate after it is turned on. It is recommended that individuals use it to turn it on.",
   "使用网页搜索功能，对用户输入的内容进行搜索": "Use the web search function to search for content entered by the user",
   "其他参数": "Other parameters",
-  "可空，请输入中转API地址，例如通过cloudflare中转": "Can be left empty, please enter the transfer API address, for example, through cloudflare transfer",
+  "可空，请输入中转API地址，例如通过cloudflare中转": "Can be left empty, please enter the transfer API address, for example, through cloudflare transfer. Supports {model} variable, e.g.: https://api.example.com/v1/{model}/chat",
   "启用": "enable",
   "地址填写Suno-API部署的地址": "Address: Fill in the address of Suno-API deployment",
   "地址填写midjourney-proxy部署的地址": "Address: fill in the address of midjourney-proxy deployment",

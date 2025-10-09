@@ -1,11 +1,14 @@
 package logger
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,10 +44,10 @@ type LogHistory struct {
 	maxSize int
 }
 
-// Global log history instance with a default capacity of 500 entries
+// Global log history instance with a default capacity of 1000 entries
 var logHistory = &LogHistory{
-	entries: make([]LogEntry, 0, 500),
-	maxSize: 500,
+	entries: make([]LogEntry, 0, 1000),
+	maxSize: 1000,
 }
 
 // AddEntry adds a new log entry to the history
@@ -125,7 +128,7 @@ func getEncoder() zapcore.Encoder {
 }
 
 func getLogWriter(logDir string) zapcore.WriteSyncer {
-	filename := utils.GetOrDefault("logs.filename", "one-hub.log")
+	filename := utils.GetOrDefault("logs.filename", "one-api.log")
 	logPath := filepath.Join(logDir, filename)
 
 	maxsize := utils.GetOrDefault("logs.max_size", 100)
@@ -283,10 +286,167 @@ func FatalLog(v ...any) {
 	os.Exit(1)
 }
 
+// LogQueryParams represents parameters for advanced log queries
+type LogQueryParams struct {
+	Count      int    `json:"count"`
+	SearchTerm string `json:"search_term,omitempty"`
+	UseRegex   bool   `json:"use_regex,omitempty"`
+	FromFile   bool   `json:"from_file,omitempty"`
+}
+
+// LogQueryResult represents the result of a log query
+type LogQueryResult struct {
+	Logs       []LogEntry `json:"logs"`
+	TotalCount int        `json:"total_count"`
+	HasMore    bool       `json:"has_more"`
+}
+
 // GetLatestLogs gets the latest n logs from memory
 func GetLatestLogs(n int) ([]LogEntry, error) {
 	// Get the latest entries from the in-memory log history
 	entries := logHistory.GetLatestEntries(n)
 
 	return entries, nil
+}
+
+// QueryLogs performs advanced log queries
+func QueryLogs(params LogQueryParams) (*LogQueryResult, error) {
+	if params.FromFile {
+		return queryLogsFromFile(params)
+	}
+	return queryLogsFromMemory(params)
+}
+
+// queryLogsFromMemory queries logs from in-memory storage
+func queryLogsFromMemory(params LogQueryParams) (*LogQueryResult, error) {
+	entries := logHistory.GetLatestEntries(params.Count)
+
+	// Apply filters
+	filtered := filterLogs(entries, params)
+
+	return &LogQueryResult{
+		Logs:       filtered,
+		TotalCount: len(filtered),
+		HasMore:    false, // Memory storage is limited, so no "more" concept
+	}, nil
+}
+
+// queryLogsFromFile queries logs from log files
+func queryLogsFromFile(params LogQueryParams) (*LogQueryResult, error) {
+	logDir := getLogDir()
+	if logDir == "" {
+		return nil, fmt.Errorf("log directory not configured")
+	}
+
+	filename := utils.GetOrDefault("logs.filename", "one-api.log")
+	logPath := filepath.Join(logDir, filename)
+
+	// Read logs from file
+	entries, err := readLogsFromFile(logPath, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply filters
+	filtered := filterLogs(entries, params)
+
+	// Limit results
+	hasMore := len(filtered) > params.Count
+	if hasMore {
+		filtered = filtered[:params.Count]
+	}
+
+	return &LogQueryResult{
+		Logs:       filtered,
+		TotalCount: len(filtered),
+		HasMore:    hasMore,
+	}, nil
+}
+
+// readLogsFromFile reads logs from the log file
+func readLogsFromFile(logPath string, params LogQueryParams) ([]LogEntry, error) {
+	file, err := os.Open(logPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open log file: %v", err)
+	}
+	defer file.Close()
+
+	var entries []LogEntry
+	scanner := bufio.NewScanner(file)
+
+	// Read file line by line
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+
+		entry, err := parseLogLine(line)
+		if err != nil {
+			// Skip invalid lines
+			continue
+		}
+
+		entries = append(entries, entry)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading log file: %v", err)
+	}
+
+	// Reverse to get newest first
+	for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+		entries[i], entries[j] = entries[j], entries[i]
+	}
+
+	return entries, nil
+}
+
+// parseLogLine parses a single log line into LogEntry
+func parseLogLine(line string) (LogEntry, error) {
+	// Expected format: "2006/01/02 - 15:04:05	LEVEL	message"
+	parts := strings.SplitN(line, "\t", 3)
+	if len(parts) < 3 {
+		return LogEntry{}, fmt.Errorf("invalid log line format")
+	}
+
+	// Parse timestamp
+	timestamp, err := time.Parse("2006/01/02 - 15:04:05", parts[0])
+	if err != nil {
+		return LogEntry{}, fmt.Errorf("failed to parse timestamp: %v", err)
+	}
+
+	level := strings.ToLower(strings.TrimSpace(parts[1]))
+	message := parts[2]
+
+	return LogEntry{
+		Timestamp: timestamp,
+		Level:     level,
+		Message:   message,
+	}, nil
+}
+
+// filterLogs applies filters to log entries
+func filterLogs(entries []LogEntry, params LogQueryParams) []LogEntry {
+	var filtered []LogEntry
+
+	for _, entry := range entries {
+		// Search term filter
+		if params.SearchTerm != "" {
+			if params.UseRegex {
+				matched, err := regexp.MatchString(params.SearchTerm, entry.Message)
+				if err != nil || !matched {
+					continue
+				}
+			} else {
+				if !strings.Contains(strings.ToLower(entry.Message), strings.ToLower(params.SearchTerm)) {
+					continue
+				}
+			}
+		}
+
+		filtered = append(filtered, entry)
+	}
+
+	return filtered
 }

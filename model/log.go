@@ -6,6 +6,7 @@ import (
 	"one-api/common/config"
 	"one-api/common/logger"
 	"one-api/common/utils"
+	"strings"
 	"time"
 
 	"gorm.io/datatypes"
@@ -14,8 +15,8 @@ import (
 
 type Log struct {
 	Id               int                                `json:"id"`
-	UserId           int                                `json:"user_id" gorm:"index"`
-	CreatedAt        int64                              `json:"created_at" gorm:"bigint;index:idx_created_at_type"`
+	UserId           int                                `json:"user_id" gorm:"index;index:idx_user_created_at"`
+	CreatedAt        int64                              `json:"created_at" gorm:"bigint;index:idx_created_at_type;index:idx_user_created_at"`
 	Type             int                                `json:"type" gorm:"index:idx_created_at_type"`
 	Content          string                             `json:"content"`
 	Username         string                             `json:"username" gorm:"index:index_username_model_name,priority:2;default:''"`
@@ -77,6 +78,34 @@ func RecordLog(userId int, logType int, content string) {
 	err := DB.Create(log).Error
 	if err != nil {
 		logger.SysError("failed to record log: " + err.Error())
+	}
+}
+
+// RecordLogWithTx 在指定事务中记录日志
+func RecordLogWithTx(tx *gorm.DB, userId int, logType int, content string) {
+	if logType == LogTypeConsume && !config.LogConsumeEnabled {
+		return
+	}
+
+	// 在事务中查询用户名，避免事务未提交时查询不到用户
+	var username string
+	err := tx.Model(&User{}).Where("id = ?", userId).Select("username").Find(&username).Error
+	if err != nil {
+		logger.SysError("failed to get username in tx: " + err.Error())
+		// 如果事务中查询失败，尝试从缓存获取
+		username, _ = CacheGetUsername(userId)
+	}
+
+	log := &Log{
+		UserId:    userId,
+		Username:  username,
+		CreatedAt: utils.GetTimestamp(),
+		Type:      logType,
+		Content:   content,
+	}
+	err = tx.Create(log).Error
+	if err != nil {
+		logger.SysError("failed to record log with tx: " + err.Error())
 	}
 }
 
@@ -186,6 +215,64 @@ func GetLogsList(params *LogsListParams) (*DataResult[Log], error) {
 	return PaginateAndOrder[Log](tx, &params.PaginationParams, &logs, allowedLogsOrderFields)
 }
 
+// GetAllLogsList returns all logs matching the criteria without pagination (for export)
+func GetAllLogsList(params *LogsListParams) ([]*Log, error) {
+	var logs []*Log
+
+	tx := DB.Preload("Channel", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, name")
+	})
+
+	if params.LogType != LogTypeUnknown {
+		tx = tx.Where("type = ?", params.LogType)
+	}
+	if params.ModelName != "" {
+		tx = tx.Where("model_name = ?", params.ModelName)
+	}
+	if params.Username != "" {
+		tx = tx.Where("username = ?", params.Username)
+	}
+	if params.TokenName != "" {
+		tx = tx.Where("token_name = ?", params.TokenName)
+	}
+	if params.StartTimestamp != 0 {
+		tx = tx.Where("created_at >= ?", params.StartTimestamp)
+	}
+	if params.EndTimestamp != 0 {
+		tx = tx.Where("created_at <= ?", params.EndTimestamp)
+	}
+	if params.ChannelId != 0 {
+		tx = tx.Where("channel_id = ?", params.ChannelId)
+	}
+	if params.SourceIp != "" {
+		tx = tx.Where("source_ip = ?", params.SourceIp)
+	}
+
+	// Apply ordering
+	if params.Order != "" {
+		orderFields := strings.Split(params.Order, ",")
+		for _, field := range orderFields {
+			field = strings.TrimSpace(field)
+			desc := strings.HasPrefix(field, "-")
+			if desc {
+				field = field[1:]
+			}
+			if allowedLogsOrderFields[field] {
+				if desc {
+					field = field + " DESC"
+				}
+				tx = tx.Order(field)
+			}
+		}
+	} else {
+		// Default ordering
+		tx = tx.Order("id DESC")
+	}
+
+	err := tx.Find(&logs).Error
+	return logs, err
+}
+
 func GetUserLogsList(userId int, params *LogsListParams) (*DataResult[Log], error) {
 	var logs []*Log
 
@@ -207,7 +294,76 @@ func GetUserLogsList(userId int, params *LogsListParams) (*DataResult[Log], erro
 		tx = tx.Where("created_at <= ?", params.EndTimestamp)
 	}
 
-	return PaginateAndOrder[Log](tx, &params.PaginationParams, &logs, allowedLogsOrderFields)
+	result, err := PaginateAndOrder[Log](tx, &params.PaginationParams, &logs, allowedLogsOrderFields)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, log := range *result.Data {
+		if log.Type == LogTypeManage || log.Type == LogTypeSystem {
+			log.SourceIp = ""
+		}
+	}
+
+	return result, nil
+}
+
+// GetAllUserLogsList returns all user logs matching the criteria without pagination (for export)
+func GetAllUserLogsList(userId int, params *LogsListParams) ([]*Log, error) {
+	var logs []*Log
+
+	tx := DB.Where("user_id = ?", userId).Omit("id")
+
+	if params.LogType != LogTypeUnknown {
+		tx = tx.Where("type = ?", params.LogType)
+	}
+	if params.ModelName != "" {
+		tx = tx.Where("model_name = ?", params.ModelName)
+	}
+	if params.TokenName != "" {
+		tx = tx.Where("token_name = ?", params.TokenName)
+	}
+	if params.StartTimestamp != 0 {
+		tx = tx.Where("created_at >= ?", params.StartTimestamp)
+	}
+	if params.EndTimestamp != 0 {
+		tx = tx.Where("created_at <= ?", params.EndTimestamp)
+	}
+
+	// Apply ordering
+	if params.Order != "" {
+		orderFields := strings.Split(params.Order, ",")
+		for _, field := range orderFields {
+			field = strings.TrimSpace(field)
+			desc := strings.HasPrefix(field, "-")
+			if desc {
+				field = field[1:]
+			}
+			if allowedLogsOrderFields[field] {
+				if desc {
+					field = field + " DESC"
+				}
+				tx = tx.Order(field)
+			}
+		}
+	} else {
+		// Default ordering
+		tx = tx.Order("id DESC")
+	}
+
+	err := tx.Find(&logs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply the same filtering as in GetUserLogsList
+	for _, log := range logs {
+		if log.Type == LogTypeManage || log.Type == LogTypeSystem {
+			log.SourceIp = ""
+		}
+	}
+
+	return logs, nil
 }
 
 func SearchAllLogs(keyword string) (logs []*Log, err error) {

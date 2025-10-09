@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"one-api/common"
+	"one-api/common/cache"
 	"one-api/common/config"
 	"one-api/common/logger"
 	"one-api/common/redis"
@@ -16,34 +17,39 @@ import (
 // User if you add sensitive fields, don't forget to clean them in setupLogin function.
 // Otherwise, the sensitive information will be saved on local storage in plain text!
 type User struct {
-	Id               int            `json:"id"`
-	Username         string         `json:"username" gorm:"unique;index" validate:"max=12"`
-	Password         string         `json:"password" gorm:"not null;" validate:"min=8,max=20"`
-	DisplayName      string         `json:"display_name" gorm:"index" validate:"max=20"`
-	Role             int            `json:"role" gorm:"type:int;default:1"`   // admin, common
-	Status           int            `json:"status" gorm:"type:int;default:1"` // enabled, disabled
-	Email            string         `json:"email" gorm:"index" validate:"max=50"`
-	AvatarUrl        string         `json:"avatar_url" gorm:"type:varchar(500);column:avatar_url;default:''"`
-	OidcId           string         `json:"oidc_id" gorm:"column:oidc_id;index"`
-	GitHubId         string         `json:"github_id" gorm:"column:github_id;index"`
-	GitHubIdNew      int            `json:"github_id_new" gorm:"column:github_id_new;index"`
-	WeChatId         string         `json:"wechat_id" gorm:"column:wechat_id;index"`
-	TelegramId       int64          `json:"telegram_id" gorm:"bigint,column:telegram_id;default:0;"`
-	LarkId           string         `json:"lark_id" gorm:"column:lark_id;index"`
-	VerificationCode string         `json:"verification_code" gorm:"-:all"`                                    // this field is only for Email verification, don't save it to database!
-	AccessToken      string         `json:"access_token" gorm:"type:char(32);column:access_token;uniqueIndex"` // this token is for system management
-	Quota            int            `json:"quota" gorm:"type:int;default:0"`
-	UsedQuota        int            `json:"used_quota" gorm:"type:int;default:0;column:used_quota"` // used quota
-	RequestCount     int            `json:"request_count" gorm:"type:int;default:0;"`               // request number
-	Group            string         `json:"group" gorm:"type:varchar(32);default:'default'"`
-	AffCode          string         `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
-	AffCount         int            `json:"aff_count" gorm:"type:int;default:0;column:aff_count"`
-	AffQuota         int            `json:"aff_quota" gorm:"type:int;default:0;column:aff_quota"`
-	AffHistoryQuota  int            `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"`
-	InviterId        int            `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
-	LastLoginTime    int64          `json:"last_login_time" gorm:"bigint;default:0"`
-	CreatedTime      int64          `json:"created_time" gorm:"bigint"`
-	DeletedAt        gorm.DeletedAt `json:"-" gorm:"index"`
+	Id                int            `json:"id"`
+	Username          string         `json:"username" gorm:"unique;index" validate:"required,max=12"`
+	Password          string         `json:"password" gorm:"not null;" validate:"min=8,max=20"`
+	DisplayName       string         `json:"display_name" gorm:"index" validate:"max=20"`
+	Role              int            `json:"role" gorm:"type:int;default:1"`   // admin, common
+	Status            int            `json:"status" gorm:"type:int;default:1"` // enabled, disabled
+	Email             string         `json:"email" gorm:"index" validate:"max=50"`
+	AvatarUrl         string         `json:"avatar_url" gorm:"type:varchar(500);column:avatar_url;default:''"`
+	OidcId            string         `json:"oidc_id" gorm:"column:oidc_id;index"`
+	GitHubId          string         `json:"github_id" gorm:"column:github_id;index"`
+	GitHubIdNew       int            `json:"github_id_new" gorm:"column:github_id_new;index"`
+	WeChatId          string         `json:"wechat_id" gorm:"column:wechat_id;index"`
+	TelegramId        int64          `json:"telegram_id" gorm:"type:bigint;column:telegram_id;default:0;"`
+	LarkId            string         `json:"lark_id" gorm:"column:lark_id;index"`
+	LinuxDoId         int            `json:"linuxdo_id" gorm:"type:bigint;column:linuxdo_id;index;default:0;"`
+	LinuxDoUsername   string         `json:"linuxdo_username" gorm:"column:linuxdo_username;index;default:'';"`
+	LinuxDoTrustLevel int            `json:"linuxdo_trust_level" gorm:"type:int;column:linuxdo_trust_level;default:0;"`
+	VerificationCode  string         `json:"verification_code" gorm:"-:all"`                                    // this field is only for Email verification, don't save it to database!
+	InviteCode        string         `json:"invite_code" gorm:"-:all"`                                          // this field is only for registration, don't save it to database!
+	UsedInviteCode    string         `json:"used_invite_code" gorm:"type:varchar(32);index;default:''"`         // the invite code used during registration, for statistics
+	AccessToken       string         `json:"access_token" gorm:"type:char(32);column:access_token;uniqueIndex"` // this token is for system management
+	Quota             int            `json:"quota" gorm:"type:int;default:0"`
+	UsedQuota         int            `json:"used_quota" gorm:"type:int;default:0;column:used_quota"` // used quota
+	RequestCount      int            `json:"request_count" gorm:"type:int;default:0;"`               // request number
+	Group             string         `json:"group" gorm:"type:varchar(32);default:'default'"`
+	AffCode           string         `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
+	AffCount          int            `json:"aff_count" gorm:"type:int;default:0;column:aff_count"`
+	AffQuota          int            `json:"aff_quota" gorm:"type:int;default:0;column:aff_quota"`
+	AffHistoryQuota   int            `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"`
+	InviterId         int            `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	LastLoginTime     int64          `json:"last_login_time" gorm:"bigint;default:0"`
+	CreatedTime       int64          `json:"created_time" gorm:"bigint"`
+	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 type UserUpdates func(*User)
@@ -70,7 +76,7 @@ func GetUsersList(params *GenericParams) (*DataResult[User], error) {
 		if common.UsingPostgreSQL {
 			groupCol = `"group"`
 		}
-		db = db.Where("id = ? or username LIKE ? or email LIKE ? or display_name LIKE ? or "+groupCol+" LIKE ?", utils.String2Int(params.Keyword), params.Keyword+"%", params.Keyword+"%", params.Keyword+"%", params.Keyword+"%")
+		db = db.Where("id = ? or username LIKE ? or email LIKE ? or display_name LIKE ? or "+groupCol+" LIKE ? or linuxdo_username LIKE ?", utils.String2Int(params.Keyword), params.Keyword+"%", params.Keyword+"%", params.Keyword+"%", params.Keyword+"%", params.Keyword+"%")
 	}
 
 	return PaginateAndOrder[User](db, &params.PaginationParams, &users, allowedUserOrderFields)
@@ -119,8 +125,18 @@ func DeleteUserById(id int) (err error) {
 }
 
 func (user *User) Insert(inviterId int) error {
+	if strings.TrimSpace(user.Username) == "" {
+		return errors.New("用户名不能为空！")
+	}
 	if RecordExists(&User{}, "username", user.Username, nil) {
 		return errors.New("用户名已存在！")
+	}
+
+	// 如果提供了邮箱，进行严格验证
+	if user.Email != "" {
+		if err := common.ValidateEmailStrict(user.Email); err != nil {
+			return errors.New("邮箱格式不符合要求")
+		}
 	}
 	var err error
 	if user.Password != "" {
@@ -154,6 +170,53 @@ func (user *User) Insert(inviterId int) error {
 	return nil
 }
 
+// InsertWithTx 在指定事务中创建用户
+func (user *User) InsertWithTx(tx *gorm.DB, inviterId int) error {
+	if strings.TrimSpace(user.Username) == "" {
+		return errors.New("用户名不能为空！")
+	}
+	if RecordExistsWithTx(tx, &User{}, "username", user.Username, nil) {
+		return errors.New("用户名已存在！")
+	}
+
+	// 如果提供了邮箱，进行严格验证
+	if user.Email != "" {
+		if err := common.ValidateEmailStrict(user.Email); err != nil {
+			return errors.New("邮箱格式不符合要求")
+		}
+	}
+	var err error
+	if user.Password != "" {
+		user.Password, err = common.Password2Hash(user.Password)
+		if err != nil {
+			return err
+		}
+	}
+	user.Quota = config.QuotaForNewUser
+	user.AccessToken = utils.GetUUID()
+	user.AffCode = utils.GetRandomString(4)
+	user.CreatedTime = utils.GetTimestamp()
+	result := tx.Create(user)
+	if result.Error != nil {
+		return result.Error
+	}
+	if config.QuotaForNewUser > 0 {
+		RecordLogWithTx(tx, user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", common.LogQuota(config.QuotaForNewUser)))
+	}
+	if inviterId != 0 {
+		if config.QuotaForInvitee > 0 {
+			_ = IncreaseUserQuotaWithTx(tx, user.Id, config.QuotaForInvitee)
+			RecordLogWithTx(tx, user.Id, LogTypeSystem, fmt.Sprintf("使用邀请码赠送 %s", common.LogQuota(config.QuotaForInvitee)))
+		}
+		// 注册时的邀请奖励保持原有逻辑，充值时的返利使用新的配置
+		if config.QuotaForInviter > 0 {
+			_ = IncreaseUserQuotaWithTx(tx, inviterId, config.QuotaForInviter)
+			RecordLogWithTx(tx, inviterId, LogTypeSystem, fmt.Sprintf("邀请用户赠送 %s", common.LogQuota(config.QuotaForInviter)))
+		}
+	}
+	return nil
+}
+
 func (user *User) Update(updatePassword bool) error {
 	var err error
 	omitFields := []string{"quota", "used_quota", "request_count", "aff_count", "aff_quota", "aff_history"}
@@ -173,16 +236,63 @@ func (user *User) Update(updatePassword bool) error {
 		config.RootUserEmail = user.Email
 	}
 
-	// 删除缓存
-	if config.RedisEnabled {
-		redis.RedisDel(fmt.Sprintf(UserGroupCacheKey, user.Id))
+	// 删除缓存（支持两套缓存机制）
+	if err == nil {
+		ClearUserGroupAndTokensCache(user.Id)
 	}
 
 	return err
 }
 
 func UpdateUser(id int, fields map[string]interface{}) error {
-	return DB.Model(&User{}).Where("id = ?", id).Updates(fields).Error
+	err := DB.Model(&User{}).Where("id = ?", id).Updates(fields).Error
+	if err != nil {
+		return err
+	}
+
+	// 如果更新了分组字段，清理缓存
+	if _, hasGroup := fields["group"]; hasGroup {
+		ClearUserGroupAndTokensCache(id)
+	}
+
+	return nil
+}
+
+// ClearUserGroupAndTokensCache 清理用户分组和所有Token的缓存
+func ClearUserGroupAndTokensCache(userId int) {
+	if !config.RedisEnabled {
+		return
+	}
+
+	// 清理用户分组缓存
+	userGroupKey := fmt.Sprintf(UserGroupCacheKey, userId)
+	if err := redis.RedisDel(userGroupKey); err != nil {
+		logger.SysError(fmt.Sprintf("清理用户分组Redis缓存失败 userId=%d: %v", userId, err))
+	}
+	if err := cache.DeleteCache(userGroupKey); err != nil {
+		logger.SysError(fmt.Sprintf("清理用户分组缓存失败 userId=%d: %v", userId, err))
+	}
+
+	// 获取用户所有Token的Key
+	var tokenKeys []string
+	err := DB.Model(&Token{}).Where("user_id = ?", userId).Pluck("key", &tokenKeys).Error
+	if err != nil {
+		logger.SysError(fmt.Sprintf("获取用户Token列表失败 userId=%d: %v", userId, err))
+		return
+	}
+
+	// 清理每个Token的缓存
+	for _, tokenKey := range tokenKeys {
+		if tokenKey != "" {
+			cacheKey := fmt.Sprintf(UserTokensKey, tokenKey)
+			if err := redis.RedisDel(cacheKey); err != nil {
+				logger.SysError(fmt.Sprintf("清理Token Redis缓存失败 key=%s: %v", tokenKey, err))
+			}
+			if err := cache.DeleteCache(cacheKey); err != nil {
+				logger.SysError(fmt.Sprintf("清理Token缓存失败 key=%s: %v", tokenKey, err))
+			}
+		}
+	}
 }
 
 func (user *User) Delete() error {
@@ -207,7 +317,7 @@ func (user *User) ValidateAndFill() (err error) {
 	// that means if your field's value is 0, '', false or other zero values,
 	// it won't be used to build query conditions
 	password := user.Password
-	if user.Username == "" || password == "" {
+	if strings.TrimSpace(user.Username) == "" || strings.TrimSpace(password) == "" {
 		return errors.New("用户名或密码为空")
 	}
 	err = DB.Where("username = ?", user.Username).First(user).Error
@@ -292,9 +402,26 @@ func (user *User) FillUserByOidcId() error {
 	if user.OidcId == "" {
 		return errors.New("OIDC ID 为空！")
 	}
-	err := DB.Where(User{OidcId: user.OidcId}).First(user)
-	if err != nil {
-		return err.Error
+	result := DB.Where(User{OidcId: user.OidcId}).First(user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errors.New("没有找到用户！")
+		}
+		return result.Error
+	}
+	return nil
+}
+
+func (user *User) FillUserByLinuxDOId() error {
+	if user.LinuxDoId == 0 {
+		return errors.New("LINUX DO ID 为空！")
+	}
+	result := DB.Where(User{LinuxDoId: user.LinuxDoId}).First(user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errors.New("没有找到用户！")
+		}
+		return result.Error
 	}
 	return nil
 }
@@ -303,9 +430,12 @@ func (user *User) FillUserByUsername() error {
 	if user.Username == "" {
 		return errors.New("username 为空！")
 	}
-	err := DB.Where(User{Username: user.Username}).First(user)
-	if err != nil {
-		return err.Error
+	result := DB.Where(User{Username: user.Username}).First(user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errors.New("没有找到用户！")
+		}
+		return result.Error
 	}
 	return nil
 }
@@ -353,6 +483,10 @@ func IsLarkIdAlreadyTaken(larkId string) bool {
 
 func IsTelegramIdAlreadyTaken(telegramId int64) bool {
 	return IsFieldAlreadyTaken("telegram_id", telegramId)
+}
+
+func IsLinuxDOIdAlreadyTaken(linuxdoId int) bool {
+	return IsFieldAlreadyTaken("linuxdo_id", linuxdoId)
 }
 
 func ResetUserPasswordByEmail(email string, password string) error {
@@ -451,6 +585,20 @@ func increaseUserQuota(id int, quota int) (err error) {
 		// 直接删除缓存键，下次读取时会重新写入最新值
 		redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
 	}
+	return nil
+}
+
+// IncreaseUserQuotaWithTx 在指定事务中增加用户配额
+func IncreaseUserQuotaWithTx(tx *gorm.DB, id int, quota int) (err error) {
+	if quota < 0 {
+		return errors.New("quota 不能为负数！")
+	}
+	// 注意：在事务中不支持批量更新，直接执行数据库操作
+	err = tx.Model(&User{}).Where("id = ?", id).Update("quota", gorm.Expr("quota + ?", quota)).Error
+	if err != nil {
+		return err
+	}
+	// 注意：在事务中不刷新缓存，等事务提交后再刷新
 	return nil
 }
 

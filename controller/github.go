@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
 	"net/url"
+	"one-api/common"
 	"one-api/common/config"
 	"one-api/common/logger"
 	"one-api/common/utils"
@@ -18,8 +18,11 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/proxy"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type GitHubOAuthResponse struct {
@@ -265,6 +268,17 @@ func GitHubOAuth(c *gin.Context) {
 			return
 		}
 
+		// 验证 GitHub 提供的邮箱格式
+		if githubUser.Email != "" {
+			if err := common.ValidateEmailStrict(githubUser.Email); err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "邮箱格式不符合要求",
+				})
+				return
+			}
+		}
+
 		user = &model.User{
 			GitHubId:    githubUser.Login,
 			GitHubIdNew: githubUser.Id,
@@ -274,14 +288,10 @@ func GitHubOAuth(c *gin.Context) {
 			AvatarUrl:   githubUser.AvatarUrl,
 		}
 
-		// 检测邀请码
+		// 检测推荐码
 		var inviterId int
 		if affCode != "" {
 			inviterId, _ = model.GetUserIdByAffCode(affCode)
-		}
-
-		if inviterId > 0 {
-			user.InviterId = inviterId
 		}
 
 		user.Username = githubUser.Login
@@ -295,7 +305,29 @@ func GitHubOAuth(c *gin.Context) {
 			user.DisplayName = user.Username
 		}
 
-		if err := user.Insert(inviterId); err != nil {
+		// 使用事务创建用户并处理邀请码
+		err = model.DB.Transaction(func(tx *gorm.DB) error {
+			// 验证和使用邀请码（如果启用）
+			usedInviteCode, err := validateAndUseInviteCodeForOAuth(c, tx)
+			if err != nil {
+				return err
+			}
+
+			// 设置邀请人ID（使用原有推荐码逻辑）
+			if inviterId > 0 {
+				user.InviterId = inviterId
+			}
+
+			// 设置使用的邀请码
+			if usedInviteCode != "" {
+				user.UsedInviteCode = usedInviteCode
+			}
+
+			// 在事务中创建用户
+			return user.InsertWithTx(tx, user.InviterId)
+		})
+
+		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": err.Error(),
@@ -410,5 +442,67 @@ func GenerateOAuthCode(c *gin.Context) {
 		"success": true,
 		"message": "",
 		"data":    state,
+	})
+}
+
+// SetOAuthInviteCode 为第三方登录设置邀请码
+func SetOAuthInviteCode(c *gin.Context) {
+	var req struct {
+		InviteCode string `json:"invite_code" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "参数错误：邀请码不能为空",
+		})
+		return
+	}
+
+	// 清理输入数据
+	req.InviteCode = strings.TrimSpace(req.InviteCode)
+	if req.InviteCode == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "邀请码不能为空",
+		})
+		return
+	}
+
+	// 如果启用了邀请码注册，验证邀请码
+	if config.InviteCodeRegisterEnabled {
+		// 验证邀请码有效性（不消费）
+		if err := model.CheckInviteCode(req.InviteCode); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	} else {
+		// 未启用邀请码注册时不应该调用此接口
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "系统未启用邀请码注册",
+		})
+		return
+	}
+
+	// 将邀请码存储到会话中
+	session := sessions.Default(c)
+	session.Set("oauth_invite_code", req.InviteCode)
+
+	if err := session.Save(); err != nil {
+		logger.SysError("Failed to save OAuth invite code to session: " + err.Error())
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "系统错误，请重试",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "邀请码设置成功",
 	})
 }

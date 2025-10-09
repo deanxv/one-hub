@@ -42,3 +42,34 @@ func SystemLog(c *gin.Context) {
 		"data":    logs,
 	})
 }
+
+// SystemLogQuery handles advanced log queries
+func SystemLogQuery(c *gin.Context) {
+	var params logger.LogQueryParams
+
+	if err := c.ShouldBindJSON(&params); err != nil {
+		common.APIRespondWithError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Validate parameters
+	if params.Count <= 0 {
+		params.Count = 50 // Default count
+	}
+	if params.Count > 1000 {
+		params.Count = 1000 // Max count
+	}
+
+	// Query logs
+	result, err := logger.QueryLogs(params)
+	if err != nil {
+		common.APIRespondWithError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    result,
+	})
+}

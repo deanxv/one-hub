@@ -20,13 +20,14 @@ import SubCard from 'ui-component/cards/SubCard';
 import { IconBrandWechat, IconBrandGithub, IconMail, IconBrandTelegram, IconBrandOauth } from '@tabler/icons-react';
 import Label from 'ui-component/Label';
 import { API } from 'utils/api';
-import { showError, showSuccess, onGitHubOAuthClicked, copy, trims, onLarkOAuthClicked } from 'utils/common';
+import { showError, showSuccess, onGitHubOAuthClicked, copy, trims, onLarkOAuthClicked, onLinuxDoOAuthClicked } from 'utils/common';
 import * as Yup from 'yup';
 import WechatModal from 'views/Authentication/AuthForms/WechatModal';
 import { useSelector } from 'react-redux';
 import EmailModal from './component/EmailModal';
 import Turnstile from 'react-turnstile';
 import LarkIcon from 'assets/images/icons/lark.svg';
+import LinuxDoIcon from 'assets/images/icons/LinuxDoIcon';
 import { useTheme } from '@mui/material/styles';
 
 const validationSchema = Yup.object().shape({
@@ -39,7 +40,7 @@ const validationSchema = Yup.object().shape({
 
 export default function Profile() {
   const { t } = useTranslation();
-  const [inputs, setInputs] = useState([]);
+  const [inputs, setInputs] = useState({});
   const [turnstileEnabled, setTurnstileEnabled] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -174,6 +175,12 @@ export default function Profile() {
                   <IconBrandOauth /> {inputs.oidc_id || t('profilePage.notBound')}
                 </Label>
               )}
+              {status.linuxDo_oauth && (
+                <Label variant="ghost" color={inputs.linuxdo_username ? 'primary' : 'default'}>
+                  <LinuxDoIcon size={24} variant="profile" />
+                  {inputs.linuxdo_username || t('profilePage.notBound')}
+                </Label>
+              )}
             </Stack>
             <SubCard title={t('profilePage.personalInfo')}>
               <Grid container spacing={2}>
@@ -243,15 +250,6 @@ export default function Profile() {
                     </Button>
                   </Grid>
                 )}
-
-                {status.lark_client_id && !inputs.lark_id && (
-                  <Grid xs={12} md={4}>
-                    <Button variant="contained" onClick={() => onLarkOAuthClicked(status.lark_client_id)}>
-                      {t('profilePage.bindLarkAccount')}
-                    </Button>
-                  </Grid>
-                )}
-
                 <Grid xs={12} md={4}>
                   <Button
                     variant="contained"
@@ -272,7 +270,20 @@ export default function Profile() {
                     <></>
                   )}
                 </Grid>
-
+                {status.lark_client_id && !inputs.lark_id && (
+                  <Grid xs={12} md={4}>
+                    <Button variant="contained" onClick={() => onLarkOAuthClicked(status.lark_client_id)}>
+                      {t('profilePage.bindLarkAccount')}
+                    </Button>
+                  </Grid>
+                )}
+                {status.linuxDo_oauth && Number(inputs.linuxdo_id) === 0 && (
+                  <Grid xs={12} md={4}>
+                    <Button variant="contained" onClick={() => onLinuxDoOAuthClicked(status.linuxDo_client_id, true)}>
+                      {t('profilePage.bindLinuxDoAccount')}
+                    </Button>
+                  </Grid>
+                )}
                 {status.telegram_bot && ( //&& !inputs.telegram_id
                   <Grid xs={12} md={12}>
                     <Stack spacing={2}>

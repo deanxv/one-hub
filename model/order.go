@@ -124,8 +124,10 @@ func GetStatisticsOrder() (orderStatistics []*OrderStatistics, err error) {
 }
 
 type OrderStatisticsGroup struct {
-	Date        string  `json:"date"`
-	OrderAmount float64 `json:"order_amount"`
+	Date          string  `json:"date"`
+	Quota         int64   `json:"quota"`
+	Money         float64 `json:"money"`
+	OrderCurrency string  `json:"order_currency"`
 }
 
 func GetStatisticsOrderByPeriod(startTimestamp, endTimestamp int64) (orderStatistics []*OrderStatisticsGroup, err error) {
@@ -133,12 +135,14 @@ func GetStatisticsOrderByPeriod(startTimestamp, endTimestamp int64) (orderStatis
 
 	err = DB.Raw(`
 		SELECT `+groupSelect+`,
-		sum(order_amount) as order_amount
+		sum(quota) as quota,
+		sum(order_amount) as money,
+		order_currency
 		FROM orders
 		WHERE status= ?
 		AND created_at BETWEEN ? AND ?
-		GROUP BY date
-		ORDER BY date
+		GROUP BY date, order_currency
+		ORDER BY date, order_currency
 	`, OrderStatusSuccess, startTimestamp, endTimestamp).Scan(&orderStatistics).Error
 
 	return orderStatistics, err

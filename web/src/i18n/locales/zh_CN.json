@@ -35,6 +35,11 @@
   "model_price": "可用模型",
   "payment": "支付",
   "setting": "设置",
+  "theme": {
+    "auto": "跟随系统",
+    "light": "浅色模式",
+    "dark": "深色模式"
+  },
   "task": "异步任务",
   "operation": "运营",
   "paySetting": "支付设置",
@@ -69,7 +74,9 @@
     "resendCode": "重新发送({{countdown}})",
     "getCode": "获取验证码",
     "verificationInfo": "请稍后几秒重试，Turnstile 正在检查用户环境！",
-    "restSendEmail": "重置邮件发送成功，请检查邮箱！"
+    "restSendEmail": "重置邮件发送成功，请检查邮箱！",
+    "registering": "注册中...",
+    "inviteCodeRequired": "邀请码是必填项"
   },
   "registerPage": {
     "alreadyHaveAccount": "已经有帐号了?点击登录"
@@ -139,7 +146,14 @@
     "realTimeTraffic": "实时流量",
     "tpmDescription": "TPM",
     "cpmDescription": "CPM",
-    "last60SecondsStats": "最近60秒统计"
+    "last60SecondsStats": "最近60秒统计",
+    "timeFilter": {
+      "all": "全部",
+      "year": "本年",
+      "month": "本月",
+      "week": "本周",
+      "day": "今日"
+    }
   },
   "channel_index": {
     "channelList": "渠道列表",
@@ -210,7 +224,20 @@
     "pleaseSelectChannelsForUserGroup": "请选择至少一个渠道",
     "addingUserGroup": "添加中...",
     "addUserGroupToChannels": "为 {{count}} 个渠道添加用户分组",
-    "batchAddUserGroupSuccess": "成功为 {{count}} 个渠道添加用户分组 \"{{group}}\""
+    "batchAddUserGroupSuccess": "成功为 {{count}} 个渠道添加用户分组 \"{{group}}\"",
+    "batchAddModel": "批量添加模型",
+    "batchAddModelTip": "选择渠道并添加模型。支持输入多个模型。如果渠道已有某个模型，将跳过该模型。",
+    "selectModelToAdd": "选择或输入要添加的模型",
+    "pleaseSelectModel": "请选择或输入模型",
+    "pleaseSelectChannelsForModel": "请选择至少一个渠道",
+    "channelAlreadyHasModel": "（已有部分模型）",
+    "currentModels": "当前模型",
+    "noModels": "无",
+    "addingModel": "添加中...",
+    "addModelToChannels": "为 {{count}} 个渠道添加模型",
+    "batchAddModelSuccess": "成功为 {{count}} 个渠道添加模型 \"{{model}}\"",
+    "modelInputTip": "支持输入多个模型，用逗号分隔",
+    "loadingChannels": "正在加载渠道列表..."
   },
   "channel_edit": {
     "customModelTip": "自定义：点击或回车输入",
@@ -358,6 +385,11 @@
     "title": "日志",
     "refreshButton": "刷新/清除搜索条件",
     "searchButton": "搜索",
+    "searching": "搜索中...",
+    "exportButton": "导出CSV",
+    "exporting": "导出中...",
+    "exportSuccess": "导出成功",
+    "exportError": "导出失败",
     "columnSettings": "列设置",
     "selectColumns": "选择列",
     "columnSelectAll": "全选",
@@ -575,6 +607,7 @@
     "bindWechatAccount": "绑定微信账号",
     "bindGitHubAccount": "绑定Github账号",
     "bindLarkAccount": "绑定飞书账号",
+    "bindLinuxDoAccount": "绑定LINUX DO账号",
     "changeEmail": "更换邮箱",
     "bindEmail": "绑定邮箱",
     "telegramBot": "Telegram 机器人",
@@ -733,6 +766,10 @@
         "displayTokenStat": "Billing 相关 API 显示令牌额度而非用户额度",
         "approximateToken": "使用近似的方式估算 token 数以减少计算量",
         "emptyResponseBilling": "空回复计费",
+        "unifiedRequestResponseModel": "统一请求响应模型",
+        "unifiedRequestResponseModelTooltip": "当存在模型映射时，响应中的model值为请求的model值，而非实际调用的模型名称",
+        "modelNameCaseInsensitive": "模型名称大小写不敏感",
+        "modelNameCaseInsensitiveTooltip": "开启后，模型匹配时将忽略大小写，例如 GPT-4、gpt-4、Gpt-4 都会匹配到同一个模型",
         "saveButton": "保存通用设置"
       },
       "invoice": {
@@ -840,6 +877,7 @@
       "chatLinkSettings": {
         "title": "聊天链接设置",
         "info": "配置聊天链接，该配置在令牌中的聊天生效以及首页的Playground中的聊天生效. <br />链接中可以使&#123;key&#125;替换用户的令牌，&#123;server&#125;替换服务器地址。例如：{'https://chat.oneapi.pro/#/?settings={\"key\":\"sk-{key}\",\"url\":\"{server}\"}'}<br />如果未配置，会默认配置以下4个链接：<br />ChatGPT Next ： {'https://chat.oneapi.pro/#/?settings={\"key\":\"{key}\",\"url\":\"{server}\"}'}<br />chatgpt-web-midjourney-proxy ： {'https://vercel.ddaiai.com/#/?settings={\"key\":\"{key}\",\"url\":\"{server}\"}'}<br />AMA 问天 ： {'ama://set-api-key?server={server}&key={key}'}<br />opencat ： {'opencat://team/join?domain={server}&token={key}'}<br />排序规则：值越大越靠前，值相同则按照配置顺序",
+        "builtinChatEnabled": "启用内置聊天",
         "save": "保存聊天链接设置"
       },
       "extraTokenPriceJson": {
@@ -904,7 +942,9 @@
         "larkAuth": "允许通过飞书登录 & 注册",
         "registerEnabled": "允许新用户注册（此项为否时，新用户将无法以任何方式进行注册）",
         "turnstileCheck": "启用 Turnstile 用户校验",
-        "gitHubOldIdClose": "关闭 GitHub 老 ID 登录"
+        "gitHubOldIdClose": "关闭 GitHub 老 ID 登录",
+        "linuxDoOAuth": "允许通过 LINUX DO 账户登录 & 注册",
+        "linuxDoOAuthTrustLevel": "允许通过 LINUX DO 信任等级进行限制"
       },
       "configureEmailDomainWhitelist": {
         "title": "配置邮箱域名白名单",
@@ -928,6 +968,21 @@
         "smtpToken": "SMTP 访问凭证",
         "smtpTokenPlaceholder": "敏感信息不会发送到前端显示",
         "save": "保存 SMTP 设置"
+      },
+      "configureLinuxDoOAuthApp": {
+        "title": "配置 LINUX DO OAuth 应用",
+        "subTitle": "用以支持通过 LINUX DO 进行登录注册，",
+        "manageLink": "点击此处",
+        "manage": "管理你的 LINUX DO App",
+        "alert1": "Homepage URL 填",
+        "alert2": "，Authorization callback URL 填",
+        "clientId": "LINUX DO Client ID",
+        "clientSecret": "LINUX DO Client Secret",
+        "lowestTrustLevel": "LINUX DO Trust Level",
+        "clientIdPlaceholder": "输入你注册的 LINUX DO OAuth APP 的 ID",
+        "clientSecretPlaceholder": "敏感信息不会发送到前端显示",
+        "lowestTrustLevelPlaceholder": "输入需要限制的最低信任等级",
+        "saveButton": "保存 LINUX DO OAuth 设置"
       },
       "configureGitHubOAuthApp": {
         "title": "配置 GitHub OAuth 应用",
@@ -1021,7 +1076,7 @@
         "aboutLabel": "关于",
         "aboutPlaceholder": "在此输入新的关于内容，支持 Markdown & HTML 代码。如果输入的是一个链接，则会使用该链接作为 iframe 的 src 属性，这允许你设置任意网页作为关于页面。",
         "saveAbout": "保存关于",
-        "copyrightWarning": "移除 One Hub 的版权标识必须首先获得授权，项目维护需要花费大量精力，如果本项目对你有意义，请主动支持本项目。",
+        "copyrightWarning": "移除 Done Hub 的版权标识必须首先获得授权，项目维护需要花费大量精力，如果本项目对你有意义，请主动支持本项目。",
         "footerLabel": "页脚设置",
         "footerPlaceholder": "在此输入新的页脚，留空则使用默认页脚，支持 HTML 代码",
         "setFooter": "设置页脚"
@@ -1072,7 +1127,12 @@
     "useGithubLogin": "使用 Github 登录",
     "useWechatLogin": "使用 Wechat 登录",
     "useOIDCLogin": "使用 OIDC 登录",
-    "useLarkLogin": "使用飞书登录"
+    "useLarkLogin": "使用飞书登录",
+    "linuxDoLogin": "LINUX DO 登录",
+    "useLinuxDoLogin": "使用 LINUX DO 登录",
+    "linuxDoError": "操作失败，重定向至登录界面中...",
+    "linuxDoCountError": "出现错误，第 {{count}} 次重试中...",
+    "loggingIn": "登录中..."
   },
   "description": "All in one 的 OpenAI 接口\n整合各种 API 访问方式\n一键部署，开箱即用",
   "about": {
@@ -1338,7 +1398,7 @@
   "标签": "标签",
   "请选择渠道类型": "请选择渠道类型",
   "请为渠道命名": "请为渠道命名",
-  "可空，请输入中转API地址，例如通过cloudflare中转": "可空，请输入中转API地址，例如通过cloudflare中转",
+  "可空，请输入中转API地址，例如通过cloudflare中转": "可空，请输入中转API地址，例如通过cloudflare中转。支持使用{model}变量，例如：https://api.example.com/v1/{model}/chat",
   "请输入渠道对应的鉴权密钥": "请输入渠道对应的鉴权密钥",
   "单独设置代理地址，支持http和socks5，例如：http://127.0.0.1:1080,代理地址中可以通过 `%s` 作为会话标识占位符，程序中检测到有占位符会根据Key生成唯一会话标识符进行替换": "单独设置代理地址，支持http和socks5，例如：http://127.0.0.1:1080,代理地址中可以通过 `%s` 作为会话标识占位符，程序中检测到有占位符会根据Key生成唯一会话标识符进行替换",
   "用于测试使用的模型，为空时无法测速,如：gpt-3.5-turbo，仅支持chat模型": "用于测试使用的模型，为空时无法测速,如：gpt-3.5-turbo，仅支持chat模型",

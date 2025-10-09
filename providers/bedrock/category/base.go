@@ -3,10 +3,10 @@ package category
 import (
 	"errors"
 	"net/http"
+	"one-api/common/model_utils"
 	"one-api/common/requester"
 	"one-api/providers/base"
 	"one-api/types"
-	"strings"
 )
 
 var CategoryMap = map[string]Category{}
@@ -23,7 +23,7 @@ func GetCategory(modelName string) (*Category, error) {
 	// 获取provider
 	provider := ""
 
-	if strings.Contains(modelName, "anthropic") {
+	if model_utils.ContainsCaseInsensitive(modelName, "anthropic") {
 		provider = "anthropic"
 	}
 

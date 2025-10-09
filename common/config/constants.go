@@ -12,6 +12,7 @@ var Commit = "unknown"
 var BuildTime = "unknown"
 var SystemName = "Done Hub"
 var ServerAddress = "http://localhost:3000"
+var PaymentCallbackAddress = ""
 var Debug = false
 
 var OldTokenMaxId = 0
@@ -43,7 +44,10 @@ var WeChatAuthEnabled = false
 var LarkAuthEnabled = false
 var TurnstileCheckEnabled = false
 var RegisterEnabled = true
+var InviteCodeRegisterEnabled = false
 var OIDCAuthEnabled = false
+var LinuxDoOAuthEnabled = false
+var LinuxDoOAuthTrustLevelEnabled = false
 
 // 是否开启内容审查
 var EnableSafe = false
@@ -127,6 +131,9 @@ var SafeKeyWords = []string{
 // mj
 var MjNotifyEnabled = false
 
+// 内置聊天功能开关
+var BuiltinChatEnabled = true
+
 var EmailDomainRestrictionEnabled = false
 var EmailDomainWhitelist = []string{
 	"gmail.com",
@@ -173,6 +180,10 @@ var OIDCIssuer = ""
 var OIDCScopes = ""
 var OIDCUsernameClaims = ""
 
+var LinuxDoClientId = ""
+var LinuxDoClientSecret = ""
+var LinuxDoOAuthLowestTrustLevel = 1
+
 var QuotaForNewUser = 0
 var QuotaForInviter = 0
 var QuotaForInvitee = 0
@@ -188,6 +199,12 @@ var EmptyResponseBillingEnabled = true
 var DisableTokenEncoders = false
 var RetryTimes = 0
 var RetryTimeOut = 10
+
+// 统一请求响应模型（响应中显示用户请求的原始模型名称）
+var UnifiedRequestResponseModelEnabled = false
+
+// 模型名称大小写不敏感匹配
+var ModelNameCaseInsensitiveEnabled = false
 
 var DefaultChannelWeight = uint(1)
 var RetryCooldownSeconds = 5
@@ -330,3 +347,11 @@ const (
 )
 
 type ContextKey string
+
+// linux do 用户信任等级
+const (
+	Basic   = 1 // 基础用户
+	Member  = 2 // 会员
+	Regular = 3 // 活跃用户
+	Leader  = 4 // 领导者
+)
