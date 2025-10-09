@@ -419,7 +419,7 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 		},
 	}
 
-	if model_utils.HasPrefixCaseInsensitive(request.Model, "gemini-2.0-flash-exp") {
+	if model_utils.HasPrefixCaseInsensitive(request.Model, "gemini-2.0-flash-exp") || model_utils.HasPrefixCaseInsensitive(request.Model, "gemini-2.5-flash-image") {
 		geminiRequest.GenerationConfig.ResponseModalities = []string{"Text", "Image"}
 	}
 
@@ -708,27 +708,17 @@ func (h *GeminiStreamHandler) convertToOpenaiStream(geminiResponse *GeminiChatRe
 		dataChan <- string(responseBody)
 	}
 
+	h.Usage.TextBuilder.WriteString(streamResponse.GetResponseText())
+
 	// 和ExecutableCode的tokens共用，所以跳过
 	if geminiResponse.UsageMetadata == nil {
 		return
 	}
 
-	h.Usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
+	usage := ConvertOpenAIUsage(geminiResponse.UsageMetadata)
 
-	// 计算 completion tokens，确保不为负数
-	completionTokens := geminiResponse.UsageMetadata.CandidatesTokenCount + geminiResponse.UsageMetadata.ThoughtsTokenCount
-	if completionTokens < 0 {
-		completionTokens = 0
-	}
-	h.Usage.CompletionTokens = completionTokens
-	h.Usage.CompletionTokensDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-
-	// 如果 TotalTokenCount 为 0 但有 PromptTokenCount，则计算总数
-	totalTokens := geminiResponse.UsageMetadata.TotalTokenCount
-	if totalTokens == 0 && geminiResponse.UsageMetadata.PromptTokenCount > 0 {
-		totalTokens = geminiResponse.UsageMetadata.PromptTokenCount + completionTokens
-	}
-	h.Usage.TotalTokens = totalTokens
+	usage.TextBuilder = h.Usage.TextBuilder
+	*h.Usage = usage
 }
 
 const tokenThreshold = 1000000
@@ -775,30 +765,44 @@ var modelAdjustRatios = map[string]int{
 
 func ConvertOpenAIUsage(geminiUsage *GeminiUsageMetadata) types.Usage {
 	if geminiUsage == nil {
-		return types.Usage{}
+		return types.Usage{
+			PromptTokens:     0,
+			CompletionTokens: 0,
+			TotalTokens:      0,
+		}
 	}
 
-	// 计算 completion tokens，确保不为负数
-	completionTokens := geminiUsage.CandidatesTokenCount + geminiUsage.ThoughtsTokenCount
-	if completionTokens < 0 {
-		completionTokens = 0
-	}
-
-	// 如果 TotalTokenCount 为 0 但有 PromptTokenCount，则计算总数
-	totalTokens := geminiUsage.TotalTokenCount
-	if totalTokens == 0 && geminiUsage.PromptTokenCount > 0 {
-		totalTokens = geminiUsage.PromptTokenCount + completionTokens
-	}
-
-	return types.Usage{
+	usage := types.Usage{
 		PromptTokens:     geminiUsage.PromptTokenCount,
-		CompletionTokens: completionTokens,
-		TotalTokens:      totalTokens,
+		CompletionTokens: geminiUsage.CandidatesTokenCount + geminiUsage.ThoughtsTokenCount,
+		TotalTokens:      geminiUsage.TotalTokenCount,
 
 		CompletionTokensDetails: types.CompletionTokensDetails{
 			ReasoningTokens: geminiUsage.ThoughtsTokenCount,
 		},
 	}
+
+	for _, p := range geminiUsage.PromptTokensDetails {
+		switch p.Modality {
+		case "TEXT":
+			usage.PromptTokensDetails.TextTokens = p.TokenCount
+		case "AUDIO":
+			usage.PromptTokensDetails.AudioTokens = p.TokenCount
+		}
+	}
+
+	for _, c := range geminiUsage.CandidatesTokensDetails {
+		switch c.Modality {
+		case "TEXT":
+			usage.CompletionTokensDetails.TextTokens = c.TokenCount
+		case "AUDIO":
+			usage.CompletionTokensDetails.AudioTokens = c.TokenCount
+		case "IMAGE":
+			usage.CompletionTokensDetails.ImageTokens = c.TokenCount
+		}
+	}
+
+	return usage
 }
 
 func (p *GeminiProvider) pluginHandle(request *GeminiChatRequest) {

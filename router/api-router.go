@@ -56,6 +56,21 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/linuxdo", middleware.CriticalRateLimit(), middleware.SessionSecurity(), controller.LinuxDoOAuth)
 		apiRouter.GET("/oauth/linuxdo/bind", middleware.CriticalRateLimit(), middleware.SessionSecurity(), middleware.UserAuth(), controller.LinuxDoBind)
 
+		webauthnGroup := apiRouter.Group("/webauthn")
+		{
+			// 注册相关
+			webauthnGroup.POST("/registration/begin", middleware.UserAuth(), controller.WebauthnBeginRegistration)
+			webauthnGroup.POST("/registration/finish", middleware.UserAuth(), controller.WebauthnFinishRegistration)
+
+			// 登录相关
+			webauthnGroup.POST("/login/begin", middleware.CriticalRateLimit(), controller.WebauthnBeginLogin)
+			webauthnGroup.POST("/login/finish", middleware.CriticalRateLimit(), controller.WebauthnFinishLogin)
+
+			// 凭据管理
+			webauthnGroup.GET("/credentials", middleware.UserAuth(), controller.GetUserWebAuthnCredentials)
+			webauthnGroup.DELETE("/credentials/:id", middleware.UserAuth(), controller.DeleteWebAuthnCredential)
+		}
+
 		apiRouter.Any("/payment/notify/:uuid", controller.PaymentCallback)
 
 		userRoute := apiRouter.Group("/user")

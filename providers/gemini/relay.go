@@ -97,28 +97,17 @@ func (h *GeminiRelayStreamHandler) HandlerStream(rawLine *[]byte, dataChan chan 
 		errChan <- geminiResponse.ErrorInfo
 		return
 	}
+	h.Usage.TextBuilder.WriteString(geminiResponse.GetResponseText())
 
 	if geminiResponse.UsageMetadata == nil {
 		dataChan <- rawStr
 		return
 	}
 
-	h.Usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
+	usage := ConvertOpenAIUsage(geminiResponse.UsageMetadata)
 
-	// 计算 completion tokens，确保不为负数
-	completionTokens := geminiResponse.UsageMetadata.CandidatesTokenCount + geminiResponse.UsageMetadata.ThoughtsTokenCount
-	if completionTokens < 0 {
-		completionTokens = 0
-	}
-	h.Usage.CompletionTokens = completionTokens
-	h.Usage.CompletionTokensDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-
-	// 如果 TotalTokenCount 为 0 但有 PromptTokenCount，则计算总数
-	totalTokens := geminiResponse.UsageMetadata.TotalTokenCount
-	if totalTokens == 0 && geminiResponse.UsageMetadata.PromptTokenCount > 0 {
-		totalTokens = geminiResponse.UsageMetadata.PromptTokenCount + completionTokens
-	}
-	h.Usage.TotalTokens = totalTokens
+	usage.TextBuilder = h.Usage.TextBuilder
+	*h.Usage = usage
 
 	dataChan <- rawStr
 }

@@ -1,5 +1,6 @@
-import PropTypes from 'prop-types'
-import { useMemo, useState } from 'react'
+import PropTypes from 'prop-types';
+import { useMemo, useState } from 'react';
+import { ArrowForward } from '@mui/icons-material';
 
 import Badge from '@mui/material/Badge'
 
@@ -114,13 +115,27 @@ export default function LogTableRow({ item, userIsAdmin, userGroup, columnVisibi
         )}
 
         {columnVisibility.group && (
-          <TableCell sx={{ p: '10px 8px', textAlign: 'center' }}>
-            {item?.metadata?.group_name ? (
-              <Label color="default" variant="soft">
-                {userGroup[item.metadata.group_name]?.name || '跟随用户'}
-              </Label>
+          <TableCell sx={{ p: '10px 8px' }}>
+            {item?.metadata?.is_backup_group ? (
+              // 显示分组重定向：原始分组 → 备份分组
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Label color="default" variant="soft">
+                  {userGroup[item.metadata.group_name]?.name || '跟随用户'}
+                </Label>
+                <ArrowForward sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Label color="warning" variant="soft">
+                  {userGroup[item.metadata.backup_group_name]?.name || '备份分组'}
+                </Label>
+              </Stack>
             ) : (
-              ''
+              // 正常显示分组
+              item?.metadata?.group_name || item?.metadata?.backup_group_name ? (
+                <Label color="default" variant="soft">
+                  {userGroup[item.metadata.group_name || item.metadata.backup_group_name]?.name || '跟随用户'}
+                </Label>
+              ) : (
+                ''
+              )
             )}
           </TableCell>
         )}
@@ -191,8 +206,13 @@ export default function LogTableRow({ item, userIsAdmin, userGroup, columnVisibi
         <TableRow>
           <TableCell colSpan={colCount} sx={{ p: 0, border: 0, bgcolor: 'transparent' }}>
             <Collapse in={open} timeout="auto" unmountOnExit>
-              <QuotaWithDetailContent item={item} t={t} totalInputTokens={totalInputTokens}
-                                      totalOutputTokens={totalOutputTokens}/>
+              <QuotaWithDetailContent
+                item={item}
+                userGroup={userGroup}
+                t={t}
+                totalInputTokens={totalInputTokens}
+                totalOutputTokens={totalOutputTokens}
+              />
             </Collapse>
           </TableCell>
         </TableRow>
@@ -307,15 +327,17 @@ function calculateTokens(item) {
   let totalOutputTokens = completion_tokens
   let show = false
 
-  const input_audio_tokens = metadata?.input_audio_tokens_ratio || TOKEN_RATIOS.INPUT_AUDIO
-  const output_audio_tokens = metadata?.output_audio_tokens_ratio || TOKEN_RATIOS.OUTPUT_AUDIO
+  const input_audio_tokens = metadata?.input_audio_tokens_ratio || 1;
+  const output_audio_tokens = metadata?.output_audio_tokens_ratio || 1;
+  const input_image_tokens = metadata?.input_image_tokens_ratio || 1;
+  const output_image_tokens = metadata?.output_image_tokens_ratio || 1;
 
-  const cached_ratio = metadata?.cached_tokens_ratio || TOKEN_RATIOS.CACHED
-  const cached_write_ratio = metadata?.cached_write_tokens_ratio || 0
-  const cached_read_ratio = metadata?.cached_read_tokens_ratio || 0
-  const reasoning_tokens = metadata?.reasoning_tokens_ratio || 0
-  const input_text_tokens_ratio = metadata?.input_text_tokens_ratio || TOKEN_RATIOS.TEXT
-  const output_text_tokens_ratio = metadata?.output_text_tokens_ratio || TOKEN_RATIOS.TEXT
+  const cached_ratio = metadata?.cached_tokens_ratio || 1;
+  const cached_write_ratio = metadata?.cached_write_tokens_ratio || 1;
+  const cached_read_ratio = metadata?.cached_read_tokens_ratio || 1;
+  const reasoning_tokens = metadata?.reasoning_tokens_ratio || 1;
+  const input_text_tokens_ratio = metadata?.input_text_tokens_ratio || 1;
+  const output_text_tokens_ratio = metadata?.output_text_tokens_ratio || 1;
 
   const tokenDetails = [
     {
@@ -349,17 +371,19 @@ function calculateTokens(item) {
       rate: cached_write_ratio,
       labelParams: { ratio: cached_write_ratio }
     },
+    { key: 'cached_read_tokens', label: 'logPage.cachedReadTokens', rate: cached_read_ratio, labelParams: { ratio: cached_read_ratio } },
+    { key: 'reasoning_tokens', label: 'logPage.reasoningTokens', rate: reasoning_tokens, labelParams: { ratio: reasoning_tokens } },
     {
-      key: 'cached_read_tokens',
-      label: 'logPage.cachedReadTokens',
-      rate: cached_read_ratio,
-      labelParams: { ratio: cached_read_ratio }
+      key: 'input_image_tokens',
+      label: 'logPage.inputImageTokens',
+      rate: input_image_tokens,
+      labelParams: { ratio: input_image_tokens }
     },
     {
-      key: 'reasoning_tokens',
-      label: 'logPage.reasoningTokens',
-      rate: reasoning_tokens,
-      labelParams: { ratio: reasoning_tokens }
+      key: 'output_image_tokens',
+      label: 'logPage.outputImageTokens',
+      rate: output_image_tokens,
+      labelParams: { ratio: output_image_tokens }
     }
   ]
     .filter(({ key }) => metadata[key] > 0)
@@ -373,10 +397,11 @@ function calculateTokens(item) {
         'input_audio_tokens',
         'cached_tokens',
         'cached_write_tokens',
-        'cached_read_tokens'
-      ].includes(key)
+        'cached_read_tokens',
+        'input_image_tokens'
+      ].includes(key);
 
-      const isOutputToken = ['output_audio_tokens', 'reasoning_tokens'].includes(key)
+      const isOutputToken = ['output_audio_tokens', 'reasoning_tokens', 'output_image_tokens'].includes(key);
 
       if (isInputToken) {
         totalInputTokens += tokens
