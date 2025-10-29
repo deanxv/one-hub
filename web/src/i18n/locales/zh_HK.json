@@ -746,7 +746,7 @@
     "usernameMinLength": "用戶名不能少於 3 個字符",
     "usernameRequired": "用戶名不能為空",
     "wechatBindSuccess": "微信帳戶綁定成功！",
-    "bindLinuxDoAccount": "綁定LINUX DO帳號"
+    "bindLinuxDoAccount": "綁定LINUX DO帳號",
     "yourTokenIs": "你的訪問令牌是：",
     "registerWebauthn": "註冊 WebAuthn 憑證",
     "webauthnManagement": "WebAuthn 憑證管理",

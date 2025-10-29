@@ -746,8 +746,7 @@
     "usernameRequired": "ユーザー名は空にできません",
     "wechatBindSuccess": "WeChatアカウントのバインドに成功しました！",
     "yourTokenIs": "あなたのアクセストークンは次の通りです：",
-    "bindLinuxDoAccount": "LINUX DOアカウントを紐付ける"
-    "yourTokenIs": "あなたのアクセストークンは次の通りです：",
+    "bindLinuxDoAccount": "LINUX DOアカウントを紐付ける",
     "registerWebauthn": "WebAuthn認証を登録",
     "webauthnManagement": "WebAuthn資格情報の管理",
     "webauthnDescription": "WebAuthnはパスワードレス認証を提供し、指紋認証、Face ID、セキュリティキーなどの生体認証を使用してログインできます。",

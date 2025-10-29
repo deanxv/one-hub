@@ -794,7 +794,7 @@
     "usernameMinLength": "Username must be at least 3 characters long",
     "usernameRequired": "Username cannot be empty",
     "wechatBindSuccess": "WeChat account successfully bound!",
-    "bindLinuxDoAccount": "Bind LINUX DO Account"
+    "bindLinuxDoAccount": "Bind LINUX DO Account",
     "yourTokenIs": "Your access token is:",
     "registerWebauthn": "Register WebAuthn Credential",
     "webauthnManagement": "WebAuthn Credential Management",

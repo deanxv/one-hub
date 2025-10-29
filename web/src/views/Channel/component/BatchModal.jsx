@@ -4,6 +4,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider
 import BatchAzureAPI from './BatchAzureAPI'
 import BatchDelModel from './BatchDelModel'
 import BatchAddUserGroup from './BatchAddUserGroup'
+import BatchAddModel from './BatchAddModel'
 import { useTranslation } from 'react-i18next'
 
 function CustomTabPanel(props) {
@@ -30,7 +31,7 @@ function a11yProps(index) {
   }
 }
 
-const BatchModal = ({ open, setOpen, groupOptions }) => {
+const BatchModal = ({ open, setOpen, groupOptions, modelOptions }) => {
   const { t } = useTranslation()
   const [value, setValue] = useState(0)
   const handleChange = (event, newValue) => {
@@ -41,10 +42,18 @@ const BatchModal = ({ open, setOpen, groupOptions }) => {
     <Dialog open={open} onClose={() => setOpen(!open)} fullWidth maxWidth={'md'}>
       <DialogTitle>
         <Box>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs channel">
+          <Tabs
+            value={value}
+            onChange={handleChange}
+            aria-label="basic tabs channel"
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+          >
             <Tab label={t('channel_index.batchAddUserGroup')} {...a11yProps(0)} />
-            <Tab label={t('channel_index.batchDelete')} {...a11yProps(1)} />
-            <Tab label={t('channel_index.AzureApiVersion')} {...a11yProps(2)} />
+            <Tab label={t('channel_index.batchAddModel')} {...a11yProps(1)} />
+            <Tab label={t('channel_index.batchDelete')} {...a11yProps(2)} />
+            <Tab label={t('channel_index.AzureApiVersion')} {...a11yProps(3)} />
           </Tabs>
         </Box>
       </DialogTitle>
@@ -54,9 +63,12 @@ const BatchModal = ({ open, setOpen, groupOptions }) => {
           <BatchAddUserGroup groupOptions={groupOptions}/>
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
-          <BatchDelModel/>
+          <BatchAddModel modelOptions={modelOptions}/>
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
+          <BatchDelModel/>
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={3}>
           <BatchAzureAPI/>
         </CustomTabPanel>
         <DialogActions>
@@ -72,5 +84,6 @@ export default BatchModal
 BatchModal.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  groupOptions: PropTypes.array
+  groupOptions: PropTypes.array,
+  modelOptions: PropTypes.array
 }

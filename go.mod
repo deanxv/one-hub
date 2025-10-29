@@ -29,7 +29,6 @@ require (
 	github.com/go-gormigrate/gormigrate/v2 v2.1.4
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-redsync/redsync/v4 v4.13.0
-	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/go-webauthn/webauthn v0.13.4
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b
@@ -50,14 +49,9 @@ require (
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.20
 	github.com/wneessen/go-mail v0.6.2
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.38.0
-	golang.org/x/image v0.27.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/image v0.28.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/sync v0.14.0
-	google.golang.org/api v0.235.0
-	google.golang.org/grpc v1.72.2
 	golang.org/x/sync v0.16.0
 	google.golang.org/api v0.237.0
 	google.golang.org/grpc v1.73.0
@@ -69,7 +63,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/auth v0.16.1 // indirect
+	cloud.google.com/go/auth v0.16.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -83,7 +77,6 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/go-webauthn/x v0.1.23 // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -126,9 +119,9 @@ require (
 	go.uber.org/mock v0.5.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
@@ -163,11 +156,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/ugorji/go/codec v1.2.14 // indirect
-	golang.org/x/arch v0.17.0 // indirect
-	golang.org/x/net v0.40.0
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	golang.org/x/arch v0.18.0 // indirect
 	golang.org/x/net v0.41.0
