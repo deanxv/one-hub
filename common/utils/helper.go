@@ -461,3 +461,16 @@ func TruncateBase64InMessage(message string) string {
 func isBase64Char(c byte) bool {
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '/' || c == '='
 }
+
+// IsIpInCidr 判断IP是否在CIDR范围内
+func IsIpInCidr(ip string, cidr string) bool {
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false
+	}
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return false
+	}
+	return ipNet.Contains(parsedIP)
+}

@@ -82,27 +82,27 @@ func CheckLimitModel(c *gin.Context, modelName string) error {
 	}
 
 	// 检查是否启用了模型限制
-	if !setting.Limits.Enabled {
+	if !setting.Limits.LimitModelSetting.Enabled {
 		// 未启用模型限制，允许所有模型
 		return nil
 	}
 
 	// 检查模型列表是否为空
-	if len(setting.Limits.Models) == 0 {
-		// 模型列表为空，不允许任何模型
-		return errors.New("当前令牌未配置可用模型")
+	if len(setting.Limits.LimitModelSetting.Models) == 0 {
+		// Empty model list means no models are allowed
+		return errors.New("No available models configured for current token")
 	}
 
-	// 检查modelName是否在允许的模型列表中
-	for _, allowedModel := range setting.Limits.Models {
+	// Check if modelName is in the allowed models list
+	for _, allowedModel := range setting.Limits.LimitModelSetting.Models {
 		if allowedModel == modelName {
-			// 找到匹配的模型，允许使用
+			// Found matching model, allow usage
 			return nil
 		}
 	}
 
-	// modelName不在允许的模型列表中
-	return fmt.Errorf("当前令牌不支持模型: %s", modelName)
+	// modelName is not in the allowed models list
+	return fmt.Errorf("Model %s is not supported for current token", modelName)
 }
 
 // buildGroupChain 构建分组降级链

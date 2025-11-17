@@ -50,6 +50,7 @@ type User struct {
 	AffHistoryQuota   int            `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"`
 	InviterId         int            `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
 	LastLoginTime     int64          `json:"last_login_time" gorm:"bigint;default:0"`
+	LastLoginIp      string         `json:"last_login_ip" gorm:"type:varchar(128);default:''"`
 	CreatedTime       int64          `json:"created_time" gorm:"bigint"`
 	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
 }
@@ -63,11 +64,13 @@ func GetMaxUserId() int {
 }
 
 var allowedUserOrderFields = map[string]bool{
-	"id":           true,
-	"username":     true,
-	"role":         true,
-	"status":       true,
-	"created_time": true,
+	"id":              true,
+	"username":        true,
+	"role":            true,
+	"status":          true,
+	"created_time":    true,
+	"last_login_time": true,
+	"last_login_ip":   true,
 }
 
 func GetUsersList(params *GenericParams) (*DataResult[User], error) {
