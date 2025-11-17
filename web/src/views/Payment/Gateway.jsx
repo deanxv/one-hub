@@ -18,6 +18,7 @@ import EditeModal from './component/EditModal';
 import { API } from 'utils/api';
 import { PAGE_SIZE_OPTIONS, getPageSize, savePageSize } from 'constants';
 import { Icon } from '@iconify/react';
+import PerfectScrollbar from 'react-perfect-scrollbar';
 
 export default function Gateway() {
   const { t } = useTranslation();
@@ -195,7 +196,7 @@ export default function Gateway() {
         >
           <Container>
             <ButtonGroup variant="outlined" aria-label="outlined small primary button group">
-              <Button onClick={handleRefresh} startIcon={<Icon icon="solar:refresh-bold-duotone" width={18} />}>
+              <Button onClick={handleRefresh} startIcon={<Icon icon="solar:refresh-circle-bold-duotone" width={18} />}>
                 {t('paymentGatewayPage.refreshClear')}
               </Button>
               <Button onClick={search} startIcon={<Icon icon="solar:minimalistic-magnifer-line-duotone" width={18} />}>
@@ -205,8 +206,9 @@ export default function Gateway() {
           </Container>
         </Toolbar>
         {searching && <LinearProgress />}
-        <TableContainer sx={{ overflow: 'unset' }}>
-          <Table sx={{ minWidth: 800 }}>
+        <PerfectScrollbar component="div">
+          <TableContainer sx={{ overflow: 'unset' }}>
+            <Table sx={{ minWidth: 800 }}>
             <KeywordTableHead
               order={order}
               orderBy={orderBy}
@@ -282,6 +284,7 @@ export default function Gateway() {
             </TableBody>
           </Table>
         </TableContainer>
+        </PerfectScrollbar>
         <TablePagination
           page={page}
           component="div"

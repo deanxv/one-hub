@@ -1,101 +1,97 @@
-import PropTypes from 'prop-types';
-import { useState } from 'react';
+import PropTypes from 'prop-types'
+import { useState } from 'react'
 
 import {
-  Popover,
-  TableRow,
-  MenuItem,
-  TableCell,
-  IconButton,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Button,
-  Tooltip,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Popover,
   Stack,
+  TableCell,
+  TableRow,
   TextField,
-  InputAdornment
-} from '@mui/material';
+  Tooltip
+} from '@mui/material'
 
-import Label from 'ui-component/Label';
-import TableSwitch from 'ui-component/Switch';
-import { renderQuota, renderNumber, timestamp2string, renderQuotaByMoney, showError } from 'utils/common';
-import { Icon } from '@iconify/react';
-import { useTheme } from '@mui/material/styles';
-import { useTranslation } from 'react-i18next';
-import ConfirmDialog from 'ui-component/confirm-dialog';
+import Label from 'ui-component/Label'
+import TableSwitch from 'ui-component/Switch'
+import { renderNumber, renderQuota, renderQuotaByMoney, showError, timestamp2string } from 'utils/common'
+import { Icon } from '@iconify/react'
+import { useTheme } from '@mui/material/styles'
+import { useTranslation } from 'react-i18next'
+import ConfirmDialog from 'ui-component/confirm-dialog'
+import LinuxDoIcon from 'assets/images/icons/LinuxDoIcon'
 
 function renderRole(t, role) {
   switch (role) {
     case 1:
-      return <Label color="default">{t('userPage.cUserRole')}</Label>;
+      return <Label color="default">{t('userPage.cUserRole')}</Label>
     case 10:
-      return <Label color="orange">{t('userPage.adminUserRole')}</Label>;
+      return <Label color="orange">{t('userPage.adminUserRole')}</Label>
     case 100:
-      return <Label color="success">{t('userPage.superAdminRole')}</Label>;
+      return <Label color="success">{t('userPage.superAdminRole')}</Label>
     default:
-      return <Label color="error">{t('userPage.uUserRole')}</Label>;
+      return <Label color="error">{t('userPage.uUserRole')}</Label>
   }
 }
 
 export default function UsersTableRow({ item, manageUser, handleOpenModal, setModalUserId }) {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const [open, setOpen] = useState(null);
-  const [openDelete, setOpenDelete] = useState(false);
-  const [openChangeQuota, setOpenChangeQuota] = useState(false);
-  const [statusSwitch, setStatusSwitch] = useState(item.status);
-  const [money, setMoney] = useState(0);
-  const [remark, setRemark] = useState('');
+  const { t } = useTranslation()
+  const theme = useTheme()
+  const [open, setOpen] = useState(null)
+  const [openDelete, setOpenDelete] = useState(false)
+  const [openChangeQuota, setOpenChangeQuota] = useState(false)
+  const [statusSwitch, setStatusSwitch] = useState(item.status)
+  const [money, setMoney] = useState(0)
+  const [remark, setRemark] = useState('')
 
   const handleDeleteOpen = () => {
-    handleCloseMenu();
-    setOpenDelete(true);
-  };
+    handleCloseMenu()
+    setOpenDelete(true)
+  }
 
   const handleDeleteClose = () => {
-    setOpenDelete(false);
-  };
+    setOpenDelete(false)
+  }
 
   const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
-  };
+    setOpen(event.currentTarget)
+  }
 
   const handleCloseMenu = () => {
-    setOpen(null);
-  };
+    setOpen(null)
+  }
 
-  const handleChangeQuota = async () => {
+  const handleChangeQuota = async() => {
     if (money === 0) {
-      showError(t('userPage.changeQuotaNotEmpty'));
+      showError(t('userPage.changeQuotaNotEmpty'))
     }
 
-    const quota = Number(renderQuotaByMoney(money));
+    const quota = Number(renderQuotaByMoney(money))
 
     if (money < 0 && Math.abs(quota) > item.quota) {
-      showError(t('userPage.changeQuotaNotEnough'));
-      return;
+      showError(t('userPage.changeQuotaNotEnough'))
+      return
     }
-    const ok = await manageUser(item.id, 'quota', { quota: Number(quota), remark });
+    const ok = await manageUser(item.id, 'quota', { quota: Number(quota), remark })
     if (ok) {
-      setOpenChangeQuota(false);
+      setOpenChangeQuota(false)
     }
-  };
+  }
 
-  const handleStatus = async () => {
-    const switchVlue = statusSwitch === 1 ? 2 : 1;
-    const { success } = await manageUser(item.username, 'status', switchVlue);
+  const handleStatus = async() => {
+    const switchVlue = statusSwitch === 1 ? 2 : 1
+    const { success } = await manageUser(item.id, 'status', switchVlue)
     if (success) {
-      setStatusSwitch(switchVlue);
+      setStatusSwitch(switchVlue)
     }
-  };
+  }
 
-  const handleDelete = async () => {
-    handleCloseMenu();
-    await manageUser(item.username, 'delete', '');
-  };
+  const handleDelete = async() => {
+    handleCloseMenu()
+    await manageUser(item.id, 'delete', '')
+  }
 
   return (
     <>
@@ -134,24 +130,34 @@ export default function UsersTableRow({ item, manageUser, handleOpenModal, setMo
         <TableCell>
           <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
             <Tooltip title={item.wechat_id ? item.wechat_id : t('profilePage.notBound')} placement="top">
-              <Icon icon="ri:wechat-fill" color={item.wechat_id ? theme.palette.success.dark : theme.palette.grey[400]} />
+              <Icon icon="ri:wechat-fill"
+                    color={item.wechat_id ? theme.palette.success.dark : theme.palette.grey[400]}/>
             </Tooltip>
             <Tooltip title={item.github_id ? item.github_id : t('profilePage.notBound')} placement="top">
-              <Icon icon="ri:github-fill" color={item.github_id ? theme.palette.grey[900] : theme.palette.grey[400]} />
+              <Icon icon="ri:github-fill" color={item.github_id ? theme.palette.grey[900] : theme.palette.grey[400]}/>
+            </Tooltip>
+            <Tooltip title={item.linuxdo_username ? item.linuxdo_username : '未绑定'} placement="top">
+              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <LinuxDoIcon
+                  size={16}
+                  color={item.linuxdo_username ? '#ffb003' : theme.palette.grey[400]}
+                  style={{ opacity: item.linuxdo_username ? 1 : 0.6 }}
+                />
+              </span>
             </Tooltip>
             <Tooltip title={item.email ? item.email : t('profilePage.notBound')} placement="top">
-              <Icon icon="ri:mail-fill" color={item.email ? theme.palette.grey[900] : theme.palette.grey[400]} />
+              <Icon icon="ri:mail-fill" color={item.email ? theme.palette.grey[900] : theme.palette.grey[400]}/>
             </Tooltip>
           </Stack>
         </TableCell>
         <TableCell>{item.created_time === 0 ? t('common.unknown') : timestamp2string(item.created_time)}</TableCell>
         <TableCell>
           {' '}
-          <TableSwitch id={`switch-${item.id}`} checked={statusSwitch === 1} onChange={handleStatus} />
+          <TableSwitch id={`switch-${item.id}`} checked={statusSwitch === 1} onChange={handleStatus}/>
         </TableCell>
         <TableCell>
           <IconButton onClick={handleOpenMenu} sx={{ color: 'rgb(99, 115, 129)' }}>
-            <Icon icon="solar:menu-dots-circle-bold-duotone" />
+            <Icon icon="solar:menu-dots-circle-bold-duotone"/>
           </IconButton>
         </TableCell>
       </TableRow>
@@ -169,54 +175,55 @@ export default function UsersTableRow({ item, manageUser, handleOpenModal, setMo
         {item.role !== 100 && (
           <MenuItem
             onClick={() => {
-              handleCloseMenu();
-              manageUser(item.username, 'role', item.role === 1 ? true : false);
+              handleCloseMenu()
+              manageUser(item.id, 'role', item.role === 1 ? true : false)
             }}
           >
-            <Icon icon="solar:user-bold-duotone" style={{ marginRight: '16px' }} />
+            <Icon icon="solar:user-bold-duotone" style={{ marginRight: '16px' }}/>
             {item.role === 1 ? t('userPage.setAdmin') : t('userPage.cancelAdmin')}
           </MenuItem>
         )}
 
         <MenuItem
           onClick={() => {
-            handleCloseMenu();
-            handleOpenModal();
-            setModalUserId(item.id);
+            handleCloseMenu()
+            handleOpenModal()
+            setModalUserId(item.id)
           }}
         >
-          <Icon icon="solar:pen-bold-duotone" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:pen-bold-duotone" style={{ marginRight: '16px' }}/>
           {t('common.edit')}
         </MenuItem>
         <MenuItem
           onClick={() => {
-            handleCloseMenu();
-            setOpenChangeQuota(true);
+            handleCloseMenu()
+            setOpenChangeQuota(true)
           }}
         >
-          <Icon icon="solar:wallet-money-bold-duotone" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:wallet-money-bold-duotone" style={{ marginRight: '16px' }}/>
           {t('userPage.changeQuota')}
         </MenuItem>
         <MenuItem onClick={handleDeleteOpen} sx={{ color: 'error.main' }}>
-          <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }}/>
           {t('common.delete')}
         </MenuItem>
       </Popover>
 
-      <Dialog open={openDelete} onClose={handleDeleteClose}>
-        <DialogTitle>{t('userPage.del')}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {t('userPage.delTip')} {item.name}？
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteClose}>{t('common.close')}</Button>
-          <Button onClick={handleDelete} sx={{ color: 'error.main' }} autoFocus>
+      <ConfirmDialog
+        open={openDelete}
+        onClose={handleDeleteClose}
+        title={t('common.delete')}
+        content={t('common.deleteConfirm', { title: `用户 "${item.username}"` })}
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDelete}
+          >
             {t('common.delete')}
           </Button>
-        </DialogActions>
-      </Dialog>
+        }
+      />
 
       <ConfirmDialog
         open={openChangeQuota}
@@ -256,7 +263,7 @@ export default function UsersTableRow({ item, manageUser, handleOpenModal, setMo
         }
       />
     </>
-  );
+  )
 }
 
 UsersTableRow.propTypes = {
@@ -264,4 +271,4 @@ UsersTableRow.propTypes = {
   manageUser: PropTypes.func,
   handleOpenModal: PropTypes.func,
   setModalUserId: PropTypes.func
-};
+}

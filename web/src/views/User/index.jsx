@@ -1,73 +1,73 @@
-import { useState, useEffect } from 'react';
-import { showError, showSuccess, trims } from 'utils/common';
+import { useEffect, useState } from 'react'
+import { showError, showSuccess, trims } from 'utils/common'
 
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableContainer from '@mui/material/TableContainer';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import TablePagination from '@mui/material/TablePagination';
-import LinearProgress from '@mui/material/LinearProgress';
-import ButtonGroup from '@mui/material/ButtonGroup';
-import Toolbar from '@mui/material/Toolbar';
-import { Icon } from '@iconify/react';
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableContainer from '@mui/material/TableContainer'
+import PerfectScrollbar from 'react-perfect-scrollbar'
+import TablePagination from '@mui/material/TablePagination'
+import LinearProgress from '@mui/material/LinearProgress'
+import ButtonGroup from '@mui/material/ButtonGroup'
+import Toolbar from '@mui/material/Toolbar'
+import { Icon } from '@iconify/react'
 
-import { Button, Card, Box, Stack, Container, Typography } from '@mui/material';
-import UsersTableRow from './component/TableRow';
-import KeywordTableHead from 'ui-component/TableHead';
-import TableToolBar from 'ui-component/TableToolBar';
-import { API } from 'utils/api';
-import { PAGE_SIZE_OPTIONS, getPageSize, savePageSize } from 'constants';
-import EditeModal from './component/EditModal';
+import { Box, Button, Card, Container, Stack, Typography } from '@mui/material'
+import UsersTableRow from './component/TableRow'
+import KeywordTableHead from 'ui-component/TableHead'
+import TableToolBar from 'ui-component/TableToolBar'
+import { API } from 'utils/api'
+import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants'
+import EditeModal from './component/EditModal'
 
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'
 // ----------------------------------------------------------------------
 export default function Users() {
-  const { t } = useTranslation();
-  const [page, setPage] = useState(0);
-  const [order, setOrder] = useState('desc');
-  const [orderBy, setOrderBy] = useState('id');
-  const [rowsPerPage, setRowsPerPage] = useState(() => getPageSize('user'));
-  const [listCount, setListCount] = useState(0);
-  const [searching, setSearching] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [users, setUsers] = useState([]);
-  const [refreshFlag, setRefreshFlag] = useState(false);
+  const { t } = useTranslation()
+  const [page, setPage] = useState(0)
+  const [order, setOrder] = useState('desc')
+  const [orderBy, setOrderBy] = useState('id')
+  const [rowsPerPage, setRowsPerPage] = useState(() => getPageSize('user'))
+  const [listCount, setListCount] = useState(0)
+  const [searching, setSearching] = useState(false)
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [users, setUsers] = useState([])
+  const [refreshFlag, setRefreshFlag] = useState(false)
 
-  const [openModal, setOpenModal] = useState(false);
-  const [editUserId, setEditUserId] = useState(0);
+  const [openModal, setOpenModal] = useState(false)
+  const [editUserId, setEditUserId] = useState(0)
 
   const handleSort = (event, id) => {
-    const isAsc = orderBy === id && order === 'asc';
+    const isAsc = orderBy === id && order === 'asc'
     if (id !== '') {
-      setOrder(isAsc ? 'desc' : 'asc');
-      setOrderBy(id);
+      setOrder(isAsc ? 'desc' : 'asc')
+      setOrderBy(id)
     }
-  };
+  }
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    setPage(newPage)
+  }
 
   const handleChangeRowsPerPage = (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setPage(0);
-    setRowsPerPage(newRowsPerPage);
-    savePageSize('user', newRowsPerPage);
-  };
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setPage(0)
+    setRowsPerPage(newRowsPerPage)
+    savePageSize('user', newRowsPerPage)
+  }
 
-  const searchUsers = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    setPage(0);
-    setSearchKeyword(formData.get('keyword'));
-  };
+  const searchUsers = async(event) => {
+    event.preventDefault()
+    const formData = new FormData(event.target)
+    setPage(0)
+    setSearchKeyword(formData.get('keyword'))
+  }
 
-  const fetchData = async (page, rowsPerPage, keyword, order, orderBy) => {
-    setSearching(true);
-    keyword = trims(keyword);
+  const fetchData = async(page, rowsPerPage, keyword, order, orderBy) => {
+    setSearching(true)
+    keyword = trims(keyword)
     try {
       if (orderBy) {
-        orderBy = order === 'desc' ? '-' + orderBy : orderBy;
+        orderBy = order === 'desc' ? '-' + orderBy : orderBy
       }
       const res = await API.get(`/api/user/`, {
         params: {
@@ -76,84 +76,84 @@ export default function Users() {
           keyword: keyword,
           order: orderBy
         }
-      });
-      const { success, message, data } = res.data;
+      })
+      const { success, message, data } = res.data
       if (success) {
-        setListCount(data.total_count);
-        setUsers(data.data);
+        setListCount(data.total_count)
+        setUsers(data.data)
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-    setSearching(false);
-  };
+    setSearching(false)
+  }
 
   // 处理刷新
-  const handleRefresh = async () => {
-    setOrderBy('id');
-    setOrder('desc');
-    setRefreshFlag(!refreshFlag);
-  };
+  const handleRefresh = async() => {
+    setOrderBy('id')
+    setOrder('desc')
+    setRefreshFlag(!refreshFlag)
+  }
 
   useEffect(() => {
-    fetchData(page, rowsPerPage, searchKeyword, order, orderBy);
-  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag]);
+    fetchData(page, rowsPerPage, searchKeyword, order, orderBy)
+  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag])
 
-  const manageUser = async (username, action, value) => {
-    let url = '/api/user/manage';
-    let valueData = {};
-    // let data = { username: username, action: '' };
-    let res;
+  const manageUser = async(userId, action, value) => {
+    let url = '/api/user/manage'
+    let valueData = {}
+    // let data = { user_id: userId, action: '' };
+    let res
     switch (action) {
       case 'delete':
-        valueData = { username, action: 'delete' };
-        break;
+        valueData = { user_id: userId, action: 'delete' }
+        break
       case 'status':
-        valueData = { username, action: value === 1 ? 'enable' : 'disable' };
-        break;
+        valueData = { user_id: userId, action: value === 1 ? 'enable' : 'disable' }
+        break
       case 'role':
-        valueData = { username, action: value === true ? 'promote' : 'demote' };
-        break;
+        valueData = { user_id: userId, action: value === true ? 'promote' : 'demote' }
+        break
       case 'quota':
-        url = `/api/user/quota/${username}`;
-        valueData = value;
-        break;
+        url = `/api/user/quota/${userId}`
+        valueData = value
+        break
     }
 
     try {
-      res = await API.post(url, valueData);
-      const { success, message } = res.data;
+      res = await API.post(url, valueData)
+      const { success, message } = res.data
       if (success) {
-        showSuccess(t('userPage.operationSuccess'));
-        await handleRefresh();
+        showSuccess(t('userPage.operationSuccess'))
+        await handleRefresh()
       } else {
-        showError(message);
+        showError(message)
       }
 
-      return res.data;
+      return res.data
     } catch (error) {
-      return;
+
     }
-  };
+  }
 
   const handleOpenModal = (userId) => {
-    setEditUserId(userId);
-    setOpenModal(true);
-  };
+    setEditUserId(userId)
+    setOpenModal(true)
+  }
 
   const handleCloseModal = () => {
-    setOpenModal(false);
-    setEditUserId(0);
-  };
+    setOpenModal(false)
+    setEditUserId(0)
+  }
 
   const handleOkModal = (status) => {
     if (status === true) {
-      handleCloseModal();
-      handleRefresh();
+      handleCloseModal()
+      handleRefresh()
     }
-  };
+  }
 
   return (
     <>
@@ -168,7 +168,7 @@ export default function Users() {
         <Button
           variant="contained"
           color="primary"
-          startIcon={<Icon icon="solar:add-circle-line-duotone" />}
+          startIcon={<Icon icon="solar:add-circle-line-duotone"/>}
           onClick={() => handleOpenModal(0)}
         >
           {t('userPage.createUser')}
@@ -176,7 +176,7 @@ export default function Users() {
       </Stack>
       <Card>
         <Box component="form" onSubmit={searchUsers} noValidate>
-          <TableToolBar placeholder={t('userPage.searchPlaceholder')} />
+          <TableToolBar placeholder={t('userPage.searchPlaceholder')}/>
         </Box>
         <Toolbar
           sx={{
@@ -189,13 +189,13 @@ export default function Users() {
         >
           <Container maxWidth="xl">
             <ButtonGroup variant="outlined" aria-label="outlined small primary button group">
-              <Button onClick={handleRefresh} startIcon={<Icon icon="solar:refresh-bold-duotone" width={18} />}>
+              <Button onClick={handleRefresh} startIcon={<Icon icon="solar:refresh-circle-bold-duotone" width={18}/>}>
                 {t('userPage.refresh')}
               </Button>
             </ButtonGroup>
           </Container>
         </Toolbar>
-        {searching && <LinearProgress />}
+        {searching && <LinearProgress/>}
         <PerfectScrollbar component="div">
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
@@ -241,7 +241,7 @@ export default function Users() {
           showLastButton
         />
       </Card>
-      <EditeModal open={openModal} onCancel={handleCloseModal} onOk={handleOkModal} userId={editUserId} />
+      <EditeModal open={openModal} onCancel={handleCloseModal} onOk={handleOkModal} userId={editUserId}/>
     </>
-  );
+  )
 }

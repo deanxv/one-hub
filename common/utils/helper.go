@@ -205,6 +205,7 @@ func GetOrDefault[T any](env string, defaultValue T) T {
 			return v
 		}
 	}
+
 	// 处理常见的类型转换场景
 	switch any(defaultValue).(type) {
 	case int:
@@ -331,6 +332,17 @@ func GetModelsWithMatch(modelList *[]string, modelName string) string {
 	return ""
 }
 
+func GetModelsWithMatchCaseInsensitive(modelList *[]string, modelName string) string {
+	modelNameLower := strings.ToLower(modelName)
+	for _, model := range *modelList {
+		modelLower := strings.ToLower(model)
+		if strings.HasPrefix(modelNameLower, strings.TrimRight(modelLower, "*")) {
+			return model
+		}
+	}
+	return ""
+}
+
 func EscapeMarkdownText(text string) string {
 	chars := []string{"_", "*", "[", "]", "(", ")", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!", "`"}
 	for _, char := range chars {
@@ -396,4 +408,56 @@ func GetLocalTimezone() string {
 	}
 
 	return "Asia/Shanghai"
+}
+
+func IntSliceToStringSlice(intSlice []int) []string {
+	stringSlice := make([]string, len(intSlice))
+	for i, v := range intSlice {
+		stringSlice[i] = strconv.Itoa(v)
+	}
+	return stringSlice
+}
+
+// TruncateBase64InMessage 截断错误消息中的 base64 数据，避免日志过长
+func TruncateBase64InMessage(message string) string {
+	const maxBase64Length = 50 // 只保留前50个字符
+
+	result := message
+	offset := 0
+
+	// 循环处理所有的 base64 数据
+	for {
+		// 在当前偏移位置查找下一个 base64 数据
+		idx := strings.Index(result[offset:], ";base64,")
+		if idx == -1 {
+			break
+		}
+
+		// 计算实际位置
+		actualIdx := offset + idx
+		start := actualIdx + 8 // ";base64," 的长度
+
+		// 查找 base64 数据的结束位置（通常是引号、空格或其他分隔符）
+		end := start
+		for end < len(result) && isBase64Char(result[end]) {
+			end++
+		}
+
+		if end-start > maxBase64Length {
+			// 截断 base64 数据
+			result = result[:start+maxBase64Length] + "...[truncated]" + result[end:]
+			// 更新偏移位置，继续查找下一个
+			offset = start + maxBase64Length + len("...[truncated]")
+		} else {
+			// 如果这个 base64 数据不需要截断，移动到下一个位置
+			offset = end
+		}
+	}
+
+	return result
+}
+
+// isBase64Char 检查字符是否是 base64 字符
+func isBase64Char(c byte) bool {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '/' || c == '='
 }

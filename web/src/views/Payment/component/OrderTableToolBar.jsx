@@ -8,8 +8,16 @@ import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/zh-cn';
 // ----------------------------------------------------------------------
 
-export default function OrderTableToolBar({ filterName, handleFilterName }) {
+export default function OrderTableToolBar({ filterName, handleFilterName, onSearch }) {
   const { t } = useTranslation();
+
+  // 处理回车键搜索
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && onSearch) {
+      event.preventDefault();
+      onSearch();
+    }
+  };
 
   return (
     <>
@@ -23,6 +31,7 @@ export default function OrderTableToolBar({ filterName, handleFilterName }) {
             label={t('orderlogPage.gatewayIdLabel')}
             value={filterName.gateway_id}
             onChange={handleFilterName}
+            onKeyDown={handleKeyDown}
             placeholder={t('orderlogPage.placeholder.gatewayId')}
           />
         </FormControl>
@@ -35,6 +44,7 @@ export default function OrderTableToolBar({ filterName, handleFilterName }) {
             label={t('orderlogPage.userIdLabel')}
             value={filterName.user_id}
             onChange={handleFilterName}
+            onKeyDown={handleKeyDown}
             placeholder={t('orderlogPage.placeholder.userId')}
           />
         </FormControl>
@@ -47,6 +57,7 @@ export default function OrderTableToolBar({ filterName, handleFilterName }) {
             label={t('orderlogPage.tradeNoLabel')}
             value={filterName.trade_no}
             onChange={handleFilterName}
+            onKeyDown={handleKeyDown}
             placeholder={t('orderlogPage.placeholder.tradeNo')}
           />
         </FormControl>
@@ -59,6 +70,7 @@ export default function OrderTableToolBar({ filterName, handleFilterName }) {
             label={t('orderlogPage.gatewayNoLabel')}
             value={filterName.gateway_no}
             onChange={handleFilterName}
+            onKeyDown={handleKeyDown}
             placeholder={t('orderlogPage.placeholder.gatewayNo')}
           />
         </FormControl>
@@ -141,5 +153,6 @@ export default function OrderTableToolBar({ filterName, handleFilterName }) {
 
 OrderTableToolBar.propTypes = {
   filterName: PropTypes.object,
-  handleFilterName: PropTypes.func
+  handleFilterName: PropTypes.func,
+  onSearch: PropTypes.func
 };

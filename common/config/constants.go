@@ -324,6 +324,8 @@ const (
 	ChannelTypeAzureDatabricks = 54
 	ChannelTypeAzureV1         = 55
 	ChannelTypeXAI             = 56
+	ChannelTypeGeminiCli       = 57
+	ChannelTypeClaudeCode      = 58
 )
 
 const (
