@@ -433,11 +433,12 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 		geminiRequest.GenerationConfig.ResponseModalities = []string{"AUDIO"}
 	}
 
+	// 历史消息约束检查：防止下游 400 错误
+	// 如果启用 thinking 但历史 assistant 消息不以 thinking/redacted_thinking 开头，则不启用
+	canEnableThinking := shouldEnableThinking(request.Messages)
+
 	// 1. 基础检查：是否有 reasoning 参数
 	if request.Reasoning != nil {
-		// 2. 历史消息约束检查：防止下游 400 错误
-		// 如果启用 thinking 但历史 assistant 消息不以 thinking/redacted_thinking 开头，则不启用
-		canEnableThinking := shouldEnableThinking(request.Messages)
 
 		if canEnableThinking {
 			budget := request.Reasoning.MaxTokens
@@ -485,7 +486,6 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 			}
 		}
 	}
-
 
 	if config.GeminiSettingsInstance.GetOpenThink(request.Model) && canEnableThinking {
 		if geminiRequest.GenerationConfig.ThinkingConfig == nil {

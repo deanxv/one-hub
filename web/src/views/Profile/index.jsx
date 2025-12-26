@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
+  Avatar,
+  Box,
   Button,
   Card,
   Chip,
@@ -13,28 +15,14 @@ import {
   Divider,
   FormControl,
   InputLabel,
-  OutlinedInput,
-  Stack,
-  Alert,
-  Divider,
-  Chip,
-  Typography,
-  useMediaQuery,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  TextField,
-  Tabs,
-  Tab,
-  Box,
-  Avatar,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
-  ListItemAvatar
-  SvgIcon,
+  OutlinedInput,
+  Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
   useMediaQuery
@@ -42,8 +30,6 @@ import {
 import { keyframes } from '@emotion/react';
 import Grid from '@mui/material/Unstable_Grid2';
 import SubCard from 'ui-component/cards/SubCard';
-import { IconBrandGithub, IconBrandOauth, IconBrandTelegram, IconBrandWechat, IconMail } from '@tabler/icons-react';
-import Label from 'ui-component/Label';
 import MainCard from 'ui-component/cards/MainCard';
 import { IconBrandWechat, IconBrandGithub, IconMail, IconBrandTelegram, IconBrandOauth, IconSettings, IconLink, IconShieldLock, IconKey } from '@tabler/icons-react';
 import { API } from 'utils/api';
@@ -657,6 +643,48 @@ export default function Profile() {
                       {t('profilePage.unbind')}
                     </Button>
                   )}
+                </ListItem>
+              )}
+              {status.linuxDo_oauth && (
+                <ListItem divider>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: '#f5e6d3', color: '#d4a574' }}>
+                      <LinuxDoIcon size={24} />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      matchDownSM ? (
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="body1">LinuxDo</Typography>
+                          {inputs.linuxdo_id ? (
+                            <Button size="small" variant="outlined" color="error" onClick={() => handleUnbind('linuxdo')}>
+                              {t('profilePage.unbind')}
+                            </Button>
+                          ) : (
+                            <Button size="small" variant="outlined" onClick={() => onLinuxDoOAuthClicked(status.linuxDo_client_id, true)}>
+                              {t('profilePage.bind')}
+                            </Button>
+                          )}
+                        </Box>
+                      ) : (
+                        'LinuxDo'
+                      )
+                    }
+                    secondary={inputs.linuxdo_id ? `${t('profilePage.bound')}: ${inputs.linuxdo_username || inputs.linuxdo_id}` : t('profilePage.unbound')}
+                    secondaryTypographyProps={matchDownSM ? {} : { noWrap: true }}
+                    sx={matchDownSM ? {} : { minWidth: 0, mr: 2 }}
+                  />
+                  {!matchDownSM &&
+                    (inputs.linuxdo_id ? (
+                      <Button variant="outlined" color="error" onClick={() => handleUnbind('linuxdo')} sx={{ ml: 2 }}>
+                        {t('profilePage.unbind')}
+                      </Button>
+                    ) : (
+                      <Button variant="outlined" onClick={() => onLinuxDoOAuthClicked(status.linuxDo_client_id, true)} sx={{ ml: 2 }}>
+                        {t('profilePage.bind')}
+                      </Button>
+                    ))}
                 </ListItem>
               )}
             </List>

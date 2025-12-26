@@ -48,22 +48,7 @@ import ListInput from './ListInput'
 import ModelSelectorModal from './ModelSelectorModal'
 import pluginList from '../type/Plugin.json'
 import { Icon } from '@iconify/react'
-} from '@mui/material';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { defaultConfig, typeConfig } from '../type/Config'; //typeConfig
-import { createFilterOptions } from '@mui/material/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { useTranslation } from 'react-i18next';
-import useCustomizeT from 'hooks/useCustomizeT';
-import { PreCostType } from '../type/other';
-import MapInput from './MapInput';
-import ListInput from './ListInput';
-import ModelSelectorModal from './ModelSelectorModal';
-import pluginList from '../type/Plugin.json';
-import { Icon } from '@iconify/react';
-import Editor from '@monaco-editor/react';
+import Editor from '@monaco-editor/react'
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>
 const checkedIcon = <CheckBoxIcon fontSize="small"/>
