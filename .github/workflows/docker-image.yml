@@ -1,4 +1,4 @@
-name: one-api docker image
+name: done-hub docker image
 
 on:
   push:
@@ -67,14 +67,14 @@ jobs:
       - name: Build Backend (amd64)
         run: |
           go mod download
-          go build -ldflags "-s -w -X 'one-api/common/config.Version=$(cat VERSION)' -extldflags '-static'" -o done-api-amd64
+          go build -ldflags "-s -w -X 'done-hub/common/config.Version=$(cat VERSION)' -extldflags '-static'" -o done-hub-amd64
 
       - name: Build Backend (arm64)
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get install gcc-aarch64-linux-gnu
-          CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X 'one-api/common/config.Version=$(cat VERSION)' -extldflags '-static'" -o done-api-arm64
+          CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X 'done-hub/common/config.Version=$(cat VERSION)' -extldflags '-static'" -o done-hub-arm64
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -101,7 +101,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ghcr.io/${{ vars.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_HUB_REPO }}
+            ghcr.io/${{ github.repository }}
             docker.io/${{ vars.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_HUB_REPO }}
           # generate Docker tags based on the following events/attributes
           tags: |

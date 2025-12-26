@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -285,7 +286,8 @@ func fetchChannelByModel(c *gin.Context, modelName string) (*model.Channel, erro
 	group := c.GetString("token_group")
 	filters := buildChannelFilters(c, modelName)
 
-	channel, err := model.ChannelGroup.NextByValidatedModel(group, modelName, filters...)
+	// 传递 gin.Context 给 balancer，用于生成 session hash
+	channel, err := model.ChannelGroup.NextByValidatedModel(group, modelName, c, filters...)
 	if err != nil {
 		// 这里只处理渠道相关的错误，模型匹配错误已在上层处理
 		message := fmt.Sprintf(model.ErrNoAvailableChannelForModel, group, modelName)
@@ -300,12 +302,18 @@ func fetchChannelByModel(c *gin.Context, modelName string) (*model.Channel, erro
 }
 
 func responseJsonClient(c *gin.Context, data interface{}) *types.OpenAIErrorWithStatusCode {
-	// 将data转换为 JSON
-	responseBody, err := json.Marshal(data)
+	// 将data转换为 JSON，禁用 HTML 转义以避免 & 被转为 \u0026
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(data)
 	if err != nil {
 		logger.LogError(c.Request.Context(), "marshal_response_body_failed:"+err.Error())
 		return nil
 	}
+
+	// Encode 会在末尾添加换行符，需要去掉
+	responseBody := bytes.TrimSuffix(buf.Bytes(), []byte("\n"))
 
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(http.StatusOK)
@@ -645,6 +653,62 @@ func FilterOpenAIErr(c *gin.Context, err *types.OpenAIErrorWithStatusCode) (errW
 					if firstErr, ok := cachedErr.(*types.OpenAIErrorWithStatusCode); ok {
 						newErr = *firstErr
 						if newErr.OpenAIError.Type == "claudecode_error" {
+							newErr.OpenAIError.Type = "system_error"
+						}
+						newErr.OpenAIError.Message = utils.MessageWithRequestId(newErr.OpenAIError.Message, requestId)
+						return newErr
+					}
+				}
+				if newErr.StatusCode == http.StatusUnauthorized {
+					newErr.OpenAIError.Type = "authentication_error"
+				} else {
+					newErr.OpenAIError.Type = "access_denied"
+				}
+				newErr.OpenAIError.Message = utils.MessageWithRequestId("上游负载已饱和，请稍后再试", requestId)
+				newErr.StatusCode = http.StatusTooManyRequests
+				return newErr
+			} else {
+				newErr.OpenAIError.Type = "system_error"
+			}
+		}
+	}
+
+	// Codex 错误处理（优先处理，避免被通用逻辑覆盖）
+	if channelType == config.ChannelTypeCodex && !newErr.LocalError {
+		if newErr.OpenAIError.Type == "codex_error" || newErr.OpenAIError.Type == "codex_token_error" {
+			if newErr.StatusCode == http.StatusUnauthorized || newErr.StatusCode == http.StatusForbidden {
+				if cachedErr, exists := c.Get("first_non_auth_error"); exists {
+					if firstErr, ok := cachedErr.(*types.OpenAIErrorWithStatusCode); ok {
+						newErr = *firstErr
+						if newErr.OpenAIError.Type == "codex_error" {
+							newErr.OpenAIError.Type = "system_error"
+						}
+						newErr.OpenAIError.Message = utils.MessageWithRequestId(newErr.OpenAIError.Message, requestId)
+						return newErr
+					}
+				}
+				if newErr.StatusCode == http.StatusUnauthorized {
+					newErr.OpenAIError.Type = "authentication_error"
+				} else {
+					newErr.OpenAIError.Type = "access_denied"
+				}
+				newErr.OpenAIError.Message = utils.MessageWithRequestId("上游负载已饱和，请稍后再试", requestId)
+				newErr.StatusCode = http.StatusTooManyRequests
+				return newErr
+			} else {
+				newErr.OpenAIError.Type = "system_error"
+			}
+		}
+	}
+
+	// Antigravity 错误处理（优先处理，避免被通用逻辑覆盖）
+	if channelType == config.ChannelTypeAntigravity && !newErr.LocalError {
+		if newErr.OpenAIError.Type == "antigravity_error" || newErr.OpenAIError.Type == "antigravity_token_error" {
+			if newErr.StatusCode == http.StatusUnauthorized || newErr.StatusCode == http.StatusForbidden {
+				if cachedErr, exists := c.Get("first_non_auth_error"); exists {
+					if firstErr, ok := cachedErr.(*types.OpenAIErrorWithStatusCode); ok {
+						newErr = *firstErr
+						if newErr.OpenAIError.Type == "antigravity_error" {
 							newErr.OpenAIError.Type = "system_error"
 						}
 						newErr.OpenAIError.Message = utils.MessageWithRequestId(newErr.OpenAIError.Message, requestId)

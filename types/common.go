@@ -137,6 +137,10 @@ type OpenAIError struct {
 	Param      string `json:"param,omitempty"`
 	Type       string `json:"type,omitempty"`
 	InnerError any    `json:"innererror,omitempty"`
+
+	// RateLimitResetAt 限流重置时间（Unix 时间戳，秒）
+	// 用于存储从响应头中解析的冻结时间（如 anthropic-ratelimit-unified-reset）
+	RateLimitResetAt int64 `json:"-"`
 }
 
 func (e *OpenAIError) Error() string {

@@ -72,6 +72,7 @@ func SetApiRouter(router *gin.Engine) {
 		}
 
 		apiRouter.Any("/payment/notify/:uuid", controller.PaymentCallback)
+		apiRouter.GET("/epay/notify", controller.EpayCallback)
 
 		userRoute := apiRouter.Group("/user")
 		{
@@ -179,11 +180,44 @@ func SetApiRouter(router *gin.Engine) {
 			channelRoute.PUT("/batch/del_model", controller.BatchDelModelChannels)
 			channelRoute.PUT("/batch/add_model", controller.BatchAddModelToChannels)
 			channelRoute.PUT("/batch/add_user_group", controller.BatchAddUserGroupToChannels)
+		}
+
+		// GeminiCli OAuth routes (no auth required for callback)
+		geminiCliRoute := apiRouter.Group("/geminicli")
+		{
+			geminiCliRoute.POST("/oauth/start", middleware.AdminAuth(), controller.StartGeminiCliOAuth)
+			geminiCliRoute.GET("/oauth/callback", controller.GeminiCliOAuthCallback)
+			geminiCliRoute.GET("/oauth/status/:state", middleware.AdminAuth(), controller.GetGeminiCliOAuthStatus)
 			channelRoute.DELETE("/disabled", controller.DeleteDisabledChannel)
 			channelRoute.DELETE("/:id/tag", controller.DeleteChannelTag)
 			channelRoute.DELETE("/:id", controller.DeleteChannel)
 			channelRoute.DELETE("/batch", controller.BatchDeleteChannel)
 		}
+
+		// ClaudeCode OAuth routes
+		claudeCodeRoute := apiRouter.Group("/claudecode")
+		claudeCodeRoute.Use(middleware.AdminAuth())
+		{
+			claudeCodeRoute.POST("/oauth/start", controller.StartClaudeCodeOAuth)
+			claudeCodeRoute.POST("/oauth/exchange-code", controller.ClaudeCodeOAuthCallback)
+		}
+
+		// Codex OAuth routes
+		codexRoute := apiRouter.Group("/codex")
+		codexRoute.Use(middleware.AdminAuth())
+		{
+			codexRoute.POST("/oauth/start", controller.StartCodexOAuth)
+			codexRoute.POST("/oauth/exchange-code", controller.CodexOAuthCallback)
+		}
+
+		// Antigravity OAuth routes
+		antigravityRoute := apiRouter.Group("/antigravity")
+		{
+			antigravityRoute.POST("/oauth/start", middleware.AdminAuth(), controller.StartAntigravityOAuth)
+			antigravityRoute.GET("/oauth/callback", controller.AntigravityOAuthCallback)
+			antigravityRoute.GET("/oauth/status/:state", middleware.AdminAuth(), controller.GetAntigravityOAuthStatus)
+		}
+
 		channelTagRoute := apiRouter.Group("/channel_tag")
 		channelTagRoute.Use(middleware.AdminAuth())
 		{

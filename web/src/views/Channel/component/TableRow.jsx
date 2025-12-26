@@ -1,15 +1,15 @@
-import PropTypes from 'prop-types';
-import { useCallback, useEffect, useState } from 'react';
+import PropTypes from 'prop-types'
+import { useCallback, useEffect, useState } from 'react'
 
-import { copy, renderQuota, showError, showInfo, showSuccess } from 'utils/common';
-import { API } from 'utils/api';
-import { CHANNEL_OPTIONS } from 'constants/ChannelConstants';
-import { useTranslation } from 'react-i18next';
-import { useBoolean } from 'src/hooks/use-boolean';
-import ConfirmDialog from 'ui-component/confirm-dialog';
-import EditeModal from './EditModal';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import { usePopover } from 'hooks/use-popover';
+import { copy, renderQuota, showError, showInfo, showSuccess } from 'utils/common'
+import { API } from 'utils/api'
+import { CHANNEL_OPTIONS } from 'constants/ChannelConstants'
+import { useTranslation } from 'react-i18next'
+import { useBoolean } from 'src/hooks/use-boolean'
+import ConfirmDialog from 'ui-component/confirm-dialog'
+import EditeModal from './EditModal'
+import PerfectScrollbar from 'react-perfect-scrollbar'
+import { usePopover } from 'hooks/use-popover'
 
 import {
   Box,
@@ -40,19 +40,19 @@ import {
   TextField,
   Tooltip,
   Typography
-} from '@mui/material';
+} from '@mui/material'
 
-import Label from 'ui-component/Label';
+import Label from 'ui-component/Label'
 // import TableSwitch from 'ui-component/Switch';
-import ResponseTimeLabel from './ResponseTimeLabel';
-import GroupLabel from './GroupLabel';
+import ResponseTimeLabel from './ResponseTimeLabel'
+import GroupLabel from './GroupLabel'
 
-import { alpha, styled } from '@mui/material/styles';
-import { Icon } from '@iconify/react';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { ChannelCheck } from './ChannelCheck';
-import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants';
+import { alpha, styled } from '@mui/material/styles'
+import { Icon } from '@iconify/react'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import { ChannelCheck } from './ChannelCheck'
+import { getPageSize, PAGE_SIZE_OPTIONS, savePageSize } from 'constants'
 
 const StyledMenu = styled((props) => (
   <Menu
@@ -89,248 +89,265 @@ const StyledMenu = styled((props) => (
       }
     }
   }
-}));
+}))
 
 function statusInfo(t, status) {
   switch (status) {
     case 1:
-      return t('channel_index.enabled');
+      return t('channel_index.enabled')
     case 2:
-      return t('channel_row.manual');
+      return t('channel_row.manual')
     case 3:
-      return t('channel_row.auto');
+      return t('channel_row.auto')
     default:
-      return t('common.unknown');
+      return t('common.unknown')
   }
 }
 
-export default function ChannelTableRow({ item, manageChannel, onRefresh, groupOptions, modelOptions, prices, selected, onSelect }) {
-  const { t } = useTranslation();
-  const popover = usePopover();
-  const confirmDelete = useBoolean();
-  const check = useBoolean();
-  const updateBalanceOption = useBoolean();
+export default function ChannelTableRow({
+  item,
+  manageChannel,
+  onRefresh,
+  groupOptions,
+  modelOptions,
+  prices,
+  selected,
+  onSelect
+}) {
+  const { t } = useTranslation()
+  const popover = usePopover()
+  const confirmDelete = useBoolean()
+  const check = useBoolean()
+  const updateBalanceOption = useBoolean()
 
-  const [openTest, setOpenTest] = useState(false);
+  const [openTest, setOpenTest] = useState(false)
   // const [openDelete, setOpenDelete] = useState(false);
-  const [openCheck, setOpenCheck] = useState(false);
-  const [statusSwitch, setStatusSwitch] = useState(item.status);
+  const [openCheck, setOpenCheck] = useState(false)
+  const [statusSwitch, setStatusSwitch] = useState(item.status)
+  const [deleting, setDeleting] = useState(false)
 
-  const [priority, setPriority] = useState(item.priority);
-  const [weight, setWeight] = useState(item.weight);
-  const tagDeleteConfirm = useBoolean();
-  const quickEdit = useBoolean();
-  const simpleChannelEdit = useBoolean();
-  const [totalTagChannels, setTotalTagChannels] = useState(0);
-  const [isTagChannelsLoading, setIsTagChannelsLoading] = useState(false);
-  const [tagChannels, setTagChannels] = useState([]);
-  const [selectedChannels, setSelectedChannels] = useState([]);
-  const [currentTestingChannel, setCurrentTestingChannel] = useState(null);
-  const [tagPage, setTagPage] = useState(0);
-  const [tagRowsPerPage, setTagRowsPerPage] = useState(() => getPageSize('channelTag'));
-  const tagModelPopover = usePopover();
+  const [priority, setPriority] = useState(item.priority)
+  const [weight, setWeight] = useState(item.weight)
+  const tagDeleteConfirm = useBoolean()
+  const quickEdit = useBoolean()
+  const simpleChannelEdit = useBoolean()
+  const [totalTagChannels, setTotalTagChannels] = useState(0)
+  const [isTagChannelsLoading, setIsTagChannelsLoading] = useState(false)
+  const [tagChannels, setTagChannels] = useState([])
+  const [selectedChannels, setSelectedChannels] = useState([])
+  const [currentTestingChannel, setCurrentTestingChannel] = useState(null)
+  const [tagPage, setTagPage] = useState(0)
+  const [tagRowsPerPage, setTagRowsPerPage] = useState(() => getPageSize('channelTag'))
+  const tagModelPopover = usePopover()
 
-  const batchConfirm = useBoolean();
+  const batchConfirm = useBoolean()
 
-  const tagStatusConfirm = useBoolean();
-  const [statusChangeAction, setStatusChangeAction] = useState('');
+  const tagStatusConfirm = useBoolean()
+  const [statusChangeAction, setStatusChangeAction] = useState('')
 
   const [responseTimeData, setResponseTimeData] = useState({
     test_time: item.test_time,
     response_time: item.response_time
-  });
-  const [itemBalance, setItemBalance] = useState(item.balance);
+  })
+  const [itemBalance, setItemBalance] = useState(item.balance)
 
-  const [openRow, setOpenRow] = useState(false);
-  let modelMap = [];
-  modelMap = item.models.split(',');
-  modelMap.sort();
+  const [openRow, setOpenRow] = useState(false)
+  let modelMap = []
+  modelMap = item.models.split(',')
+  modelMap.sort()
 
-  const [editedChannel, setEditedChannel] = useState({});
-  const fetchTagChannels = useCallback(async () => {
-    if (!item.tag) return;
+  const [editedChannel, setEditedChannel] = useState({})
+  const fetchTagChannels = useCallback(async() => {
+    if (!item.tag) return
 
     try {
-      setIsTagChannelsLoading(true);
-      const response = await API.get(`/api/channel_tag/${item.tag}/list`);
+      setIsTagChannelsLoading(true)
+      const response = await API.get(`/api/channel_tag/${item.tag}/list`)
       if (response.data.success) {
-        const data = response.data.data || [];
-        setTagChannels(data);
-        setTotalTagChannels(data.length);
+        const data = response.data.data || []
+        setTagChannels(data)
+        setTotalTagChannels(data.length)
       } else {
-        showError(t('channel_row.getTagChannelsError', { message: response.data.message }));
+        showError(t('channel_row.getTagChannelsError', { message: response.data.message }))
       }
     } catch (error) {
-      showError(t('channel_row.getTagChannelsErrorTip', { message: error.message }));
+      showError(t('channel_row.getTagChannelsErrorTip', { message: error.message }))
     } finally {
-      setIsTagChannelsLoading(false);
+      setIsTagChannelsLoading(false)
     }
-  }, [item.tag, t]);
+  }, [item.tag, t])
 
   const handleChangeTagPage = (event, newPage) => {
-    setTagPage(newPage);
-  };
+    setTagPage(newPage)
+  }
 
   const handleChangeTagRowsPerPage = (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setTagRowsPerPage(newRowsPerPage);
-    setTagPage(0);
-    savePageSize('channelTag', newRowsPerPage);
-  };
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setTagRowsPerPage(newRowsPerPage)
+    setTagPage(0)
+    savePageSize('channelTag', newRowsPerPage)
+  }
 
   const handleToggleChannel = (channelId) => {
-    setSelectedChannels((prev) => (prev.includes(channelId) ? prev.filter((id) => id !== channelId) : [...prev, channelId]));
-  };
+    setSelectedChannels((prev) => (prev.includes(channelId) ? prev.filter((id) => id !== channelId) : [...prev, channelId]))
+  }
 
   const handleToggleAll = () => {
     if (selectedChannels.length === tagChannels.length) {
-      setSelectedChannels([]);
+      setSelectedChannels([])
     } else {
-      setSelectedChannels(tagChannels.map((channel) => channel.id));
+      setSelectedChannels(tagChannels.map((channel) => channel.id))
     }
-  };
+  }
 
-  const handleTagChannelStatus = async (channelId, currentStatus) => {
-    const newStatus = currentStatus === 1 ? 2 : 1;
-    const { success } = await manageChannel(channelId, 'status', newStatus);
+  const handleTagChannelStatus = async(channelId, currentStatus) => {
+    const newStatus = currentStatus === 1 ? 2 : 1
+    const { success } = await manageChannel(channelId, 'status', newStatus)
     if (success) {
       // 更新本地状态
       setTagChannels((prev) =>
         prev.map((channel) =>
           channel.id === channelId
             ? {
-                ...channel,
-                status: newStatus
-              }
+              ...channel,
+              status: newStatus
+            }
             : channel
         )
-      );
+      )
     }
-  };
+  }
 
   // 处理子渠道的优先级变更
   const handleTagChannelPriorityChange = (channelId, value) => {
     // 更新本地UI状态
-    setTagChannels((prev) => prev.map((c) => (c.id === channelId ? { ...c, priority: value } : c)));
-  };
+    setTagChannels((prev) => prev.map((c) => (c.id === channelId ? { ...c, priority: value } : c)))
+  }
 
-  const handleTagChannelTest = async (channel) => {
-    const models = channel.models.split(',');
+  const handleTagChannelTest = async(channel) => {
+    const models = channel.models.split(',')
     if (models.length === 1) {
       // 如果只有一个模型，直接测速
-      const testModel = models[0];
-      const { success, time } = await manageChannel(channel.id, 'test', testModel);
+      const testModel = models[0]
+      const { success, time } = await manageChannel(channel.id, 'test', testModel)
       if (success) {
-        showInfo(t('channel_row.modelTestSuccess', { channel: channel.name, model: testModel, time: time.toFixed(2) }));
+        showInfo(t('channel_row.modelTestSuccess', { channel: channel.name, model: testModel, time: time.toFixed(2) }))
         // 更新本地状态
         setTagChannels((prev) =>
           prev.map((c) =>
             c.id === channel.id
               ? {
-                  ...c,
-                  test_time: Date.now() / 1000,
-                  response_time: time * 1000
-                }
+                ...c,
+                test_time: Date.now() / 1000,
+                response_time: time * 1000
+              }
               : c
           )
-        );
+        )
       }
     } else {
       // 多个模型，显示模型列表
-      setCurrentTestingChannel(channel);
-      tagModelPopover.onOpen();
+      setCurrentTestingChannel(channel)
+      tagModelPopover.onOpen()
     }
-  };
+  }
 
-  const handleBatchDelete = async () => {
+  const handleBatchDelete = async() => {
     if (!selectedChannels.length) {
-      showError(t('channel_row.batchAddIDRequired'));
-      return;
+      showError(t('channel_row.batchAddIDRequired'))
+      return
     }
 
-    batchConfirm.onTrue();
-  };
+    batchConfirm.onTrue()
+  }
 
-  const executeBatchDelete = async () => {
+  const executeBatchDelete = async() => {
     try {
       // 这里需要实现批量删除的API调用
-      const { success, message } = await manageChannel(0, 'batch_delete', selectedChannels, false);
+      const { success, message } = await manageChannel(0, 'batch_delete', selectedChannels, false)
       if (success) {
-        showInfo(t('channel_row.batchDeleteSuccess'));
-        setSelectedChannels([]);
-        fetchTagChannels(); // 重新获取数据
-        onRefresh(false); // 刷新父组件数据
+        showInfo(t('channel_row.batchDeleteSuccess'))
+        setSelectedChannels([])
+        fetchTagChannels() // 重新获取数据
+        onRefresh(false) // 刷新父组件数据
       } else {
-        showError(t('channel_row.batchDeleteError', { message }));
+        showError(t('channel_row.batchDeleteError', { message }))
       }
     } catch (error) {
-      showError(t('channel_row.batchDeleteErrorTip', { message: error.message }));
+      showError(t('channel_row.batchDeleteErrorTip', { message: error.message }))
     }
-  };
+  }
 
   useEffect(() => {
     if (openRow && item.tag) {
-      fetchTagChannels();
+      fetchTagChannels()
     }
-  }, [openRow, item.tag, fetchTagChannels]);
+  }, [openRow, item.tag, fetchTagChannels])
 
   const handleTestModel = (event) => {
-    setOpenTest(event.currentTarget);
-  };
+    setOpenTest(event.currentTarget)
+  }
 
-  const handleDeleteRow = useCallback(async () => {
-    await manageChannel(item.id, 'delete', '');
-  }, [manageChannel, item.id]);
+  const handleDeleteRow = useCallback(async() => {
+    if (deleting) return
 
-  const handleStatus = async () => {
-    const switchVlue = statusSwitch === 1 ? 2 : 1;
-    const { success } = await manageChannel(item.id, 'status', switchVlue);
-    if (success) {
-      setStatusSwitch(switchVlue);
+    setDeleting(true)
+    try {
+      await manageChannel(item.id, 'delete', '')
+    } finally {
+      setDeleting(false)
     }
-  };
+  }, [manageChannel, item.id, deleting])
 
-  const handleResponseTime = async (modelName) => {
-    setOpenTest(null);
+  const handleStatus = async() => {
+    const switchVlue = statusSwitch === 1 ? 2 : 1
+    const { success } = await manageChannel(item.id, 'status', switchVlue)
+    if (success) {
+      setStatusSwitch(switchVlue)
+    }
+  }
+
+  const handleResponseTime = async(modelName) => {
+    setOpenTest(null)
 
     if (typeof modelName !== 'string') {
-      modelName = item.test_model;
+      modelName = item.test_model
     }
 
     if (modelName == '') {
-      showError(t('channel_row.modelTestTip'));
-      return;
+      showError(t('channel_row.modelTestTip'))
+      return
     }
-    const { success, time } = await manageChannel(item.id, 'test', modelName);
+    const { success, time } = await manageChannel(item.id, 'test', modelName)
     if (success) {
-      setResponseTimeData({ test_time: Date.now() / 1000, response_time: time * 1000 });
-      showInfo(t('channel_row.modelTestSuccess', { channel: item.name, model: modelName, time: time.toFixed(2) }));
+      setResponseTimeData({ test_time: Date.now() / 1000, response_time: time * 1000 })
+      showInfo(t('channel_row.modelTestSuccess', { channel: item.name, model: modelName, time: time.toFixed(2) }))
     }
-  };
+  }
 
-  const updateChannelBalance = async () => {
+  const updateChannelBalance = async() => {
     try {
-      const res = await API.get(`/api/channel/update_balance/${item.id}`);
-      const { success, message, balance } = res.data;
+      const res = await API.get(`/api/channel/update_balance/${item.id}`)
+      const { success, message, balance } = res.data
       if (success) {
-        setItemBalance(balance);
+        setItemBalance(balance)
 
-        showInfo(t('channel_row.updateOk'));
+        showInfo(t('channel_row.updateOk'))
       } else {
-        showError(message);
+        showError(message)
       }
     } catch (error) {
-      return;
+
     }
-  };
+  }
 
   useEffect(() => {
-    setStatusSwitch(item.status);
-    setPriority(item.priority);
-    setWeight(item.weight);
-    setItemBalance(item.balance);
-    setResponseTimeData({ test_time: item.test_time, response_time: item.response_time });
-  }, [item]);
+    setStatusSwitch(item.status)
+    setPriority(item.priority)
+    setWeight(item.weight)
+    setItemBalance(item.balance)
+    setResponseTimeData({ test_time: item.test_time, response_time: item.response_time })
+  }, [item])
 
   return (
     <>
@@ -348,7 +365,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
           {item.tag && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               <IconButton aria-label="expand row" size="small" onClick={() => setOpenRow(!openRow)}>
-                {openRow ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                {openRow ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>}
               </IconButton>
               <Label color="primary" variant="soft" sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
                 {t('channel_row.tag')}
@@ -387,7 +404,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         </TableCell>
 
         <TableCell>
-          <GroupLabel group={item.group} />
+          <GroupLabel group={item.group}/>
         </TableCell>
 
         <TableCell>
@@ -405,7 +422,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         <TableCell align="center" sx={{ minWidth: 90 }}>
           {!item.tag && (
             <Stack direction="column" alignItems="center" spacing={0.5}>
-              <Switch checked={statusSwitch === 1} onChange={handleStatus} size="small" />
+              <Switch checked={statusSwitch === 1} onChange={handleStatus} size="small"/>
               <Typography
                 variant="caption"
                 sx={{
@@ -423,24 +440,24 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                 <IconButton
                   size="small"
                   onClick={() => {
-                    setStatusChangeAction('enable');
-                    tagStatusConfirm.onTrue();
+                    setStatusChangeAction('enable')
+                    tagStatusConfirm.onTrue()
                   }}
                   sx={{ color: 'success.main' }}
                 >
-                  <Icon icon="mdi:power" />
+                  <Icon icon="mdi:power"/>
                 </IconButton>
               </Tooltip>
               <Tooltip title={t('channel_row.disableAllChannels')} placement="top">
                 <IconButton
                   size="small"
                   onClick={() => {
-                    setStatusChangeAction('disable');
-                    tagStatusConfirm.onTrue();
+                    setStatusChangeAction('disable')
+                    tagStatusConfirm.onTrue()
                   }}
                   sx={{ color: 'error.main' }}
                 >
-                  <Icon icon="mdi:power-off" />
+                  <Icon icon="mdi:power-off"/>
                 </IconButton>
               </Tooltip>
             </Stack>
@@ -502,22 +519,22 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       onClick={() => {
                         // 确保在提交时检查是否有变化
                         if (priority !== item.priority) {
-                          const isTag = !!item.tag;
-                          const channelId = isTag ? item.tag : item.id;
+                          const isTag = !!item.tag
+                          const channelId = isTag ? item.tag : item.id
                           manageChannel(channelId, 'priority', priority, isTag)
                             .then(({ success }) => {
                               if (success) {
-                                item.priority = priority;
-                                showInfo(t('channel_row.priorityUpdateSuccess'));
+                                item.priority = priority
+                                showInfo(t('channel_row.priorityUpdateSuccess'))
                               }
                             })
                             .catch((error) => {
-                              showError(t('channel_row.priorityUpdateError', { message: error.message }));
-                            });
+                              showError(t('channel_row.priorityUpdateError', { message: error.message }))
+                            })
                         }
                       }}
                     >
-                      <Icon icon="mdi:check" />
+                      <Icon icon="mdi:check"/>
                     </IconButton>
                   </InputAdornment>
                 )
@@ -553,17 +570,17 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                             manageChannel(item.id, 'weight', weight)
                               .then(({ success }) => {
                                 if (success) {
-                                  item.weight = weight;
-                                  showInfo(t('channel_row.weightUpdateSuccess'));
+                                  item.weight = weight
+                                  showInfo(t('channel_row.weightUpdateSuccess'))
                                 }
                               })
                               .catch((error) => {
-                                showError(t('channel_row.weightUpdateError', { message: error.message }));
-                              });
+                                showError(t('channel_row.weightUpdateError', { message: error.message }))
+                              })
                           }
                         }}
                       >
-                        <Icon icon="mdi:check" />
+                        <Icon icon="mdi:check"/>
                       </IconButton>
                     </InputAdornment>
                   )
@@ -584,25 +601,25 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                 aria-expanded={openTest ? 'true' : undefined}
                 sx={{ color: 'info.main' }}
               >
-                <Icon icon="mdi:speedometer" />
+                <Icon icon="mdi:speedometer"/>
               </IconButton>
             )}
 
             <Tooltip title={t('common.edit')} placement="top" arrow>
               <IconButton onClick={quickEdit.onTrue} size="small">
-                <Icon icon="solar:pen-bold" />
+                <Icon icon="solar:pen-bold"/>
               </IconButton>
             </Tooltip>
             {!item.tag && (
               <IconButton onClick={popover.onOpen} size="small">
-                <Icon icon="eva:more-vertical-fill" />
+                <Icon icon="eva:more-vertical-fill"/>
               </IconButton>
             )}
 
             {item.tag && (
               <Tooltip title={t('channel_row.deleteTagAndChannels')} placement="top">
                 <IconButton sx={{ color: 'error.main' }} onClick={tagDeleteConfirm.onTrue} size="small">
-                  <Icon icon="solar:trash-bin-trash-bold" />
+                  <Icon icon="solar:trash-bin-trash-bold"/>
                 </IconButton>
               </Tooltip>
             )}
@@ -614,10 +631,10 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         open={popover.open}
         anchorEl={popover.anchorEl}
         onClose={() => {
-          popover.onClose();
+          popover.onClose()
           // 如果在关闭后没有进一步操作，重置当前渠道
           if (!check.value && !confirmDelete.value && !updateBalanceOption.value) {
-            setCurrentTestingChannel(null);
+            setCurrentTestingChannel(null)
           }
         }}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
@@ -628,31 +645,31 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
       >
         <MenuItem
           onClick={() => {
-            popover.onClose();
-            manageChannel(currentTestingChannel ? currentTestingChannel.id : item.id, 'copy');
+            popover.onClose()
+            manageChannel(currentTestingChannel ? currentTestingChannel.id : item.id, 'copy')
           }}
         >
-          <Icon icon="solar:copy-bold-duotone" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:copy-bold-duotone" style={{ marginRight: '16px' }}/>
           {t('token_index.copy')}
         </MenuItem>
         <MenuItem
           onClick={() => {
-            setOpenCheck(true);
-            popover.onClose();
+            setOpenCheck(true)
+            popover.onClose()
           }}
         >
-          <Icon icon="solar:checklist-minimalistic-bold" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:checklist-minimalistic-bold" style={{ marginRight: '16px' }}/>
           {t('channel_row.check')}
         </MenuItem>
 
         {CHANNEL_OPTIONS[currentTestingChannel ? currentTestingChannel?.type : item.type]?.url && (
           <MenuItem
             onClick={() => {
-              popover.onClose();
-              window.open(CHANNEL_OPTIONS[currentTestingChannel ? currentTestingChannel?.type : item.type].url);
+              popover.onClose()
+              window.open(CHANNEL_OPTIONS[currentTestingChannel ? currentTestingChannel?.type : item.type].url)
             }}
           >
-            <Icon icon="solar:global-line-duotone" style={{ marginRight: '16px' }} />
+            <Icon icon="solar:global-line-duotone" style={{ marginRight: '16px' }}/>
             {t('channel_row.channelWeb')}
           </MenuItem>
         )}
@@ -660,23 +677,23 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         {currentTestingChannel && (
           <MenuItem
             onClick={() => {
-              popover.onClose();
-              manageChannel(currentTestingChannel.id, 'delete_tag', '');
+              popover.onClose()
+              manageChannel(currentTestingChannel.id, 'delete_tag', '')
             }}
             sx={{ color: 'error.main' }}
           >
-            <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }} />
+            <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }}/>
             {t('channel_row.delTag')}
           </MenuItem>
         )}
         <MenuItem
           onClick={() => {
-            popover.onClose();
-            confirmDelete.onTrue();
+            popover.onClose()
+            confirmDelete.onTrue()
           }}
           sx={{ color: 'error.main' }}
         >
-          <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }} />
+          <Icon icon="solar:trash-bin-trash-bold-duotone" style={{ marginRight: '16px' }}/>
           {t('common.delete')}
         </MenuItem>
       </Popover>
@@ -689,14 +706,14 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         anchorEl={openTest}
         open={!!openTest}
         onClose={() => {
-          setOpenTest(null);
+          setOpenTest(null)
         }}
       >
         {modelMap.map((model) => (
           <MenuItem
             key={'test_model-' + model}
             onClick={() => {
-              handleResponseTime(model);
+              handleResponseTime(model)
             }}
           >
             {model}
@@ -740,7 +757,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       alignItems: 'center'
                     }}
                   >
-                    <Icon icon="mdi:cube-outline" sx={{ mr: 0.5 }} /> {t('channel_row.canModels')}
+                    <Icon icon="mdi:cube-outline" sx={{ mr: 0.5 }}/> {t('channel_row.canModels')}
                   </Typography>
                   {modelMap.map((model) => (
                     <Label
@@ -755,7 +772,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                         // '&:hover': { opacity: 0.8 }
                       }}
                       onClick={() => {
-                        copy(model, t('channel_index.modelName'));
+                        copy(model, t('channel_index.modelName'))
                       }}
                     >
                       {model}
@@ -789,7 +806,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                         alignItems: 'center'
                       }}
                     >
-                      <Icon icon="mdi:speedometer" sx={{ mr: 0.5 }} /> {t('channel_row.testModels') + ':'}
+                      <Icon icon="mdi:speedometer" sx={{ mr: 0.5 }}/> {t('channel_row.testModels') + ':'}
                     </Typography>
                     <Label
                       variant="soft"
@@ -797,7 +814,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       key={item.test_model}
                       sx={{ fontSize: '0.75rem', cursor: 'pointer' }}
                       onClick={() => {
-                        copy(item.test_model, t('channel_row.testModels'));
+                        copy(item.test_model, t('channel_row.testModels'))
                       }}
                     >
                       {item.test_model}
@@ -831,7 +848,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                         alignItems: 'center'
                       }}
                     >
-                      <Icon icon="mdi:web" sx={{ mr: 0.5 }} /> {t('channel_row.proxy')}
+                      <Icon icon="mdi:web" sx={{ mr: 0.5 }}/> {t('channel_row.proxy')}
                     </Typography>
                     <Typography variant="body2">{item.proxy}</Typography>
                   </Box>
@@ -863,7 +880,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                         alignItems: 'center'
                       }}
                     >
-                      <Icon icon="mdi:cog-outline" sx={{ mr: 0.5 }} /> {t('channel_row.otherArg')}
+                      <Icon icon="mdi:cog-outline" sx={{ mr: 0.5 }}/> {t('channel_row.otherArg')}
                     </Typography>
                     <Label
                       variant="soft"
@@ -871,7 +888,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       key={item.other}
                       sx={{ fontSize: '0.75rem', cursor: 'pointer' }}
                       onClick={() => {
-                        copy(item.other, t('channel_row.otherArg'));
+                        copy(item.other, t('channel_row.otherArg'))
                       }}
                     >
                       {item.other}
@@ -901,13 +918,13 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                             size="small"
                             color="primary"
                             onClick={() => {
-                              setIsTagChannelsLoading(true);
+                              setIsTagChannelsLoading(true)
                               fetchTagChannels().finally(() => {
-                                setIsTagChannelsLoading(false);
-                              });
+                                setIsTagChannelsLoading(false)
+                              })
                             }}
                           >
-                            <Icon icon="mdi:refresh" width={18} height={18} />
+                            <Icon icon="mdi:refresh" width={18} height={18}/>
                           </IconButton>
                         </Tooltip>
                       </Stack>
@@ -916,7 +933,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                         <Button
                           variant="contained"
                           color="error"
-                          startIcon={<Icon icon="solar:trash-bin-trash-bold" />}
+                          startIcon={<Icon icon="solar:trash-bin-trash-bold"/>}
                           onClick={handleBatchDelete}
                           size="small"
                         >
@@ -927,7 +944,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
 
                     {isTagChannelsLoading ? (
                       <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                        <CircularProgress size={24} />
+                        <CircularProgress size={24}/>
                       </Box>
                     ) : tagChannels.length === 0 ? (
                       <Typography variant="body2" sx={{ py: 2, textAlign: 'center', color: 'text.secondary' }}>
@@ -1012,8 +1029,10 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                     </TableCell>
                                     <TableCell sx={{ textAlign: 'center' }}>
                                       <Tooltip title={t('channel_row.clickUpdateQuota')} placement="top">
-                                        <Box sx={{ cursor: 'pointer' }} onClick={() => manageChannel(channel.id, 'update_balance')}>
-                                          <Stack direction="column" spacing={0.5} alignItems="center" justifyContent="center">
+                                        <Box sx={{ cursor: 'pointer' }}
+                                             onClick={() => manageChannel(channel.id, 'update_balance')}>
+                                          <Stack direction="column" spacing={0.5} alignItems="center"
+                                                 justifyContent="center">
                                             <Typography
                                               variant="body2"
                                               sx={{
@@ -1038,7 +1057,8 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                       </Tooltip>
                                     </TableCell>
                                     <TableCell sx={{ textAlign: 'center' }}>
-                                      <ResponseTimeLabel test_time={channel.test_time} response_time={channel.response_time} />
+                                      <ResponseTimeLabel test_time={channel.test_time}
+                                                         response_time={channel.response_time}/>
                                     </TableCell>
 
                                     <TableCell sx={{ textAlign: 'center' }}>
@@ -1075,26 +1095,26 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                                   onClick={() => {
                                                     try {
                                                       // 直接使用当前渠道对象和UI状态中的优先级值
-                                                      const channelId = channel.id;
-                                                      const newPriority = channel.priority;
+                                                      const channelId = channel.id
+                                                      const newPriority = channel.priority
 
                                                       // 直接发送请求更新优先级，不再进行二次检查
                                                       manageChannel(channelId, 'priority', newPriority)
                                                         .then(({ success }) => {
                                                           if (success) {
                                                             // 成功后更新本地状态（虽然没必要，因为UI状态已经是新值了）
-                                                            showSuccess(t('channel_row.priorityUpdateSuccess'));
+                                                            showSuccess(t('channel_row.priorityUpdateSuccess'))
                                                           }
                                                         })
                                                         .catch((error) => {
-                                                          showError(t('channel_row.priorityUpdateError', { message: error.message }));
-                                                        });
+                                                          showError(t('channel_row.priorityUpdateError', { message: error.message }))
+                                                        })
                                                     } catch (error) {
-                                                      showError(t('channel_row.priorityUpdateError', { message: error.message }));
+                                                      showError(t('channel_row.priorityUpdateError', { message: error.message }))
                                                     }
                                                   }}
                                                 >
-                                                  <Icon icon="mdi:check" width={16} height={16} />
+                                                  <Icon icon="mdi:check" width={16} height={16}/>
                                                 </IconButton>
                                               </InputAdornment>
                                             )
@@ -1109,14 +1129,14 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                             size="small"
                                             sx={{ p: 0.5, color: 'info.main' }}
                                             onClick={(event) => {
-                                              handleTagChannelTest(channel);
+                                              handleTagChannelTest(channel)
                                               // 记录点击位置用于弹出模型列表
                                               if (channel.models.split(',').length > 1) {
-                                                tagModelPopover.onOpen(event);
+                                                tagModelPopover.onOpen(event)
                                               }
                                             }}
                                           >
-                                            <Icon icon="mdi:speedometer" width={18} height={18} />
+                                            <Icon icon="mdi:speedometer" width={18} height={18}/>
                                           </IconButton>
                                         </Tooltip>
 
@@ -1125,12 +1145,12 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                             size="small"
                                             sx={{ p: 0.5, color: 'primary.main' }}
                                             onClick={() => {
-                                              setCurrentTestingChannel(channel);
-                                              setEditedChannel({ name: channel.name, key: channel.key });
-                                              simpleChannelEdit.onTrue();
+                                              setCurrentTestingChannel(channel)
+                                              setEditedChannel({ name: channel.name, key: channel.key })
+                                              simpleChannelEdit.onTrue()
                                             }}
                                           >
-                                            <Icon icon="solar:pen-bold" width={18} height={18} />
+                                            <Icon icon="solar:pen-bold" width={18} height={18}/>
                                           </IconButton>
                                         </Tooltip>
 
@@ -1140,12 +1160,12 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                                             sx={{ p: 0.5 }}
                                             onClick={(event) => {
                                               // 设置当前操作的渠道
-                                              setCurrentTestingChannel(channel);
+                                              setCurrentTestingChannel(channel)
                                               // 打开更多操作菜单
-                                              popover.onOpen(event);
+                                              popover.onOpen(event)
                                             }}
                                           >
-                                            <Icon icon="eva:more-vertical-fill" width={18} height={18} />
+                                            <Icon icon="eva:more-vertical-fill" width={18} height={18}/>
                                           </IconButton>
                                         </Tooltip>
                                       </Stack>
@@ -1207,31 +1227,32 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                   .then(({ success }) => {
                     if (success) {
                       // 从本地列表中移除
-                      setTagChannels((prev) => prev.filter((c) => c.id !== currentTestingChannel.id));
+                      setTagChannels((prev) => prev.filter((c) => c.id !== currentTestingChannel.id))
                       // 减少总数
-                      setTotalTagChannels((prev) => prev - 1);
+                      setTotalTagChannels((prev) => prev - 1)
                       // 重置当前选中的渠道
-                      setCurrentTestingChannel(null);
-                      showSuccess(t('common.deleteSuccess'));
+                      setCurrentTestingChannel(null)
+                      showSuccess(t('common.deleteSuccess'))
                     }
                   })
                   .catch((error) => {
-                    showError(t('common.deleteError', { message: error.message }));
-                  });
+                    showError(t('common.deleteError', { message: error.message }))
+                  })
               } else {
                 // 处理主渠道删除
-                handleDeleteRow();
+                handleDeleteRow()
               }
-              confirmDelete.onFalse();
+              confirmDelete.onFalse()
             }}
             sx={{ color: 'error.main' }}
+            disabled={deleting}
             autoFocus
           >
-            {t('common.delete')}
+            {deleting ? '删除中...' : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
-      <ChannelCheck item={currentTestingChannel || item} open={openCheck} onClose={() => setOpenCheck(false)} />
+      <ChannelCheck item={currentTestingChannel || item} open={openCheck} onClose={() => setOpenCheck(false)}/>
 
       <ConfirmDialog
         open={tagDeleteConfirm.value}
@@ -1246,14 +1267,14 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
               manageChannel(item.tag, 'delete', '', true)
                 .then(({ success }) => {
                   if (success) {
-                    showInfo(t('channel_row.deleteTagSuccess', { tag: item.tag }));
-                    onRefresh(false); // 刷新父组件数据
+                    showInfo(t('channel_row.deleteTagSuccess', { tag: item.tag }))
+                    onRefresh(false) // 刷新父组件数据
                   }
                 })
                 .catch((error) => {
-                  showError(t('channel_row.deleteTagError', { message: error.message }));
-                });
-              tagDeleteConfirm.onFalse();
+                  showError(t('channel_row.deleteTagError', { message: error.message }))
+                })
+              tagDeleteConfirm.onFalse()
             }}
           >
             {t('common.delete')}
@@ -1281,8 +1302,8 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       t('channel_row.tagChannelsSuccess', {
                         action: statusChangeAction === 'enable' ? t('channel_row.enable') : t('channel_row.disable')
                       })
-                    );
-                    onRefresh(false); // 刷新父组件数据
+                    )
+                    onRefresh(false) // 刷新父组件数据
                   }
                 })
                 .catch((error) => {
@@ -1291,9 +1312,9 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                       action: statusChangeAction === 'enable' ? t('channel_row.enable') : t('channel_row.disable'),
                       message: error.message
                     })
-                  );
-                });
-              tagStatusConfirm.onFalse();
+                  )
+                })
+              tagStatusConfirm.onFalse()
             }}
           >
             {t('common.submit')}
@@ -1305,8 +1326,8 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         open={quickEdit.value}
         onCancel={quickEdit.onFalse}
         onOk={() => {
-          onRefresh(false);
-          quickEdit.onFalse();
+          onRefresh(false)
+          quickEdit.onFalse()
         }}
         channelId={item.tag ? item.tag : item.id}
         groupOptions={groupOptions}
@@ -1339,22 +1360,22 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
                           model,
                           time: time.toFixed(2)
                         })
-                      );
+                      )
                       // 更新本地状态
                       setTagChannels((prev) =>
                         prev.map((c) =>
                           c.id === currentTestingChannel.id
                             ? {
-                                ...c,
-                                test_time: Date.now() / 1000,
-                                response_time: time * 1000
-                              }
+                              ...c,
+                              test_time: Date.now() / 1000,
+                              response_time: time * 1000
+                            }
                             : c
                         )
-                      );
+                      )
                     }
-                  });
-                  tagModelPopover.onClose();
+                  })
+                  tagModelPopover.onClose()
                 }}
               >
                 {model}
@@ -1373,8 +1394,8 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
             variant="contained"
             color="error"
             onClick={() => {
-              executeBatchDelete();
-              batchConfirm.onFalse();
+              executeBatchDelete()
+              batchConfirm.onFalse()
             }}
           >
             {t('common.delete')}
@@ -1418,61 +1439,61 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
             color="primary"
             onClick={() => {
               if (!editedChannel?.name?.trim()) {
-                showError(t('channel_edit.requiredName'));
-                return;
+                showError(t('channel_edit.requiredName'))
+                return
               }
               if (!editedChannel?.key?.trim()) {
-                showError(t('channel_row.keyRequired'));
-                return;
+                showError(t('channel_row.keyRequired'))
+                return
               }
 
               // 确保这里使用currentTestingChannel的ID，因为这是子渠道
-              const channelId = currentTestingChannel.id;
+              const channelId = currentTestingChannel.id
 
               // 创建一个包含名称和密钥的对象来更新
               const updateData = {
                 id: channelId,
                 name: editedChannel.name,
                 key: editedChannel.key
-              };
+              }
 
               // 使用PUT请求更新渠道
               API.put('/api/channel/', updateData)
                 .then((res) => {
                   if (res && res.data) {
-                    const { success, message } = res.data;
+                    const { success, message } = res.data
                     if (success) {
-                      showSuccess(t('channel_edit.editSuccess'));
+                      showSuccess(t('channel_edit.editSuccess'))
 
                       // 更新本地状态
                       setTagChannels((prev) =>
                         prev.map((c) =>
                           c.id === channelId
                             ? {
-                                ...c,
-                                name: editedChannel.name,
-                                key: editedChannel.key
-                              }
+                              ...c,
+                              name: editedChannel.name,
+                              key: editedChannel.key
+                            }
                             : c
                         )
-                      );
+                      )
 
-                      onRefresh(false); // 刷新父组件数据
+                      onRefresh(false) // 刷新父组件数据
                     } else {
-                      showError(message || t('channel_edit.editError'));
+                      showError(message || t('channel_edit.editError'))
                     }
                   } else {
-                    showError(t('channel_edit.editError'));
+                    showError(t('channel_edit.editError'))
                   }
                 })
                 .catch((error) => {
-                  const errorMessage = error.response?.data?.message || error.message || '未知错误';
-                  showError(t('channel_edit.editError', { message: errorMessage }));
+                  const errorMessage = error.response?.data?.message || error.message || '未知错误'
+                  showError(t('channel_edit.editError', { message: errorMessage }))
                 })
                 .finally(() => {
-                  simpleChannelEdit.onFalse();
-                  setCurrentTestingChannel(null);
-                });
+                  simpleChannelEdit.onFalse()
+                  setCurrentTestingChannel(null)
+                })
             }}
           >
             {t('common.submit')}
@@ -1480,7 +1501,7 @@ export default function ChannelTableRow({ item, manageChannel, onRefresh, groupO
         </DialogActions>
       </Dialog>
     </>
-  );
+  )
 }
 
 ChannelTableRow.propTypes = {
@@ -1490,15 +1511,15 @@ ChannelTableRow.propTypes = {
   groupOptions: PropTypes.array,
   modelOptions: PropTypes.array,
   prices: PropTypes.array
-};
+}
 
 function renderBalance(type, balance) {
   switch (type) {
     case 28: // Deepseek
-      return <>¥{balance}</>;
+      return <>¥{balance}</>
     case 45: // Deepseek
-      return <>¥{balance}</>;
+      return <>¥{balance}</>
     default:
-      return <>${balance.toFixed(2)}</>;
+      return <>${balance.toFixed(2)}</>
   }
 }

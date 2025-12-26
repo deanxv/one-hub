@@ -1,4 +1,4 @@
-FROM node:18 as builder
+FROM node:20 as builder
 
 WORKDIR /build
 
@@ -16,21 +16,21 @@ FROM golang:1.25.0 AS builder2
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \
     GOOS=linux \
-    GOPROXY=https://goproxy.cn,direct
+    GOPROXY=https://proxy.golang.org,direct
 
 WORKDIR /build
 ADD go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=builder /build/build ./web/build
-RUN go build -ldflags "-s -w -X 'one-api/common.Version=$(cat VERSION)' -extldflags '-static'" -o done-hub
+RUN go build -ldflags "-s -w -X 'done-hub/common.Version=$(cat VERSION)' -extldflags '-static'" -o done-hub
 
-FROM alpine
+FROM alpine:latest
 
-RUN apk update \
-    && apk upgrade \
-    && apk add --no-cache ca-certificates tzdata \
-    && update-ca-certificates 2>/dev/null || true
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache ca-certificates tzdata && \
+    update-ca-certificates 2>/dev/null || true
 
 COPY --from=builder2 /build/done-hub /
 EXPOSE 3000

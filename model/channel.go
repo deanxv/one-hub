@@ -3,6 +3,8 @@ package model
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"one-api/common/cache"
 	"one-api/common/config"
 	"one-api/common/logger"
 	"one-api/common/utils"
@@ -28,7 +30,7 @@ type Channel struct {
 	Balance            float64 `json:"balance"` // in USD
 	BalanceUpdatedTime int64   `json:"balance_updated_time" gorm:"bigint"`
 	Models             string  `json:"models" form:"models"`
-	Group              string  `json:"group" form:"group" gorm:"type:varchar(32);default:'default'"`
+	Group              string  `json:"group" form:"group" gorm:"type:varchar(255);default:'default'"`
 	Tag                string  `json:"tag" form:"tag" gorm:"type:varchar(32);default:''"`
 	UsedQuota          int64   `json:"used_quota" gorm:"bigint;default:0"`
 	ModelMapping       *string `json:"model_mapping" gorm:"type:text"`
@@ -72,7 +74,8 @@ var allowedChannelOrderFields = map[string]bool{
 type SearchChannelsParams struct {
 	Channel
 	PaginationParams
-	FilterTag int `json:"filter_tag" form:"filter_tag"`
+	FilterTag int    `json:"filter_tag" form:"filter_tag"`
+	BaseURL   string `json:"base_url" form:"base_url"`
 }
 
 func GetChannelsList(params *SearchChannelsParams) (*DataResult[Channel], error) {
@@ -122,6 +125,11 @@ func GetChannelsList(params *SearchChannelsParams) (*DataResult[Channel], error)
 	if params.TestModel != "" {
 		db = db.Where("test_model LIKE ?", params.TestModel+"%")
 		tagDB = tagDB.Where("test_model LIKE ?", params.TestModel+"%")
+	}
+
+	if params.BaseURL != "" {
+		db = db.Where("base_url LIKE ?", "%"+params.BaseURL+"%")
+		tagDB = tagDB.Where("base_url LIKE ?", "%"+params.BaseURL+"%")
 	}
 
 	if params.Tag != "" {
@@ -414,6 +422,7 @@ func (channel *Channel) Update(overwrite bool) error {
 
 	if err == nil {
 		ChannelGroup.Load()
+		ChannelGroup.ClearChannelCooldowns(channel.Id)
 	}
 
 	return err
@@ -486,7 +495,13 @@ func UpdateChannelStatusById(id int, status int) {
 
 	tx.Commit()
 
-	go ChannelGroup.ChangeStatus(id, status == config.ChannelStatusEnabled)
+	isEnabled := status == config.ChannelStatusEnabled
+	go ChannelGroup.ChangeStatus(id, isEnabled)
+
+	// 启用渠道时清除冻结缓存
+	if isEnabled {
+		ChannelGroup.ClearChannelCooldowns(id)
+	}
 }
 
 func UpdateChannelUsedQuota(id int, quota int) {
@@ -502,6 +517,33 @@ func updateChannelUsedQuota(id int, quota int) {
 	if err != nil {
 		logger.SysError("failed to update channel used quota: " + err.Error())
 	}
+}
+
+func ClearChannelTokenCache(channelId int) {
+	cacheKeys := []string{
+		fmt.Sprintf("api_token:codex:%d", channelId),
+		fmt.Sprintf("api_token:geminicli:%d", channelId),
+		fmt.Sprintf("api_token:claudecode:%d", channelId),
+	}
+
+	for _, key := range cacheKeys {
+		if err := cache.DeleteCache(key); err != nil {
+			logger.SysError(fmt.Sprintf("failed to clear token cache %s: %v", key, err))
+		}
+	}
+}
+
+func UpdateChannelKey(id int, key string) error {
+	err := DB.Model(&Channel{}).Where("id = ?", id).Update("key", key).Error
+	if err != nil {
+		logger.SysError("failed to update channel key: " + err.Error())
+		return err
+	}
+
+	ClearChannelTokenCache(id)
+	ChannelGroup.Load()
+
+	return nil
 }
 
 func DeleteDisabledChannel() (int64, error) {

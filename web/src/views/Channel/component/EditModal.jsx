@@ -1,10 +1,11 @@
-import PropTypes from 'prop-types';
-import { useEffect, useRef, useState } from 'react';
-import { CHANNEL_OPTIONS } from 'constants/ChannelConstants';
-import { useTheme } from '@mui/material/styles';
-import { API } from 'utils/api';
-import { copy, showError, showSuccess, trims } from 'utils/common';
+import PropTypes from 'prop-types'
+import { useEffect, useRef, useState } from 'react'
+import { CHANNEL_OPTIONS } from 'constants/ChannelConstants'
+import { useTheme } from '@mui/material/styles'
+import { API } from 'utils/api'
+import { copy, showError, showSuccess, trims } from 'utils/common'
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
@@ -21,35 +22,37 @@ import {
   FormControl,
   FormControlLabel,
   FormHelperText,
+  IconButton,
   InputLabel,
   MenuItem,
   OutlinedInput,
   Select,
+  Stack,
   Switch,
   TextField,
   Tooltip,
   Typography,
   useMediaQuery
-} from '@mui/material';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { defaultConfig, typeConfig } from '../type/Config'; //typeConfig
-import { createFilterOptions } from '@mui/material/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { useTranslation } from 'react-i18next';
-import useCustomizeT from 'hooks/useCustomizeT';
-import { PreCostType } from '../type/other';
-import MapInput from './MapInput';
-import ListInput from './ListInput';
-import ModelSelectorModal from './ModelSelectorModal';
-import pluginList from '../type/Plugin.json';
-import { Icon } from '@iconify/react';
+} from '@mui/material'
+import { Formik } from 'formik'
+import * as Yup from 'yup'
+import { defaultConfig, typeConfig } from '../type/Config' //typeConfig
+import { createFilterOptions } from '@mui/material/Autocomplete'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import { useTranslation } from 'react-i18next'
+import useCustomizeT from 'hooks/useCustomizeT'
+import { PreCostType } from '../type/other'
+import MapInput from './MapInput'
+import ListInput from './ListInput'
+import ModelSelectorModal from './ModelSelectorModal'
+import pluginList from '../type/Plugin.json'
+import { Icon } from '@iconify/react'
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>
+const checkedIcon = <CheckBoxIcon fontSize="small"/>
 
-const filter = createFilterOptions();
+const filter = createFilterOptions()
 const getValidationSchema = (t) =>
   Yup.object().shape({
     is_edit: Yup.boolean(),
@@ -70,62 +73,625 @@ const getValidationSchema = (t) =>
     model_mapping: Yup.array(),
     model_headers: Yup.array(),
     custom_parameter: Yup.string().nullable()
-  });
+  })
 
 const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, modelOptions, prices }) => {
-  const { t } = useTranslation();
-  const { t: customizeT } = useCustomizeT();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t } = useTranslation()
+  const { t: customizeT } = useCustomizeT()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   // const [loading, setLoading] = useState(false);
-  const [initialInput, setInitialInput] = useState(defaultConfig.input);
-  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel); //
-  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt);
-  const [batchAdd, setBatchAdd] = useState(false);
-  const [hasTag, setHasTag] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [parameterFocused, setParameterFocused] = useState(false);
-  const parameterInputRef = useRef(null);
-  const removeDuplicates = (array) => [...new Set(array)];
-  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
-  const [tempFormikValues, setTempFormikValues] = useState(null);
-  const [tempSetFieldValue, setTempSetFieldValue] = useState(null);
+  const [initialInput, setInitialInput] = useState(defaultConfig.input)
+  const [inputLabel, setInputLabel] = useState(defaultConfig.inputLabel) //
+  const [inputPrompt, setInputPrompt] = useState(defaultConfig.prompt)
+  const [batchAdd, setBatchAdd] = useState(false)
+  const [hasTag, setHasTag] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [parameterFocused, setParameterFocused] = useState(false)
+  const parameterInputRef = useRef(null)
+  const removeDuplicates = (array) => [...new Set(array)]
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false)
+  const [tempFormikValues, setTempFormikValues] = useState(null)
+  const [tempSetFieldValue, setTempSetFieldValue] = useState(null)
+
+  // 用于追踪模型的原始名称映射关系 { displayName: originalName }
+  const [modelOriginalMapping, setModelOriginalMapping] = useState({})
+
+  // GeminiCli OAuth 相关状态
+  const [oauthLoading, setOauthLoading] = useState(false)
+  const [oauthWindow, setOauthWindow] = useState(null)
+  const [oauthState, setOauthState] = useState(null)
+  const [oauthURL, setOauthURL] = useState('')
+  const oauthHandledRef = useRef(false) // 用于防止重复处理
+  const pollingIntervalRef = useRef(null) // 使用 ref 存储 interval ID
+
+  // ClaudeCode OAuth 相关状态
+  const [claudeCodeOAuthVisible, setClaudeCodeOAuthVisible] = useState(false)
+  const [claudeCodeAuthURL, setClaudeCodeAuthURL] = useState('')
+  const [claudeCodeSessionId, setClaudeCodeSessionId] = useState('')
+  const [claudeCodeAuthCode, setClaudeCodeAuthCode] = useState('')
+  const [claudeCodeSubmitting, setClaudeCodeSubmitting] = useState(false)
+
+  // Codex OAuth 相关状态
+  const [codexOAuthVisible, setCodexOAuthVisible] = useState(false)
+  const [codexAuthURL, setCodexAuthURL] = useState('')
+  const [codexSessionId, setCodexSessionId] = useState('')
+  const [codexAuthCode, setCodexAuthCode] = useState('')
+  const [codexSubmitting, setCodexSubmitting] = useState(false)
+
+  // 清理 OAuth 相关资源
+  const cleanupOAuth = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+    if (oauthWindow && !oauthWindow.closed) {
+      oauthWindow.close()
+    }
+    setOauthWindow(null)
+    setOauthLoading(false)
+    setOauthState(null)
+    oauthHandledRef.current = false
+  }
+
+  // 包装 onCancel，添加清理逻辑
+  const handleCancel = () => {
+    cleanupOAuth()
+    onCancel()
+  }
 
   const initChannel = (typeValue) => {
     if (typeConfig[typeValue]?.inputLabel) {
-      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel });
+      setInputLabel({ ...defaultConfig.inputLabel, ...typeConfig[typeValue].inputLabel })
     } else {
-      setInputLabel(defaultConfig.inputLabel);
+      setInputLabel(defaultConfig.inputLabel)
     }
 
     if (typeConfig[typeValue]?.prompt) {
-      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt });
+      setInputPrompt({ ...defaultConfig.prompt, ...typeConfig[typeValue].prompt })
     } else {
-      setInputPrompt(defaultConfig.prompt);
+      setInputPrompt(defaultConfig.prompt)
     }
 
-    return typeConfig[typeValue]?.input;
-  };
+    return typeConfig[typeValue]?.input
+  }
+
+  // 解析模型映射配置的工具函数
+  const parseModelMapping = (mappingArray) => {
+    if (!mappingArray || !Array.isArray(mappingArray) || mappingArray.length === 0) {
+      return null
+    }
+
+    try {
+      const mapping = mappingArray.reduce((acc, item) => {
+        if (item.key && item.value) {
+          acc[item.key] = item.value
+        }
+        return acc
+      }, {})
+
+      if (Object.keys(mapping).length === 0) {
+        return null
+      }
+      return mapping
+    } catch (error) {
+      console.warn('模型重定向解析失败:', error)
+      return null
+    }
+  }
+
+  // 更新模型列表的统一方法
+  const updateModelsList = (newModels, newMapping, setFieldValue) => {
+    const uniqueModels = Array.from(new Set(newModels.filter(model => model && model.id && model.id.trim())))
+
+    setFieldValue('models', uniqueModels)
+    setModelOriginalMapping(newMapping)
+  }
+
+  // 恢复模型到原始名称
+  const restoreModelsToOriginalNames = (currentModels, setFieldValue) => {
+    const restoredModels = currentModels.map(model => {
+      const originalName = modelOriginalMapping[model.id] || model.id
+      return {
+        ...model,
+        id: originalName
+      }
+    })
+
+    // 检查是否有变化
+    const hasChanges = currentModels.some((model, index) => {
+      return model.id !== restoredModels[index].id
+    })
+
+    if (hasChanges) {
+      updateModelsList(restoredModels, {}, setFieldValue)
+    }
+  }
+
+  // 应用模型映射的核心逻辑
+  const applyModelMapping = (mapping, currentModels, currentMapping, setFieldValue) => {
+    let updatedModels = [...currentModels]
+    let newMapping = { ...currentMapping }
+    let hasChanges = false
+
+    // 遍历重定向映射
+    Object.entries(mapping).forEach(([key, mappedValue]) => {
+      if (typeof key === 'string' && typeof mappedValue === 'string') {
+        const keyTrimmed = key.trim()
+        const valueTrimmed = mappedValue.trim()
+
+        if (keyTrimmed && valueTrimmed) {
+          // 查找模型配置中是否存在重定向的"值"（原始模型名）
+          const valueIndex = updatedModels.findIndex(model => {
+            return model.id === valueTrimmed || newMapping[model.id] === valueTrimmed
+          })
+
+          if (valueIndex !== -1) {
+            const currentDisplayName = updatedModels[valueIndex].id
+            if (currentDisplayName !== keyTrimmed) {
+              // 记录原始映射关系
+              if (!newMapping[keyTrimmed]) {
+                newMapping[keyTrimmed] = newMapping[currentDisplayName] || currentDisplayName
+              }
+              // 清理旧的映射关系
+              if (newMapping[currentDisplayName]) {
+                delete newMapping[currentDisplayName]
+              }
+              // 更新显示名称为重定向的键
+              updatedModels[valueIndex] = {
+                ...updatedModels[valueIndex],
+                id: keyTrimmed
+              }
+              hasChanges = true
+            }
+          }
+        }
+      }
+    })
+
+    // 处理不在映射中的模型，恢复为原始名称
+    const mappingKeys = new Set(Object.keys(mapping).map(key => key.trim()))
+    updatedModels = updatedModels.map(model => {
+      if (!mappingKeys.has(model.id) && newMapping[model.id]) {
+        const originalName = newMapping[model.id]
+        delete newMapping[model.id]
+        hasChanges = true
+        return {
+          ...model,
+          id: originalName
+        }
+      }
+      return model
+    })
+
+    return { updatedModels, newMapping, hasChanges }
+  }
+
+  // 实时同步模型重定向到模型配置的函数
+  const syncModelMappingToModels = (mappingArray, currentModels, setFieldValue) => {
+    const mapping = parseModelMapping(mappingArray)
+
+    if (!mapping) {
+      restoreModelsToOriginalNames(currentModels, setFieldValue)
+      return
+    }
+
+    const { updatedModels, newMapping, hasChanges } = applyModelMapping(
+      mapping,
+      currentModels,
+      modelOriginalMapping,
+      setFieldValue
+    )
+
+    if (hasChanges) {
+      updateModelsList(updatedModels, newMapping, setFieldValue)
+    }
+  }
+
+  // 轮询 OAuth 状态
+  const pollOAuthStatus = async(state, setFieldValue, messageHandlerRef, channelType = 57) => {
+    try {
+      // 最早检查：如果已经处理过，立即返回，不做任何操作
+      if (oauthHandledRef.current) {
+        return true
+      }
+
+      // 根据渠道类型选择 API 端点
+      const apiEndpoint = channelType === 60 ? 'antigravity' : 'geminicli'
+      const res = await API.get(`/api/${apiEndpoint}/oauth/status/${state}`)
+
+      if (!res.data.success) {
+        return false
+      }
+
+      if (res.data.status === 'completed') {
+        // 再次检查，防止竞态条件
+        if (oauthHandledRef.current) {
+          return true
+        }
+
+        // 立即设置标志，防止其他路径重复处理
+        oauthHandledRef.current = true
+
+        // 立即停止轮询
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
+        }
+
+        // 移除 message 监听器
+        if (messageHandlerRef && messageHandlerRef.current) {
+          window.removeEventListener('message', messageHandlerRef.current)
+          messageHandlerRef.current = null
+        }
+
+        // 更新状态
+        setOauthLoading(false)
+        setOauthState(null)
+
+        // 处理结果
+        if (res.data.result && res.data.credentials) {
+          setFieldValue('key', res.data.credentials)
+          showSuccess('OAuth 授权成功！凭证已自动填充')
+        } else {
+          showError(res.data.message || 'OAuth 授权失败')
+        }
+
+        // 关闭弹窗
+        if (oauthWindow && !oauthWindow.closed) {
+          oauthWindow.close()
+        }
+        setOauthWindow(null)
+
+        return true // 已完成
+      }
+
+      return false // 未完成
+    } catch (error) {
+      return false
+    }
+  }
+
+  // 复制 OAuth 授权链接
+  const handleCopyOAuthURL = () => {
+    if (!oauthURL) {
+      showError('请先点击授权按钮生成授权链接')
+      return
+    }
+    navigator.clipboard.writeText(oauthURL).then(() => {
+      showSuccess('授权链接已复制到剪贴板')
+    }).catch(() => {
+      showError('复制失败，请手动复制')
+    })
+  }
+
+  // GeminiCli/Antigravity OAuth 授权处理
+  const handleGeminiCliOAuth = async(projectId, proxy, setFieldValue, channelType = 57) => {
+    // 允许 projectId 为空，支持自动检测
+    const trimmedProjectId = projectId ? projectId.trim() : ''
+    const trimmedProxy = proxy ? proxy.trim() : ''
+
+    // 根据渠道类型选择 API 端点和名称
+    const apiEndpoint = channelType === 60 ? 'antigravity' : 'geminicli'
+    const channelName = channelType === 60 ? 'Antigravity' : 'GeminiCli'
+
+    try {
+      setOauthLoading(true)
+      oauthHandledRef.current = false // 重置处理标志
+
+      // 调用后端 API 生成授权 URL（传递代理配置）
+      const res = await API.post(`/api/${apiEndpoint}/oauth/start`, {
+        channel_id: channelId || 0,
+        project_id: trimmedProjectId,
+        proxy: trimmedProxy
+      })
+
+      if (!res.data.success) {
+        showError(res.data.message || 'OAuth 授权失败')
+        setOauthLoading(false)
+        return
+      }
+
+      const authURL = res.data.auth_url
+      const state = res.data.state
+
+      setOauthState(state)
+      setOauthURL(authURL)
+
+      // 打开新窗口进行授权（使用新标签页）
+      const popup = window.open(authURL, '_blank')
+
+      setOauthWindow(popup)
+
+      // 用于存储 message handler 的引用
+      const messageHandlerRef = { current: null }
+
+      // 监听来自 OAuth 窗口的消息（作为快速路径）
+      const handleMessage = (event) => {
+        // 安全检查：确保消息来自我们的域（支持 geminicli 和 antigravity）
+        const expectedType = channelType === 60 ? 'antigravity_oauth_result' : 'geminicli_oauth_result'
+        if (event.data && event.data.type === expectedType) {
+          // 如果已经处理过，直接返回
+          if (oauthHandledRef.current) {
+            return
+          }
+
+          // 立即设置标志
+          oauthHandledRef.current = true
+
+          // 立即停止轮询
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
+
+          // 移除自己
+          window.removeEventListener('message', handleMessage)
+          messageHandlerRef.current = null
+
+          // 处理结果
+          if (event.data.success && event.data.credentials) {
+            setFieldValue('key', event.data.credentials)
+            showSuccess('OAuth 授权成功！凭证已自动填充')
+          } else {
+            showError('OAuth 授权失败')
+          }
+
+          // 更新状态
+          setOauthLoading(false)
+          setOauthState(null)
+          setOauthWindow(null)
+
+          // 关闭弹窗
+          if (popup && !popup.closed) {
+            popup.close()
+          }
+        }
+      }
+
+      messageHandlerRef.current = handleMessage
+      window.addEventListener('message', handleMessage)
+
+      // 开始轮询状态（每 2 秒查询一次）
+      const interval = setInterval(async() => {
+        const completed = await pollOAuthStatus(state, setFieldValue, messageHandlerRef, channelType)
+        if (completed) {
+          clearInterval(interval)
+          pollingIntervalRef.current = null
+        }
+      }, 2000)
+
+      pollingIntervalRef.current = interval
+
+      // 检测弹窗是否被关闭
+      const checkClosed = setInterval(() => {
+        if (popup && popup.closed) {
+          clearInterval(checkClosed)
+          // 不立即停止轮询，因为用户可能在其他浏览器完成授权
+          if (messageHandlerRef.current) {
+            window.removeEventListener('message', messageHandlerRef.current)
+            messageHandlerRef.current = null
+          }
+        }
+      }, 500)
+
+      // 10 分钟后超时
+      setTimeout(() => {
+        // 检查是否已经处理过
+        if (oauthHandledRef.current) {
+          return
+        }
+
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
+        }
+        if (messageHandlerRef.current) {
+          window.removeEventListener('message', messageHandlerRef.current)
+          messageHandlerRef.current = null
+        }
+        if (oauthLoading) {
+          setOauthLoading(false)
+          setOauthState(null)
+          showError('OAuth 授权超时，请重试')
+        }
+      }, 10 * 60 * 1000)
+
+    } catch (error) {
+      showError('OAuth 授权失败: ' + (error.message || error))
+      setOauthLoading(false)
+    }
+  }
+
+  // ClaudeCode OAuth 授权处理 - 步骤1: 获取授权链接
+  const handleClaudeCodeOAuth = async(proxy) => {
+    const trimmedProxy = proxy ? proxy.trim() : ''
+
+    try {
+      setClaudeCodeSubmitting(true)
+
+      // 调用后端 API 生成授权 URL（传递代理配置）
+      const res = await API.post('/api/claudecode/oauth/start', {
+        channel_id: channelId || 0,
+        proxy: trimmedProxy
+      })
+
+      if (!res.data.success) {
+        showError(res.data.message || '获取授权链接失败')
+        setClaudeCodeSubmitting(false)
+        return
+      }
+
+      const authURL = res.data.data.auth_url
+      const sessionId = res.data.data.session_id
+
+      setClaudeCodeAuthURL(authURL)
+      setClaudeCodeSessionId(sessionId)
+      setClaudeCodeOAuthVisible(true)
+      setClaudeCodeSubmitting(false)
+
+      // 自动打开授权页面
+      window.open(authURL, '_blank')
+
+    } catch (error) {
+      showError('获取授权链接失败: ' + (error.message || error))
+      setClaudeCodeSubmitting(false)
+    }
+  }
+
+  // ClaudeCode OAuth 授权处理 - 步骤2: 提交授权码
+  const handleClaudeCodeSubmitCode = async(setFieldValue) => {
+    if (!claudeCodeAuthCode || claudeCodeAuthCode.trim() === '') {
+      showError('请输入授权码或回调 URL')
+      return
+    }
+
+    try {
+      setClaudeCodeSubmitting(true)
+
+      // 提交授权码到后端
+      const res = await API.post('/api/claudecode/oauth/exchange-code', {
+        session_id: claudeCodeSessionId,
+        callback_url: claudeCodeAuthCode.trim()
+      })
+
+      if (!res.data.success) {
+        showError(res.data.message || '授权码交换失败')
+        setClaudeCodeSubmitting(false)
+        return
+      }
+
+      // 获取凭证并填充
+      const credentials = res.data.data.credentials
+      setFieldValue('key', credentials)
+      showSuccess('OAuth 授权成功！凭证已自动填充')
+
+      // 关闭对话框并重置状态
+      setClaudeCodeOAuthVisible(false)
+      setClaudeCodeAuthURL('')
+      setClaudeCodeSessionId('')
+      setClaudeCodeAuthCode('')
+      setClaudeCodeSubmitting(false)
+
+    } catch (error) {
+      showError('授权码交换失败: ' + (error.message || error))
+      setClaudeCodeSubmitting(false)
+    }
+  }
+
+  // 取消 ClaudeCode OAuth
+  const handleClaudeCodeCancelOAuth = () => {
+    setClaudeCodeOAuthVisible(false)
+    setClaudeCodeAuthURL('')
+    setClaudeCodeSessionId('')
+    setClaudeCodeAuthCode('')
+    setClaudeCodeSubmitting(false)
+  }
+
+  // Codex OAuth 授权处理 - 步骤1: 获取授权链接
+  const handleCodexOAuth = async(proxy) => {
+    const trimmedProxy = proxy ? proxy.trim() : ''
+
+    try {
+      setCodexSubmitting(true)
+
+      // 调用后端 API 生成授权 URL（传递代理配置）
+      const res = await API.post('/api/codex/oauth/start', {
+        channel_id: channelId || 0,
+        proxy: trimmedProxy
+      })
+
+      if (!res.data.success) {
+        showError(res.data.message || '获取授权链接失败')
+        setCodexSubmitting(false)
+        return
+      }
+
+      const authURL = res.data.data.auth_url
+      const sessionId = res.data.data.session_id
+
+      setCodexAuthURL(authURL)
+      setCodexSessionId(sessionId)
+      setCodexOAuthVisible(true)
+      setCodexSubmitting(false)
+
+      // 自动打开授权页面
+      window.open(authURL, '_blank')
+
+    } catch (error) {
+      showError('获取授权链接失败: ' + (error.message || error))
+      setCodexSubmitting(false)
+    }
+  }
+
+  // Codex OAuth 授权处理 - 步骤2: 提交授权码
+  const handleCodexSubmitCode = async(setFieldValue) => {
+    if (!codexAuthCode || codexAuthCode.trim() === '') {
+      showError('请输入授权码或回调 URL')
+      return
+    }
+
+    try {
+      setCodexSubmitting(true)
+
+      // 提交授权码到后端
+      const res = await API.post('/api/codex/oauth/exchange-code', {
+        session_id: codexSessionId,
+        callback_url: codexAuthCode.trim()
+      })
+
+      if (!res.data.success) {
+        showError(res.data.message || '授权码交换失败')
+        setCodexSubmitting(false)
+        return
+      }
+
+      // 获取凭证并填充
+      const credentials = res.data.data.credentials
+      setFieldValue('key', credentials)
+      showSuccess('OAuth 授权成功！凭证已自动填充')
+
+      // 关闭对话框并重置状态
+      setCodexOAuthVisible(false)
+      setCodexAuthURL('')
+      setCodexSessionId('')
+      setCodexAuthCode('')
+      setCodexSubmitting(false)
+
+    } catch (error) {
+      showError('授权码交换失败: ' + (error.message || error))
+      setCodexSubmitting(false)
+    }
+  }
+
+  // 取消 Codex OAuth
+  const handleCodexCancelOAuth = () => {
+    setCodexOAuthVisible(false)
+    setCodexAuthURL('')
+    setCodexSessionId('')
+    setCodexAuthCode('')
+    setCodexSubmitting(false)
+  }
 
   const handleTypeChange = (setFieldValue, typeValue, values) => {
     // 处理插件事务
     if (pluginList[typeValue]) {
-      const newPluginValues = {};
-      const pluginConfig = pluginList[typeValue];
+      const newPluginValues = {}
+      const pluginConfig = pluginList[typeValue]
       for (const pluginName in pluginConfig) {
-        const plugin = pluginConfig[pluginName];
-        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {};
-        newPluginValues[pluginName] = {};
+        const plugin = pluginConfig[pluginName]
+        const oldValve = values['plugin'] ? values['plugin'][pluginName] || {} : {}
+        newPluginValues[pluginName] = {}
         for (const paramName in plugin.params) {
-          const param = plugin.params[paramName];
-          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '');
+          const param = plugin.params[paramName]
+          newPluginValues[pluginName][paramName] = oldValve[paramName] || (param.type === 'bool' ? false : '')
         }
       }
-      setFieldValue('plugin', newPluginValues);
+      setFieldValue('plugin', newPluginValues)
     }
 
-    const newInput = initChannel(typeValue);
+    const newInput = initChannel(typeValue)
 
     if (newInput) {
       Object.keys(newInput).forEach((key) => {
@@ -133,103 +699,103 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
           (!Array.isArray(values[key]) && values[key] !== null && values[key] !== undefined && values[key] !== '') ||
           (Array.isArray(values[key]) && values[key].length > 0)
         ) {
-          return;
+          return
         }
 
         if (key === 'models') {
-          setFieldValue(key, initialModel(newInput[key]));
-          return;
+          setFieldValue(key, initialModel(newInput[key]))
+          return
         }
-        setFieldValue(key, newInput[key]);
-      });
+        setFieldValue(key, newInput[key])
+      })
     }
-  };
+  }
 
   const basicModels = (channelType) => {
-    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup;
+    let modelGroup = typeConfig[channelType]?.modelGroup || defaultConfig.modelGroup
     // 循环 modelOptions，找到 modelGroup 对应的模型
-    let modelList = [];
+    let modelList = []
     modelOptions.forEach((model) => {
       if (model.group === modelGroup) {
-        modelList.push(model);
+        modelList.push(model)
       }
-    });
-    return modelList;
-  };
+    })
+    return modelList
+  }
 
   const handleModelSelectorConfirm = (selectedModels, overwriteModels) => {
     if (tempSetFieldValue && tempFormikValues) {
       if (overwriteModels) {
         // 覆盖模式：清空现有的模型列表，使用选择器中的模型
-        tempSetFieldValue('models', selectedModels);
+        tempSetFieldValue('models', selectedModels)
       } else {
         // 追加模式：合并现有模型和新选择的模型，避免重复
-        const existingModels = tempFormikValues.models || [];
-        const existingModelIds = new Set(existingModels.map((model) => model.id));
+        const existingModels = tempFormikValues.models || []
+        const existingModelIds = new Set(existingModels.map((model) => model.id))
 
         // 过滤掉已存在的模型，避免重复
-        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id));
+        const newModels = selectedModels.filter((model) => !existingModelIds.has(model.id))
 
         // 合并模型列表
-        tempSetFieldValue('models', [...existingModels, ...newModels]);
+        tempSetFieldValue('models', [...existingModels, ...newModels])
       }
     }
-  };
+  }
 
-  const submit = async (values, { setErrors, setStatus, setSubmitting }) => {
-    setSubmitting(true);
-    values = trims(values);
+  const submit = async(values, { setErrors, setStatus, setSubmitting }) => {
+    setSubmitting(true)
+    values = trims(values)
     if (values.base_url && values.base_url.endsWith('/')) {
-      values.base_url = values.base_url.slice(0, values.base_url.length - 1);
+      values.base_url = values.base_url.slice(0, values.base_url.length - 1)
     }
     if (values.type === 3 && values.other === '') {
-      values.other = '2024-05-01-preview';
+      values.other = '2024-05-01-preview'
     }
     if (values.type === 18 && values.other === '') {
-      values.other = 'v2.1';
+      values.other = 'v2.1'
     }
-    let res;
+    let res
 
-    let modelMappingModel = [];
+    let modelMappingModel = []
 
     if (values.model_mapping) {
       try {
         const modelMapping = values.model_mapping.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value;
+            acc[item.key] = item.value
           }
-          return acc;
-        }, {});
-        const cleanedMapping = {};
+          return acc
+        }, {})
+        const cleanedMapping = {}
 
         for (const [key, value] of Object.entries(modelMapping)) {
           if (key && value && !(key in cleanedMapping)) {
-            cleanedMapping[key] = value;
-            modelMappingModel.push(key);
+            cleanedMapping[key] = value
+            modelMappingModel.push(key)
           }
         }
 
-        values.model_mapping = JSON.stringify(cleanedMapping, null, 2);
+        values.model_mapping = JSON.stringify(cleanedMapping, null, 2)
       } catch (error) {
-        showError('Error parsing model_mapping:' + error.message);
+        showError('Error parsing model_mapping:' + error.message)
       }
     }
-    let modelHeadersKey = [];
+    let modelHeadersKey = []
 
     if (values.model_headers) {
       try {
         const modelHeader = values.model_headers.reduce((acc, item) => {
           if (item.key && item.value) {
-            acc[item.key] = item.value;
+            acc[item.key] = item.value
           }
-          return acc;
-        }, {});
-        const cleanedHeader = {};
+          return acc
+        }, {})
+        const cleanedHeader = {}
 
         for (const [key, value] of Object.entries(modelHeader)) {
           if (key && value && !(key in cleanedHeader)) {
-            cleanedHeader[key] = value;
-            modelHeadersKey.push(key);
+            cleanedHeader[key] = value
+            modelHeadersKey.push(key)
           }
         }
 
@@ -351,6 +917,22 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
               value
             }))
             : []
+
+        // 初始化模型原始映射关系
+        const mapping = parseModelMapping(data.model_mapping)
+        if (mapping) {
+          const initialMapping = {}
+          // 根据当前的模型映射和模型列表，建立原始映射关系
+          Object.entries(mapping).forEach(([key, value]) => {
+            const modelExists = data.models.some(model => model.id === key)
+            if (modelExists) {
+              initialMapping[key] = value
+            }
+          })
+          setModelOriginalMapping(initialMapping)
+        } else {
+          setModelOriginalMapping({})
+        }
         // if (data.model_headers) {
         data.model_headers =
           data.model_headers !== ''
@@ -370,7 +952,6 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
             data.custom_parameter = JSON.stringify(parsedJson, null, 2)
           } catch (error) {
             // If parsing fails, keep the original string
-            console.log('Error parsing custom_parameter JSON:', error)
           }
         } else {
           data.custom_parameter = ''
@@ -404,14 +985,19 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
         setHasTag(false)
         initChannel(1)
         setInitialInput({ ...defaultConfig.input, is_edit: false })
+        // 重置模型原始映射关系
+        setModelOriginalMapping({})
       }
+    } else {
+      // 关闭对话框时清理 OAuth 窗口和轮询
+      cleanupOAuth()
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, open])
 
   return (
-    <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
+    <Dialog open={open} onClose={handleCancel} fullWidth maxWidth={'md'}>
       <DialogTitle
         sx={{ margin: '0px', fontWeight: 700, lineHeight: '1.55556', padding: '24px', fontSize: '1.125rem' }}>
         {channelId ? t('common.edit') : t('common.create')}
@@ -515,12 +1101,14 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.name}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-name-label"> {customizeT(inputPrompt.name)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
                 {inputPrompt.base_url && (
-                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.base_url && errors.base_url)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-base_url-label">{customizeT(inputLabel.base_url)}</InputLabel>
                     <OutlinedInput
                       id="channel-base_url-label"
@@ -539,13 +1127,15 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                         {errors.base_url}
                       </FormHelperText>
                     ) : (
-                      <FormHelperText id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
+                      <FormHelperText
+                        id="helper-tex-channel-base_url-label"> {customizeT(inputPrompt.base_url)} </FormHelperText>
                     )}
                   </FormControl>
                 )}
 
                 {inputPrompt.other && (
-                  <FormControl fullWidth error={Boolean(touched.other && errors.other)} sx={{ ...theme.typography.otherInput }}>
+                  <FormControl fullWidth error={Boolean(touched.other && errors.other)}
+                               sx={{ ...theme.typography.otherInput }}>
                     <InputLabel htmlFor="channel-other-label">{customizeT(inputLabel.other)}</InputLabel>
                     <OutlinedInput
                       id="channel-other-label"
@@ -738,50 +1328,85 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                 </FormControl>
                 <Container
                   sx={{
-                    textAlign: 'right'
+                    textAlign: isMobile ? 'center' : 'right',
+                    p: 0
                   }}
                 >
-                  <ButtonGroup variant="outlined" aria-label="small outlined primary button group">
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        const modelString = values.models.map((model) => model.id).join(',')
-                        copy(modelString)
-                      }}
+                  {!isMobile ? (
+                    <ButtonGroup
+                      variant="outlined"
+                      aria-label="small outlined primary button group"
                     >
-                      {isMobile ? <Icon icon="mdi:content-copy"/> : t('channel_edit.copyModels')}
-                    </Button>
-                    <Button
-                      disabled={hasTag}
-                      size="small"
-                      onClick={() => {
-                        setFieldValue('models', basicModels(values.type))
-                      }}
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          const modelString = values.models.map((model) => model.id).join(',')
+                          copy(modelString)
+                        }}
+                      >
+                        {t('channel_edit.copyModels')}
+                      </Button>
+                      <Button
+                        disabled={hasTag}
+                        size="small"
+                        onClick={() => {
+                          setFieldValue('models', basicModels(values.type))
+                        }}
+                      >
+                        {t('channel_edit.inputChannelModel')}
+                      </Button>
+                      {inputLabel.provider_models_list && (
+                        <Tooltip title={customizeT(inputPrompt.provider_models_list)} placement="top">
+                          <Button
+                            disabled={hasTag}
+                            size="small"
+                            onClick={openModelSelector}
+                            startIcon={<Icon icon="mdi:cloud-download"/>}
+                          >
+                            {customizeT(inputLabel.provider_models_list)}
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </ButtonGroup>
+                  ) : (
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      divider={<Divider orientation="vertical" flexItem/>}
+                      justifyContent="space-around"
+                      alignItems="center"
                     >
-                      {isMobile ? <Icon icon="mdi:playlist-plus"/> : t('channel_edit.inputChannelModel')}
-                    </Button>
-                    {/* <Button
-                      disabled={hasTag}
-                      size="small"
-                      onClick={() => {
-                        setFieldValue('models', modelOptions);
-                      }}
-                    >
-                      {t('channel_edit.inputAllModel')}
-                    </Button> */}
-                    {inputLabel.provider_models_list && (
-                      <Tooltip title={customizeT(inputPrompt.provider_models_list)} placement="top">
-                        <Button
-                          disabled={hasTag}
-                          size="small"
-                          onClick={openModelSelector}
-                          startIcon={!isMobile && <Icon icon="mdi:cloud-download"/>}
-                        >
-                          {isMobile ? <Icon icon="mdi:cloud-download"/> : customizeT(inputLabel.provider_models_list)}
-                        </Button>
-                      </Tooltip>
-                    )}
-                  </ButtonGroup>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          const modelString = values.models.map((model) => model.id).join(',')
+                          copy(modelString)
+                        }}
+                      >
+                        <Icon icon="mdi:content-copy"/>
+                      </IconButton>
+                      <IconButton
+                        disabled={hasTag}
+                        size="small"
+                        onClick={() => {
+                          setFieldValue('models', basicModels(values.type))
+                        }}
+                      >
+                        <Icon icon="mdi:playlist-plus"/>
+                      </IconButton>
+                      {inputLabel.provider_models_list && (
+                        <Tooltip title={customizeT(inputPrompt.provider_models_list)} placement="top">
+                          <IconButton
+                            disabled={hasTag}
+                            size="small"
+                            onClick={openModelSelector}
+                          >
+                            <Icon icon="mdi:cloud-download"/>
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                  )}
                 </Container>
                 <FormControl fullWidth error={Boolean(touched.key && errors.key)}
                              sx={{ ...theme.typography.otherInput }}>
@@ -838,6 +1463,235 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                   )}
                 </FormControl>
 
+                {/* GeminiCli/Antigravity OAuth 授权按钮 */}
+                {(values.type === 57 || values.type === 60) && !batchAdd && (
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        fullWidth
+                        disabled={oauthLoading}
+                        onClick={() => handleGeminiCliOAuth(values.other, values.proxy, setFieldValue, values.type)}
+                        startIcon={oauthLoading ? null : <Icon icon="mdi:google"/>}
+                      >
+                        {oauthLoading ? '授权中，请完成授权...' : 'OAuth 授权'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        disabled={!oauthURL}
+                        onClick={handleCopyOAuthURL}
+                        startIcon={<Icon icon="mdi:content-copy"/>}
+                        sx={{ minWidth: '120px' }}
+                      >
+                        复制链接
+                      </Button>
+                    </Box>
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      {values.other ? (
+                        <>授权后会跳转到 localhost:8080，请在浏览器地址栏中将 localhost:8080 改为当前服务的域名后刷新访问完成授权</>
+                      ) : (
+                        <>
+                          <strong>Project ID 未填写，将自动检测可用项目。</strong>
+                          <br />
+                          授权后会跳转到 localhost:8080，请在浏览器地址栏中将 localhost:8080 改为当前服务的域名后刷新访问完成授权
+                        </>
+                      )}
+                    </Alert>
+                  </Box>
+                )}
+
+                {/* ClaudeCode OAuth 授权按钮 */}
+                {values.type === 58 && !batchAdd && (
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                      disabled={claudeCodeSubmitting}
+                      onClick={() => handleClaudeCodeOAuth(values.proxy)}
+                      startIcon={claudeCodeSubmitting ? null : <Icon icon="simple-icons:anthropic"/>}
+                    >
+                      {claudeCodeSubmitting ? '获取授权链接中...' : 'OAuth 授权'}
+                    </Button>
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      点击按钮后，将打开 Claude 授权页面。授权成功后，请复制浏览器地址栏中的完整 URL 并粘贴到弹出的输入框中。
+                    </Alert>
+
+                    {/* ClaudeCode OAuth 对话框 */}
+                    <Dialog
+                      open={claudeCodeOAuthVisible}
+                      onClose={handleClaudeCodeCancelOAuth}
+                      maxWidth="md"
+                      fullWidth
+                    >
+                      <DialogTitle>ClaudeCode OAuth 授权</DialogTitle>
+                      <DialogContent>
+                        <Box sx={{ mb: 2 }}>
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            <Typography variant="body2" component="div">
+                              <strong>授权步骤：</strong>
+                              <ol style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                                <li>点击下方"打开授权页面"按钮（或手动复制链接到浏览器）</li>
+                                <li>在新打开的页面中登录 Claude 账户并同意授权</li>
+                                <li>授权成功后，复制浏览器地址栏中的<strong>完整 URL</strong></li>
+                                <li>将完整 URL 粘贴到下方输入框中，点击"提交授权码"</li>
+                              </ol>
+                            </Typography>
+                          </Alert>
+
+                          <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              fullWidth
+                              onClick={() => window.open(claudeCodeAuthURL, '_blank')}
+                              startIcon={<Icon icon="mdi:open-in-new"/>}
+                            >
+                              打开授权页面
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              onClick={() => {
+                                copy(claudeCodeAuthURL).then(() => {
+                                  showSuccess('授权链接已复制到剪贴板')
+                                }).catch(() => {
+                                  showError('复制失败，请手动复制')
+                                })
+                              }}
+                              startIcon={<Icon icon="mdi:content-copy"/>}
+                              sx={{ minWidth: '120px' }}
+                            >
+                              复制链接
+                            </Button>
+                          </Box>
+
+                          <TextField
+                            fullWidth
+                            label="授权回调 URL 或授权码"
+                            placeholder="粘贴完整的回调 URL，例如：https://console.anthropic.com/oauth/code/callback?code=xxx&state=xxx"
+                            value={claudeCodeAuthCode}
+                            onChange={(e) => setClaudeCodeAuthCode(e.target.value)}
+                            multiline
+                            rows={3}
+                            variant="outlined"
+                          />
+                        </Box>
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleClaudeCodeCancelOAuth} disabled={claudeCodeSubmitting}>
+                          取消
+                        </Button>
+                        <Button
+                          onClick={() => handleClaudeCodeSubmitCode(setFieldValue)}
+                          variant="contained"
+                          color="primary"
+                          disabled={claudeCodeSubmitting || !claudeCodeAuthCode}
+                        >
+                          {claudeCodeSubmitting ? '提交中...' : '提交授权码'}
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
+                  </Box>
+                )}
+
+                {/* Codex OAuth 授权按钮 */}
+                {values.type === 59 && !batchAdd && (
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                      disabled={codexSubmitting}
+                      onClick={() => handleCodexOAuth(values.proxy)}
+                      startIcon={codexSubmitting ? null : <Icon icon="simple-icons:openai"/>}
+                    >
+                      {codexSubmitting ? '获取授权链接中...' : 'OAuth 授权'}
+                    </Button>
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      点击按钮后，将打开 OpenAI 授权页面。授权成功后，请复制浏览器地址栏中的完整 URL 并粘贴到弹出的输入框中。
+                    </Alert>
+
+                    {/* Codex OAuth 对话框 */}
+                    <Dialog
+                      open={codexOAuthVisible}
+                      onClose={handleCodexCancelOAuth}
+                      maxWidth="md"
+                      fullWidth
+                    >
+                      <DialogTitle>Codex OAuth 授权</DialogTitle>
+                      <DialogContent>
+                        <Box sx={{ mb: 2 }}>
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            <Typography variant="body2" component="div">
+                              <strong>授权步骤：</strong>
+                              <ol style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                                <li>点击下方"打开授权页面"按钮（或手动复制链接到浏览器）</li>
+                                <li>在新打开的页面中登录 OpenAI 账户并同意授权</li>
+                                <li>授权成功后，复制浏览器地址栏中的<strong>完整 URL</strong></li>
+                                <li>将完整 URL 粘贴到下方输入框中，点击"提交授权码"</li>
+                              </ol>
+                            </Typography>
+                          </Alert>
+
+                          <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              fullWidth
+                              onClick={() => window.open(codexAuthURL, '_blank')}
+                              startIcon={<Icon icon="mdi:open-in-new"/>}
+                            >
+                              打开授权页面
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              onClick={() => {
+                                copy(codexAuthURL).then(() => {
+                                  showSuccess('授权链接已复制到剪贴板')
+                                }).catch(() => {
+                                  showError('复制失败，请手动复制')
+                                })
+                              }}
+                              startIcon={<Icon icon="mdi:content-copy"/>}
+                              sx={{ minWidth: '120px' }}
+                            >
+                              复制链接
+                            </Button>
+                          </Box>
+
+                          <TextField
+                            fullWidth
+                            label="授权回调 URL 或授权码"
+                            placeholder="粘贴完整的回调 URL，例如：http://localhost:1455/auth/callback?code=xxx&state=xxx"
+                            value={codexAuthCode}
+                            onChange={(e) => setCodexAuthCode(e.target.value)}
+                            multiline
+                            rows={3}
+                            variant="outlined"
+                          />
+                        </Box>
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleCodexCancelOAuth} disabled={codexSubmitting}>
+                          取消
+                        </Button>
+                        <Button
+                          onClick={() => handleCodexSubmitCode(setFieldValue)}
+                          variant="contained"
+                          color="primary"
+                          disabled={codexSubmitting || !codexAuthCode}
+                        >
+                          {codexSubmitting ? '提交中...' : '提交授权码'}
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
+                  </Box>
+                )}
+
                 {inputPrompt.model_mapping && (
                   <FormControl
                     fullWidth
@@ -848,6 +1702,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       mapValue={values.model_mapping}
                       onChange={(newValue) => {
                         setFieldValue('model_mapping', newValue)
+                        // 实时同步模型重定向到模型配置
+                        syncModelMappingToModels(newValue, values.models, setFieldValue)
                       }}
                       disabled={hasTag}
                       error={Boolean(touched.model_mapping && errors.model_mapping)}
@@ -1085,7 +1941,8 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       }
                       label={customizeT(inputLabel.compatible_response)}
                     />
-                    <FormHelperText id="helper-tex-compatible_response-label">{customizeT(inputPrompt.compatible_response)}</FormHelperText>
+                    <FormHelperText
+                      id="helper-tex-compatible_response-label">{customizeT(inputPrompt.compatible_response)}</FormHelperText>
                   </FormControl>
                 )}
                 {pluginList[values.type] &&

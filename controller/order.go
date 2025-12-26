@@ -148,7 +148,7 @@ func PaymentCallback(c *gin.Context) {
 		logger.SysError(fmt.Sprintf("gateway callback failed to find order, trade_no: %s,", payNotify.TradeNo))
 		return
 	}
-	fmt.Println(order.Status, order.Status != model.OrderStatusPending)
+	//fmt.Println(order.Status, order.Status != model.OrderStatusPending)
 
 	if order.Status != model.OrderStatusPending {
 		return
@@ -247,4 +247,72 @@ func GetOrderList(c *gin.Context) {
 		"message": "",
 		"data":    payments,
 	})
+}
+
+// EpayCallback 固定的易支付回调接口
+func EpayCallback(c *gin.Context) {
+	tradeNo := c.Query("out_trade_no")
+	if tradeNo == "" {
+		c.String(http.StatusOK, "fail")
+		return
+	}
+
+	order, err := model.GetOrderByTradeNo(tradeNo)
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to find order, trade_no: %s", tradeNo))
+		c.String(http.StatusOK, "fail")
+		return
+	}
+
+	gatewayPayment, err := model.GetPaymentByID(order.GatewayId)
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to find payment, trade_no: %s, gateway_id: %d", tradeNo, order.GatewayId))
+		c.String(http.StatusOK, "fail")
+		return
+	}
+
+	paymentService, err := payment.NewPaymentService(gatewayPayment.UUID)
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to create payment service, trade_no: %s", tradeNo))
+		c.String(http.StatusOK, "fail")
+		return
+	}
+
+	payNotify, err := paymentService.HandleCallback(c, paymentService.Payment.Config)
+	if err != nil {
+		return
+	}
+
+	LockOrder(payNotify.GatewayNo)
+	defer UnlockOrder(payNotify.GatewayNo)
+
+	if order.Status != model.OrderStatusPending {
+		return
+	}
+
+	order.GatewayNo = payNotify.GatewayNo
+	order.Status = model.OrderStatusSuccess
+	err = order.Update()
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to update order, trade_no: %s", tradeNo))
+		return
+	}
+
+	err = model.IncreaseUserQuota(order.UserId, order.Quota)
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to increase user quota, trade_no: %s", tradeNo))
+		return
+	}
+
+	err = model.CheckAndUpgradeUserGroup(order.UserId, order.Quota)
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to upgrade user group, trade_no: %s, error: %s", tradeNo, err.Error()))
+	}
+
+	model.RecordQuotaLog(order.UserId, model.LogTypeTopup, order.Quota, c.ClientIP(), fmt.Sprintf("在线充值成功，充值积分: %d，支付金额：%.2f %s", order.Quota, order.OrderAmount, order.OrderCurrency))
+
+	err = model.ProcessInviterReward(order.UserId, order.Quota, c.ClientIP())
+	if err != nil {
+		logger.SysError(fmt.Sprintf("epay callback failed to process inviter reward, trade_no: %s, error: %s", tradeNo, err.Error()))
+	}
 }

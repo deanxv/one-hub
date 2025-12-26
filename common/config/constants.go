@@ -48,6 +48,7 @@ var InviteCodeRegisterEnabled = false
 var OIDCAuthEnabled = false
 var LinuxDoOAuthEnabled = false
 var LinuxDoOAuthTrustLevelEnabled = false
+var LinuxDoOAuthDynamicTrustLevel = true // 动态限制已注册用户的信任等级，关闭后已注册用户不受新等级限制影响
 
 // 是否开启内容审查
 var EnableSafe = false
@@ -326,6 +327,8 @@ const (
 	ChannelTypeXAI             = 56
 	ChannelTypeGeminiCli       = 57
 	ChannelTypeClaudeCode      = 58
+	ChannelTypeCodex           = 59
+	ChannelTypeAntigravity     = 60
 )
 
 const (

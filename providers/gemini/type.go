@@ -186,6 +186,9 @@ type GeminiPart struct {
 	ExecutableCode      *GeminiPartExecutableCode      `json:"executableCode,omitempty"`
 	CodeExecutionResult *GeminiPartCodeExecutionResult `json:"codeExecutionResult,omitempty"`
 	Thought             bool                           `json:"thought,omitempty"` // 是否是思考内容
+	ThoughtSignature    json.RawMessage                `json:"thoughtSignature,omitempty"`
+	MediaResolution     json.RawMessage                `json:"mediaResolution,omitempty"`
+	VideoMetadata       json.RawMessage                `json:"videoMetadata,omitempty"`
 }
 
 type GeminiPartExecutableCode struct {
@@ -201,7 +204,7 @@ type GeminiPartCodeExecutionResult struct {
 type GeminiFunctionCall struct {
 	Name string                 `json:"name,omitempty"`
 	Args map[string]interface{} `json:"args,omitempty"`
-	Id   string                 `json:"-"` // 忽略 OpenAI 格式的 id 字段
+	Id   string                 `json:"id,omitempty"`
 }
 
 func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCompletionRequest) types.ChatCompletionStreamChoice {
@@ -273,7 +276,7 @@ func (candidate *GeminiChatCandidate) ToOpenAIStreamChoice(request *types.ChatCo
 	if candidate.GroundingMetadata != nil && showGoogleSearchMeta(request) {
 		groundingMarkdown := formatGroundingMetadataAsMarkdown(candidate.GroundingMetadata)
 		if groundingMarkdown != "" {
-			content = append(content, "\n\n" + groundingMarkdown)
+			content = append(content, "\n\n"+groundingMarkdown)
 		}
 	}
 
@@ -406,13 +409,16 @@ func (candidate *GeminiChatCandidate) ToOpenAIChoice(request *types.ChatCompleti
 }
 
 type GeminiFunctionResponse struct {
-	Name     string `json:"name,omitempty"`
-	Response any    `json:"response,omitempty"`
+	Name         string          `json:"name,omitempty"`
+	Response     any             `json:"response,omitempty"`
+	WillContinue json.RawMessage `json:"willContinue,omitempty"`
+	Scheduling   json.RawMessage `json:"scheduling,omitempty"`
+	Parts        json.RawMessage `json:"parts,omitempty"`
+	ID           json.RawMessage `json:"id,omitempty"`
 }
 
 type GeminiFunctionResponseContent struct {
-	Name    string `json:"name,omitempty"`
-	Content string `json:"content,omitempty"`
+	Output string `json:"output,omitempty"`
 }
 
 func (g *GeminiFunctionCall) ToOpenAITool() *types.ChatCompletionToolCalls {
@@ -474,9 +480,17 @@ type ThinkingConfig struct {
 }
 
 type GeminiError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Status  string `json:"status"`
+	Code    int                  `json:"code"`
+	Message string               `json:"message"`
+	Status  string               `json:"status"`
+	Details []GeminiErrorDetails `json:"details,omitempty"`
+}
+
+type GeminiErrorDetails struct {
+	Type     string                 `json:"@type,omitempty"`
+	Reason   string                 `json:"reason,omitempty"`
+	Domain   string                 `json:"domain,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (e *GeminiError) Error() string {
@@ -663,6 +677,7 @@ func OpenAIToGeminiChatContent(openaiContents []types.ChatCompletionMessage) ([]
 					FunctionCall: &GeminiFunctionCall{
 						Name: toolCall.Function.Name,
 						Args: args,
+						Id:   toolCall.Id,
 					},
 				})
 
@@ -684,12 +699,20 @@ func OpenAIToGeminiChatContent(openaiContents []types.ChatCompletionMessage) ([]
 				continue
 			}
 
+			// 构建 ID 字段（如果有 ToolCallID）
+			var idField json.RawMessage
+			if openaiContent.ToolCallID != "" {
+				if idBytes, err := json.Marshal(openaiContent.ToolCallID); err == nil {
+					idField = idBytes
+				}
+			}
+
 			functionPart := GeminiPart{
 				FunctionResponse: &GeminiFunctionResponse{
 					Name: *openaiContent.Name,
+					ID:   idField,
 					Response: GeminiFunctionResponseContent{
-						Name:    *openaiContent.Name,
-						Content: openaiContent.StringContent(),
+						Output: openaiContent.StringContent(),
 					},
 				},
 			}
@@ -708,8 +731,25 @@ func OpenAIToGeminiChatContent(openaiContents []types.ChatCompletionMessage) ([]
 			openaiMessagePart := openaiContent.ParseContent()
 			imageNum := 0
 			for _, openaiPart := range openaiMessagePart {
+				// 处理 thinking 和 redacted_thinking 类型
+				if openaiPart.Type == "thinking" || openaiPart.Type == "redacted_thinking" {
+					if openaiPart.ThinkingSignature != "" {
+						var sigField json.RawMessage
+						if sigBytes, err := json.Marshal(openaiPart.ThinkingSignature); err == nil {
+							sigField = sigBytes
+						}
+						content.Parts = append(content.Parts, GeminiPart{
+							Text:             openaiPart.Thinking,
+							Thought:          true,
+							ThoughtSignature: sigField,
+						})
+					}
+					continue
+				}
+
 				if openaiPart.Type == types.ContentTypeText {
-					if openaiPart.Text == "" {
+					// 过滤纯空白文本
+					if isEmptyOrOnlyNewlines(openaiPart.Text) {
 						continue
 					}
 					imageSymbols := ImageSymbolAcMachines.MultiPatternSearch([]rune(openaiPart.Text), false)
@@ -944,20 +984,6 @@ type VeoOperationError struct {
 func isEmptyOrOnlyNewlines(s string) bool {
 	trimmed := strings.TrimSpace(s)
 	return trimmed == ""
-}
-
-type GeminiGroundingMetadata struct {
-	GroundingChunks  []GeminiGroundingChunk `json:"groundingChunks,omitempty"`
-	WebSearchQueries []string               `json:"webSearchQueries,omitempty"`
-}
-
-type GeminiGroundingChunk struct {
-	Web *GeminiGroundingChunkWeb `json:"web,omitempty"`
-}
-
-type GeminiGroundingChunkWeb struct {
-	Uri   string `json:"uri,omitempty"`
-	Title string `json:"title,omitempty"`
 }
 
 // checks if googleSearch tool has "show" parameter

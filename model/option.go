@@ -33,6 +33,10 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterBool("WeChatAuthEnabled", &config.WeChatAuthEnabled)
 	config.GlobalOption.RegisterBool("LarkAuthEnabled", &config.LarkAuthEnabled)
 	config.GlobalOption.RegisterBool("OIDCAuthEnabled", &config.OIDCAuthEnabled)
+	config.GlobalOption.RegisterBool("LinuxDoOAuthEnabled", &config.LinuxDoOAuthEnabled)
+	config.GlobalOption.RegisterBool("InviteCodeRegisterEnabled", &config.InviteCodeRegisterEnabled)
+	config.GlobalOption.RegisterBool("LinuxDoOAuthTrustLevelEnabled", &config.LinuxDoOAuthTrustLevelEnabled)
+	config.GlobalOption.RegisterBool("LinuxDoOAuthDynamicTrustLevel", &config.LinuxDoOAuthDynamicTrustLevel)
 	config.GlobalOption.RegisterBool("TurnstileCheckEnabled", &config.TurnstileCheckEnabled)
 	config.GlobalOption.RegisterBool("RegisterEnabled", &config.RegisterEnabled)
 	config.GlobalOption.RegisterBool("AutomaticDisableChannelEnabled", &config.AutomaticDisableChannelEnabled)
@@ -63,6 +67,7 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterString("SystemName", &config.SystemName)
 	config.GlobalOption.RegisterString("Logo", &config.Logo)
 	config.GlobalOption.RegisterString("ServerAddress", &config.ServerAddress)
+	config.GlobalOption.RegisterString("PaymentCallbackAddress", &config.PaymentCallbackAddress)
 	config.GlobalOption.RegisterString("GitHubClientId", &config.GitHubClientId)
 	config.GlobalOption.RegisterString("GitHubClientSecret", &config.GitHubClientSecret)
 
@@ -71,6 +76,10 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterString("OIDCIssuer", &config.OIDCIssuer)
 	config.GlobalOption.RegisterString("OIDCScopes", &config.OIDCScopes)
 	config.GlobalOption.RegisterString("OIDCUsernameClaims", &config.OIDCUsernameClaims)
+
+	config.GlobalOption.RegisterString("LinuxDoClientId", &config.LinuxDoClientId)
+	config.GlobalOption.RegisterString("LinuxDoClientSecret", &config.LinuxDoClientSecret)
+	config.GlobalOption.RegisterInt("LinuxDoOAuthLowestTrustLevel", &config.LinuxDoOAuthLowestTrustLevel)
 
 	config.GlobalOption.RegisterString("WeChatServerAddress", &config.WeChatServerAddress)
 	config.GlobalOption.RegisterString("WeChatServerToken", &config.WeChatServerToken)
@@ -93,6 +102,7 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterInt("RetryCooldownSeconds", &config.RetryCooldownSeconds)
 
 	config.GlobalOption.RegisterBool("MjNotifyEnabled", &config.MjNotifyEnabled)
+	config.GlobalOption.RegisterBool("BuiltinChatEnabled", &config.BuiltinChatEnabled)
 	config.GlobalOption.RegisterString("ChatImageRequestProxy", &config.ChatImageRequestProxy)
 	config.GlobalOption.RegisterFloat("PaymentUSDRate", &config.PaymentUSDRate)
 	config.GlobalOption.RegisterInt("PaymentMinAmount", &config.PaymentMinAmount)
@@ -130,6 +140,12 @@ func InitOptionMap() {
 		config.SafeKeyWords = strings.Split(value, "\n")
 		return nil
 	}, "")
+
+	// 注册统一请求响应模型配置项
+	config.GlobalOption.RegisterBool("UnifiedRequestResponseModelEnabled", &config.UnifiedRequestResponseModelEnabled)
+
+	// 注册模型名称大小写不敏感配置项
+	config.GlobalOption.RegisterBool("ModelNameCaseInsensitiveEnabled", &config.ModelNameCaseInsensitiveEnabled)
 
 	loadOptionsFromDatabase()
 }

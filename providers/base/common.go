@@ -1,6 +1,7 @@
 package base
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -128,6 +129,11 @@ func (p *BaseProvider) SetUsage(usage *types.Usage) {
 
 func (p *BaseProvider) SetContext(c *gin.Context) {
 	p.Context = c
+	// 使用 WithoutCancel 创建一个不受客户端断开影响的 context
+	// 这样即使客户端断开，上游请求也会继续完成，确保计费和日志正常记录
+	if c != nil && p.Requester != nil {
+		p.Requester.Context = context.WithoutCancel(c.Request.Context())
+	}
 }
 
 func (p *BaseProvider) GetContext() *gin.Context {
@@ -301,7 +307,7 @@ func (p *BaseProvider) NewRequestWithCustomParams(method, url string, originalRe
 		}
 
 		// 处理自定义额外参数
-		requestMap = p.mergeCustomParams(requestMap, customParams, modelName)
+		requestMap = p.MergeCustomParams(requestMap, customParams, modelName)
 
 		// 使用修改后的请求体创建请求
 		req, err := p.Requester.NewRequest(method, url, p.Requester.WithBody(requestMap), p.Requester.WithHeader(headers))
@@ -321,8 +327,8 @@ func (p *BaseProvider) NewRequestWithCustomParams(method, url string, originalRe
 	return req, nil
 }
 
-// mergeCustomParams 将自定义参数合并到请求体中
-func (p *BaseProvider) mergeCustomParams(requestMap map[string]interface{}, customParams map[string]interface{}, modelName string) map[string]interface{} {
+// MergeCustomParams 将自定义参数合并到请求体中
+func (p *BaseProvider) MergeCustomParams(requestMap map[string]interface{}, customParams map[string]interface{}, modelName string) map[string]interface{} {
 	// 检查是否需要覆盖已有参数
 	shouldOverwrite := false
 	if overwriteValue, exists := customParams["overwrite"]; exists {
@@ -379,7 +385,7 @@ func (p *BaseProvider) mergeCustomParams(requestMap map[string]interface{}, cust
 				// 如果都是map类型，进行深度合并
 				if existingMap, ok := existingValue.(map[string]interface{}); ok {
 					if newMap, ok := value.(map[string]interface{}); ok {
-						requestMap[key] = p.deepMergeMap(existingMap, newMap)
+						requestMap[key] = p.DeepMergeMap(existingMap, newMap)
 						continue
 					}
 				}
@@ -394,8 +400,8 @@ func (p *BaseProvider) mergeCustomParams(requestMap map[string]interface{}, cust
 	return requestMap
 }
 
-// deepMergeMap 深度合并两个map
-func (p *BaseProvider) deepMergeMap(existing map[string]interface{}, new map[string]interface{}) map[string]interface{} {
+// DeepMergeMap 深度合并两个map
+func (p *BaseProvider) DeepMergeMap(existing map[string]interface{}, new map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	// 先复制现有的所有键值
@@ -409,7 +415,7 @@ func (p *BaseProvider) deepMergeMap(existing map[string]interface{}, new map[str
 			// 如果都是map类型，递归深度合并
 			if existingMap, ok := existingValue.(map[string]interface{}); ok {
 				if newMap, ok := newValue.(map[string]interface{}); ok {
-					result[k] = p.deepMergeMap(existingMap, newMap)
+					result[k] = p.DeepMergeMap(existingMap, newMap)
 					continue
 				}
 			}
