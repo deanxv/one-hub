@@ -66,6 +66,7 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterString("Footer", &config.Footer)
 	config.GlobalOption.RegisterString("SystemName", &config.SystemName)
 	config.GlobalOption.RegisterString("Logo", &config.Logo)
+	config.GlobalOption.RegisterString("AnalyticsCode", &config.AnalyticsCode)
 	config.GlobalOption.RegisterString("ServerAddress", &config.ServerAddress)
 	config.GlobalOption.RegisterString("PaymentCallbackAddress", &config.PaymentCallbackAddress)
 	config.GlobalOption.RegisterString("GitHubClientId", &config.GitHubClientId)

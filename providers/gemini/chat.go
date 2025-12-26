@@ -433,27 +433,59 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 		geminiRequest.GenerationConfig.ResponseModalities = []string{"AUDIO"}
 	}
 
-	// 检查是否应该启用 thinking（历史消息约束检查）
-	canEnableThinking := shouldEnableThinking(request.Messages)
+	// 1. 基础检查：是否有 reasoning 参数
+	if request.Reasoning != nil {
+		// 2. 历史消息约束检查：防止下游 400 错误
+		// 如果启用 thinking 但历史 assistant 消息不以 thinking/redacted_thinking 开头，则不启用
+		canEnableThinking := shouldEnableThinking(request.Messages)
 
-	if request.Reasoning != nil && canEnableThinking {
-		budget := request.Reasoning.MaxTokens
-		maxTokens := request.MaxTokens
+		if canEnableThinking {
+			budget := request.Reasoning.MaxTokens
+			maxTokens := request.MaxTokens
 
-		// 验证 thinkingBudget < maxOutputTokens
-		if maxTokens > 0 && budget >= maxTokens {
-			// 自动下调 budget
-			budget = maxTokens - 1
-		}
+			// 3. Token 校验与调整：验证 thinkingBudget < maxOutputTokens
+			// Gemini API 要求 Budget 必须严格小于 MaxOutputTokens
+			if maxTokens > 0 && budget >= maxTokens {
+				// 自动下调 budget
+				budget = maxTokens - 1
+			}
 
-		// 如果下调后 budget <= 0，则不启用 thinking
-		if budget > 0 {
-			geminiRequest.GenerationConfig.ThinkingConfig = &ThinkingConfig{
-				ThinkingBudget:  &budget,
-				IncludeThoughts: true, // 当有 Reasoning 参数时，启用思考输出
+			// 初始化 ThinkingConfig
+			thinkingConfig := &ThinkingConfig{
+				IncludeThoughts: true, // 只要进入 Reasoning 模式，通常都希望包含思考过程
+			}
+			hasConfig := false
+
+			// 4. 设置 Budget (仅当 budget 有效时)
+			if budget > 0 {
+				thinkingConfig.ThinkingBudget = &budget
+				hasConfig = true
+			}
+
+			// 5. 设置 ThinkingLevel (映射 effort 参数)
+			if request.Reasoning.Effort != "" {
+				effortToLevelMap := map[string]string{
+					"minimal": "MINIMAL",
+					"low":     "LOW",
+					"medium":  "MEDIUM",
+					"high":    "HIGH",
+				}
+				if level, ok := effortToLevelMap[request.Reasoning.Effort]; ok {
+					thinkingConfig.ThinkingLevel = level
+					hasConfig = true
+				}
+			}
+
+			// 6. 最终应用配置
+			// 注意：如果有 reasoning 参数但 budget 归零且无 effort，可能不应该下发空 config
+			// 但如果有 IncludeThoughts=true，通常也是有效的。
+			// 这里判断 hasConfig 主要是为了确保至少设置了 Budget 或 Level，或者保留 IncludeThoughts
+			if hasConfig {
+				geminiRequest.GenerationConfig.ThinkingConfig = thinkingConfig
 			}
 		}
 	}
+
 
 	if config.GeminiSettingsInstance.GetOpenThink(request.Model) && canEnableThinking {
 		if geminiRequest.GenerationConfig.ThinkingConfig == nil {

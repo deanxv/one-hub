@@ -15,6 +15,7 @@ const config = {
     display_in_currency: true,
     email_verification: false,
     footer_html: '',
+    analytics_code: '',
     github_client_id: '',
     github_oauth: false,
     linuxDo_client_id: '',

@@ -224,6 +224,8 @@ type ChatCompletionRequest struct {
 	EnableSearch    *bool `json:"enable_search,omitempty"`    // qwen 搜索开关
 	IncludeThoughts bool  `json:"include_thoughts,omitempty"` // gemini 输出思考开关
 
+  Thinking *interface{} `json:"thinking,omitempty"` // thinking 思考开关，兼容火山引擎
+  
 	OneOtherArg string `json:"-"`
 }
 

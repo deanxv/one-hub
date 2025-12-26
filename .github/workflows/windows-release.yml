@@ -20,14 +20,14 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
-          node-version: 22.4.1
+          node-version: 22.20.0
       - name: Build Frontend
         env:
           CI: ""
         run: |
           cd web
-          npm install
-          VITE_APP_VERSION=$(git describe --tags) npm run build
+          yarn install
+          VITE_APP_VERSION=$(git describe --tags) yarn run build
           cd ..
       - name: Set up Go
         uses: actions/setup-go@v4

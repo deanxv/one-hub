@@ -48,6 +48,22 @@ import ListInput from './ListInput'
 import ModelSelectorModal from './ModelSelectorModal'
 import pluginList from '../type/Plugin.json'
 import { Icon } from '@iconify/react'
+} from '@mui/material';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { defaultConfig, typeConfig } from '../type/Config'; //typeConfig
+import { createFilterOptions } from '@mui/material/Autocomplete';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { useTranslation } from 'react-i18next';
+import useCustomizeT from 'hooks/useCustomizeT';
+import { PreCostType } from '../type/other';
+import MapInput from './MapInput';
+import ListInput from './ListInput';
+import ModelSelectorModal from './ModelSelectorModal';
+import pluginList from '../type/Plugin.json';
+import { Icon } from '@iconify/react';
+import Editor from '@monaco-editor/react';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small"/>
 const checkedIcon = <CheckBoxIcon fontSize="small"/>
@@ -1436,6 +1452,7 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                       onChange={handleChange}
                       aria-describedby="helper-text-channel-key-label"
                       minRows={5}
+                      maxRows={15}
                       placeholder={customizeT(inputPrompt.key) + t('channel_edit.batchKeytip')}
                     />
                   )}
@@ -1758,36 +1775,48 @@ const EditModal = ({ open, channelId, onCancel, onOk, groupOptions, isTag, model
                     error={Boolean(touched.custom_parameter && errors.custom_parameter)}
                     sx={{ ...theme.typography.otherInput }}
                   >
-                    <TextField
-                      id="channel-custom_parameter-label"
-                      label={customizeT(inputLabel.custom_parameter)}
-                      multiline={Boolean(values.custom_parameter || parameterFocused)}
-                      rows={values.custom_parameter || parameterFocused ? 8 : 1}
-                      value={values.custom_parameter}
-                      name="custom_parameter"
-                      disabled={hasTag}
-                      error={Boolean(touched.custom_parameter && errors.custom_parameter)}
-                      onChange={handleChange}
-                      inputRef={parameterInputRef}
-                      onBlur={(e) => {
-                        handleBlur(e)
-                        setParameterFocused(false)
+                    <InputLabel shrink htmlFor="channel-custom_parameter-label">
+                      {customizeT(inputLabel.custom_parameter)}
+                    </InputLabel>
+                    <Box
+                      sx={{
+                        border: '1px solid',
+                        borderColor: touched.custom_parameter && errors.custom_parameter ? 'error.main' : 'divider',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        marginTop: 2, // Add some margin for the label
+                        resize: 'vertical',
+                        height: '200px',
+                        minHeight: '100px',
+                        '&:hover': {
+                          borderColor: 'primary.main'
+                        },
+                        '&:focus-within': {
+                          borderColor: 'primary.main',
+                          borderWidth: 2
+                        }
                       }}
-                      onFocus={() => {
-                        setParameterFocused(true)
-                        // 使用setTimeout确保状态更新后重新聚焦
-                        setTimeout(() => {
-                          if (parameterInputRef.current) {
-                            parameterInputRef.current.focus()
-                          }
-                        }, 0)
-                      }}
-                      placeholder={
-                        parameterFocused
-                          ? '{\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "nested_param": {\n      "key": "value"\n  }\n}'
-                          : ''
-                      }
-                    />
+                    >
+                      <Editor
+                        height="100%"
+                        language="json"
+                        theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'light'}
+                        value={values.custom_parameter}
+                        options={{
+                          minimap: { enabled: false },
+                          scrollBeyondLastLine: false,
+                          automaticLayout: true,
+                          fontSize: 14,
+                          lineNumbers: 'on',
+                          folding: true,
+                          formatOnPaste: true,
+                          formatOnType: true
+                        }}
+                        onChange={(value) => {
+                          setFieldValue('custom_parameter', value);
+                        }}
+                      />
+                    </Box>
                     {touched.custom_parameter && errors.custom_parameter ? (
                       <FormHelperText error id="helper-tex-channel-custom_parameter-label">
                         {errors.custom_parameter}
