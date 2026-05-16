@@ -1,89 +1,99 @@
 /**
- * Typography used in theme
  * @param {JsonObject} theme theme customization object
  */
 
+const primaryFont =
+  '"Public Sans Variable",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"';
+const secondaryFont =
+  '"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"';
+
 export default function themeTypography(theme) {
   return {
-    fontFamily:
-      theme?.customization?.fontFamily ||
-      "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    fontFamily: theme?.customization?.fontFamily || primaryFont,
+    fontSecondaryFamily: secondaryFont,
+    fontWeightLight: 300,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+    fontWeightSemiBold: 600,
+    fontWeightBold: 700,
     h1: {
-      fontWeight: 600,
-      fontSize: '2rem',
-      lineHeight: 1.25,
-      letterSpacing: '-0.01em',
+      fontWeight: 800,
+      fontSize: '2.125rem',
+      lineHeight: 1.35,
+      fontFamily: secondaryFont,
       color: theme.heading
     },
     h2: {
-      fontWeight: 600,
+      fontWeight: 800,
       fontSize: '1.5rem',
-      lineHeight: 1.3,
-      letterSpacing: '0em',
+      lineHeight: 1.35,
+      fontFamily: secondaryFont,
       color: theme.heading
     },
     h3: {
-      fontWeight: 600,
+      fontWeight: 700,
       fontSize: '1.25rem',
-      lineHeight: 1.4,
+      lineHeight: 1.5,
+      fontFamily: secondaryFont,
       color: theme.heading
     },
     h4: {
-      fontWeight: 600,
+      fontWeight: 700,
       fontSize: '1.125rem',
-      lineHeight: 1.4,
+      lineHeight: 1.5,
       color: theme.heading
     },
     h5: {
-      fontWeight: 500,
+      fontWeight: 600,
       fontSize: '1rem',
       lineHeight: 1.5,
       color: theme.heading
     },
     h6: {
-      fontWeight: 500,
+      fontWeight: 600,
       fontSize: '0.875rem',
-      lineHeight: 1.5,
+      lineHeight: 28 / 18,
       color: theme.heading
     },
     subtitle1: {
-      fontSize: '0.875rem',
+      fontSize: '1rem',
       lineHeight: 1.5,
-      fontWeight: 500,
+      fontWeight: 600,
       color: theme.textDark
     },
     subtitle2: {
-      fontSize: '0.75rem',
-      lineHeight: 1.5,
-      fontWeight: 500,
+      fontSize: '0.875rem',
+      lineHeight: 22 / 14,
+      fontWeight: 600,
       color: theme.darkTextSecondary
     },
     body1: {
-      fontSize: '0.875rem',
+      fontSize: '1rem',
       lineHeight: 1.5,
       color: theme.darkTextPrimary
     },
     body2: {
-      fontSize: '0.75rem',
-      lineHeight: 1.5,
+      fontSize: '0.875rem',
+      lineHeight: 22 / 14,
       color: theme.darkTextPrimary
     },
     caption: {
       fontSize: '0.75rem',
-      lineHeight: 1.4,
+      lineHeight: 1.5,
       color: theme.darkTextSecondary
     },
     overline: {
-      fontSize: '0.625rem',
-      fontWeight: 500,
+      fontSize: '0.75rem',
+      fontWeight: 700,
       lineHeight: 1.5,
-      letterSpacing: '0.5px',
       textTransform: 'uppercase',
       color: theme.darkTextSecondary
     },
     button: {
-      textTransform: 'none',
-      fontWeight: 500
+      textTransform: 'unset',
+      fontWeight: 700,
+      fontSize: '0.875rem',
+      lineHeight: 24 / 14
     },
     customInput: {
       marginTop: 1,
@@ -124,7 +134,7 @@ export default function themeTypography(theme) {
     },
     menuCaption: {
       fontSize: '0.875rem',
-      fontWeight: 500,
+      fontWeight: 600,
       color: theme.heading,
       padding: '6px',
       textTransform: 'capitalize',

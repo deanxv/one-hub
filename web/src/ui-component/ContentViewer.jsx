@@ -6,7 +6,7 @@ import 'assets/css/content-viewer.css';
 
 /**
  * ContentViewer component for displaying Markdown or HTML content
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.content - The content to display (Markdown, HTML, or URL)
  * @param {boolean} props.loading - Whether the content is loading
@@ -16,14 +16,7 @@ import 'assets/css/content-viewer.css';
  * @param {number} props.iframeHeight - Height for iframe (when content is a URL)
  * @returns {React.ReactElement} The rendered component
  */
-const ContentViewer = ({ 
-  content, 
-  loading = false, 
-  errorMessage = '', 
-  containerStyle = {}, 
-  contentStyle = {},
-  iframeHeight = '100vh'
-}) => {
+const ContentViewer = ({ content, loading = false, errorMessage = '', containerStyle = {}, contentStyle = {}, iframeHeight = '100vh' }) => {
   const [parsedContent, setParsedContent] = useState('');
   const [isUrl, setIsUrl] = useState(false);
 
@@ -62,11 +55,11 @@ const ContentViewer = ({
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           minHeight: '200px',
           ...containerStyle
         }}
@@ -78,16 +71,18 @@ const ContentViewer = ({
 
   if (errorMessage) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           minHeight: '200px',
           ...containerStyle
         }}
       >
-        <Typography color="error" variant="body1">{errorMessage}</Typography>
+        <Typography color="error" variant="body1">
+          {errorMessage}
+        </Typography>
       </Box>
     );
   }
@@ -97,29 +92,29 @@ const ContentViewer = ({
   }
 
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
+    <Paper
+      elevation={0}
+      sx={{
         overflow: 'hidden',
         backgroundColor: 'transparent',
         ...containerStyle
       }}
     >
       {isUrl ? (
-        <iframe 
-          title="content-frame" 
-          src={parsedContent} 
-          style={{ 
-            width: '100%', 
-            height: iframeHeight, 
+        <iframe
+          title="content-frame"
+          src={parsedContent}
+          style={{
+            width: '100%',
+            height: iframeHeight,
             border: 'none',
             ...contentStyle
-          }} 
+          }}
         />
       ) : (
-        <Box 
+        <Box
           className="content-viewer"
-          sx={{ 
+          sx={{
             fontSize: 'inherit',
             lineHeight: 1.6,
             '& img': {
@@ -127,7 +122,7 @@ const ContentViewer = ({
               height: 'auto'
             },
             ...contentStyle
-          }} 
+          }}
           dangerouslySetInnerHTML={{ __html: parsedContent }}
         />
       )}

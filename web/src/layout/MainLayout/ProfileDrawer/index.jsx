@@ -26,7 +26,6 @@ import { calculateQuota } from 'utils/common';
 
 // assets
 import { Icon } from '@iconify/react';
-import { keyframes } from '@emotion/react';
 
 // ==============================|| PROFILE DRAWER ||============================== //
 
@@ -47,18 +46,6 @@ const ProfileDrawer = ({ open, onClose }) => {
     navigate(path);
     if (onClose) onClose();
   };
-
-  const gradientAnimation = keyframes`
-    0% {
-      background-position: 0 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0 50%;
-    }
-  `;
 
   return (
     <SwipeableDrawer
@@ -90,7 +77,6 @@ const ProfileDrawer = ({ open, onClose }) => {
 
         {/* 用户信息头部 */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 2, pb: 2 }}>
-
           <Box
             component="div"
             sx={{
@@ -106,12 +92,7 @@ const ProfileDrawer = ({ open, onClose }) => {
             ${theme.palette.primary.main}, 
             ${theme.palette.secondary.main}, 
             ${theme.palette.primary.light}, 
-            ${theme.palette.primary.main})`,
-              backgroundSize: '300% 300%',
-              animation: `${gradientAnimation} 5s ease infinite`,
-              '&:hover': {
-                animation: `${gradientAnimation} 5s ease infinite`
-              }
+            ${theme.palette.primary.main})`
             }}
           >
             <Avatar
@@ -125,7 +106,6 @@ const ProfileDrawer = ({ open, onClose }) => {
               }}
             />
           </Box>
-
 
           <Typography variant="h5" sx={{ fontWeight: 500, mb: 0.5 }}>
             {user?.display_name || user?.username || 'Unknown'}
@@ -144,7 +124,8 @@ const ProfileDrawer = ({ open, onClose }) => {
           >
             <Typography variant="caption" color="primary">
               {t('userPage.group')}: {userGroup?.[user?.group]?.name || user?.group}（ {t('modelpricePage.rate')}:
-              {userGroup?.[user?.group]?.ratio || t('dashboard_index.unknown')}/ {t('modelpricePage.RPM')}:{userGroup?.[user?.group]?.api_rate || t('dashboard_index.unknown')}）
+              {userGroup?.[user?.group]?.ratio || t('dashboard_index.unknown')}/ {t('modelpricePage.RPM')}:
+              {userGroup?.[user?.group]?.api_rate || t('dashboard_index.unknown')}）
             </Typography>
           </Box>
         </Box>

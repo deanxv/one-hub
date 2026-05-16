@@ -18,6 +18,6 @@ export function usePopover() {
     anchorEl,
     onOpen,
     onClose,
-    setAnchorEl,
+    setAnchorEl
   };
 }

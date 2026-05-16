@@ -13,7 +13,13 @@ export default function TableToolBar({ filterName, handleFilterName, groupOption
 
   return (
     <>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 3, sm: 2, md: 4 }} padding={'24px'} paddingBottom={'0px'} sx={{ width: '100%', '& > *': { flex: 1 } }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={{ xs: 3, sm: 2, md: 4 }}
+        padding={'24px'}
+        paddingBottom={'0px'}
+        sx={{ width: '100%', '& > *': { flex: 1 } }}
+      >
         <FormControl>
           <InputLabel htmlFor="channel-name-label">{t('channel_index.channelName')}</InputLabel>
           <OutlinedInput
@@ -111,7 +117,12 @@ export default function TableToolBar({ filterName, handleFilterName, groupOption
         </FormControl>
       </Stack>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 3, sm: 2, md: 4 }} padding={'24px'} sx={{ width: '100%', '& > *': { flex: 1 } }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={{ xs: 3, sm: 2, md: 4 }}
+        padding={'24px'}
+        sx={{ width: '100%', '& > *': { flex: 1 } }}
+      >
         <FormControl>
           <InputLabel htmlFor="channel-type-label">{t('channel_index.channelType')}</InputLabel>
           <Select

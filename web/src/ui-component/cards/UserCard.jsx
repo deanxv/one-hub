@@ -6,25 +6,12 @@ import userBackground from 'assets/images/users/background-1.webp';
 import { useSelector } from 'react-redux';
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import { keyframes } from '@emotion/react';
 import React from 'react';
 
 export default function UserCard({ children }) {
   const account = useSelector((state) => state.account);
   const theme = useTheme();
 
-  // Define the gradient animation
-  const gradientAnimation = keyframes`
-    0% {
-      background-position: 0 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0 50%;
-    }
-  `;
   return (
     <Card
       sx={{
@@ -62,12 +49,7 @@ export default function UserCard({ children }) {
             ${theme.palette.primary.main}, 
             ${theme.palette.secondary.main}, 
             ${theme.palette.primary.light}, 
-            ${theme.palette.primary.main})`,
-          backgroundSize: '300% 300%',
-          animation: `${gradientAnimation} 5s ease infinite`,
-          '&:hover': {
-            animation: `${gradientAnimation} 5s ease infinite`,
-          }
+            ${theme.palette.primary.main})`
         }}
       >
         <Avatar

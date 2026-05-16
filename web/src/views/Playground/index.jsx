@@ -93,9 +93,7 @@ const Playground = () => {
       </SubCard>
     );
   } else if (chatLinks.length === 1) {
-    return (
-      <iframe title="playground" src={iframeSrc} style={{ width: '100%', height: '85vh', border: 'none' }} />
-    );
+    return <iframe title="playground" src={iframeSrc} style={{ width: '100%', height: '85vh', border: 'none' }} />;
   } else {
     return (
       <Card>

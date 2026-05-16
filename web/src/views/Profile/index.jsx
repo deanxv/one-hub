@@ -8,7 +8,6 @@ import {
   OutlinedInput,
   Stack,
   Alert,
-  Divider,
   Chip,
   Typography,
   useMediaQuery,
@@ -27,11 +26,21 @@ import {
   ListItemText,
   ListItemAvatar
 } from '@mui/material';
-import { keyframes } from '@emotion/react';
+
 import Grid from '@mui/material/Unstable_Grid2';
 import SubCard from 'ui-component/cards/SubCard';
 import MainCard from 'ui-component/cards/MainCard';
-import { IconBrandWechat, IconBrandGithub, IconMail, IconBrandTelegram, IconBrandOauth, IconSettings, IconLink, IconShieldLock, IconKey } from '@tabler/icons-react';
+import {
+  IconBrandWechat,
+  IconBrandGithub,
+  IconMail,
+  IconBrandTelegram,
+  IconBrandOauth,
+  IconSettings,
+  IconLink,
+  IconShieldLock,
+  IconKey
+} from '@tabler/icons-react';
 import { API } from 'utils/api';
 import {
   showError,
@@ -64,18 +73,8 @@ function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+    <div role="tabpanel" hidden={value !== index} id={`simple-tabpanel-${index}`} aria-labelledby={`simple-tab-${index}`} {...other}>
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -83,7 +82,7 @@ function CustomTabPanel(props) {
 function a11yProps(index) {
   return {
     id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`
   };
 }
 
@@ -106,19 +105,6 @@ export default function Profile() {
   const theme = useTheme();
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const [value, setValue] = useState(0);
-
-  // Define the gradient animation
-  const gradientAnimation = keyframes`
-    0% {
-      background-position: 0 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0 50%;
-    }
-  `;
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -349,12 +335,7 @@ export default function Profile() {
                         ${theme.palette.primary.main}, 
                         ${theme.palette.secondary.main}, 
                         ${theme.palette.primary.light}, 
-                        ${theme.palette.primary.main})`,
-                      backgroundSize: '300% 300%',
-                      animation: `${gradientAnimation} 5s ease infinite`,
-                      '&:hover': {
-                        animation: `${gradientAnimation} 5s ease infinite`
-                      }
+                        ${theme.palette.primary.main})`
                     }}
                   >
                     <Avatar
@@ -373,7 +354,9 @@ export default function Profile() {
                     />
                   </Box>
                   <Typography variant="h3">{inputs.username}</Typography>
-                  <Typography variant="body2" color="textSecondary">{inputs.email}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {inputs.email}
+                  </Typography>
                   <Chip label={getGroupInfo()} color="primary" variant="outlined" />
                 </Stack>
               </SubCard>
@@ -537,11 +520,7 @@ export default function Profile() {
                               {t('profilePage.unbind')}
                             </Button>
                           ) : (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() => onGitHubOAuthClicked(status.github_client_id, true)}
-                            >
+                            <Button size="small" variant="outlined" onClick={() => onGitHubOAuthClicked(status.github_client_id, true)}>
                               {t('profilePage.bind')}
                             </Button>
                           )}
@@ -560,11 +539,7 @@ export default function Profile() {
                         {t('profilePage.unbind')}
                       </Button>
                     ) : (
-                      <Button
-                        variant="outlined"
-                        onClick={() => onGitHubOAuthClicked(status.github_client_id, true)}
-                        sx={{ ml: 2 }}
-                      >
+                      <Button variant="outlined" onClick={() => onGitHubOAuthClicked(status.github_client_id, true)} sx={{ ml: 2 }}>
                         {t('profilePage.bind')}
                       </Button>
                     ))}
@@ -651,9 +626,7 @@ export default function Profile() {
                     <IconBrandTelegram /> {t('profilePage.telegramBot')}
                   </Typography>
                   <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2">
-                      {t('profilePage.telegramStep1')}
-                    </Typography>
+                    <Typography variant="body2">{t('profilePage.telegramStep1')}</Typography>
                     <Chip
                       icon={<IconBrandTelegram />}
                       label={'@' + status.telegram_bot}
@@ -663,9 +636,7 @@ export default function Profile() {
                       onClick={() => window.open('https://t.me/' + status.telegram_bot, '_blank')}
                       sx={{ my: 1 }}
                     />
-                    <Typography variant="body2">
-                      {t('profilePage.telegramStep2')}
-                    </Typography>
+                    <Typography variant="body2">{t('profilePage.telegramStep2')}</Typography>
                   </Box>
                 </Alert>
               </Stack>
@@ -838,9 +809,7 @@ export default function Profile() {
       >
         <DialogTitle id="unbind-dialog-title">{t('profilePage.unbindConfirm')}</DialogTitle>
         <DialogContent>
-          <DialogContentText id="unbind-dialog-description">
-            {t('profilePage.unbindWarning')}
-          </DialogContentText>
+          <DialogContentText id="unbind-dialog-description">{t('profilePage.unbindWarning')}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenUnbindDialog(false)} color="primary">

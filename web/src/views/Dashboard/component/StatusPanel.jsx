@@ -184,7 +184,7 @@ const StatusPanel = () => {
                   mr: 1
                 }}
               />
-              <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500, color: 'text.primary',fontSize: '13px' }}>
+              <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '13px' }}>
                 {monitor.name}
               </Typography>
             </Box>

@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 // material-ui
 import { styled, useTheme, alpha } from '@mui/material/styles';
 import { Avatar, Card, CardContent, Box, Typography, Chip, LinearProgress, Stack, Tooltip } from '@mui/material';
-import { keyframes } from '@emotion/react';
 import User1 from 'assets/images/users/user-round.svg';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -70,19 +69,6 @@ const MenuCard = () => {
   const [usedQuota, setUsedQuota] = useState(0);
   const [requestCount, setRequestCount] = useState(0);
 
-  // Define the gradient animation
-  const gradientAnimation = keyframes`
-    0% {
-      background-position: 0 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0 50%;
-    }
-  `;
-
   const quotaPerUnit = localStorage.getItem('quota_per_unit') || 500000;
 
   const totalQuota = parseFloat(balance) + parseFloat(usedQuota);
@@ -106,9 +92,9 @@ const MenuCard = () => {
     <CardStyle>
       <CardContent sx={{ p: 1.5, pb: '8px !important' }}>
         <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-          <Box 
+          <Box
             component="div"
-            sx={{ 
+            sx={{
               cursor: 'pointer',
               position: 'relative',
               width: '38px',
@@ -121,12 +107,7 @@ const MenuCard = () => {
                 ${theme.palette.primary.main}, 
                 ${theme.palette.secondary.main}, 
                 ${theme.palette.primary.light}, 
-                ${theme.palette.primary.main})`,
-              backgroundSize: '300% 300%',
-              animation: `${gradientAnimation} 3s ease infinite`,
-              '&:hover': {
-                animation: `${gradientAnimation} 1.5s ease infinite`,
-              }
+                ${theme.palette.primary.main})`
             }}
             onClick={() => navigate('/panel/profile')}
           >

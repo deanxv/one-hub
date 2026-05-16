@@ -324,12 +324,7 @@ const Header = () => {
                       />
                     </ListItemButton>
                     {siteInfo.UptimeEnabled && (
-                      <ListItemButton
-                        component="a"
-                        href={siteInfo.UptimeDomain}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <ListItemButton component="a" href={siteInfo.UptimeDomain} target="_blank" rel="noopener noreferrer">
                         <ListItemText
                           primary={
                             <Typography

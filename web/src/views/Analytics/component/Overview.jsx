@@ -8,7 +8,6 @@ import dayjs from 'dayjs';
 import { API } from 'utils/api';
 import { generateBarChartOptions, renderChartNumber } from 'utils/chart';
 import { useTranslation } from 'react-i18next';
-import { minWidth } from '@mui/system';
 
 export default function Overview() {
   const { t } = useTranslation();

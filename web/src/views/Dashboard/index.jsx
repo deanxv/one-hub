@@ -21,18 +21,8 @@ function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`dashboard-tabpanel-${index}`}
-      aria-labelledby={`dashboard-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ pt: 3 }}>
-          {children}
-        </Box>
-      )}
+    <div role="tabpanel" hidden={value !== index} id={`dashboard-tabpanel-${index}`} aria-labelledby={`dashboard-tab-${index}`} {...other}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -167,9 +157,9 @@ const Dashboard = () => {
 
           {siteInfo.UptimeEnabled && (
             <Stack direction="row" spacing={1}>
-              <Button 
+              <Button
                 onClick={() => handleTabChange(0)}
-                variant={currentTab === 0 ? "contained" : "text"}
+                variant={currentTab === 0 ? 'contained' : 'text'}
                 size="small"
                 disableElevation
                 sx={{
@@ -184,9 +174,9 @@ const Dashboard = () => {
               >
                 {t('dashboard_index.tab_dashboard')}
               </Button>
-              <Button 
+              <Button
                 onClick={() => handleTabChange(1)}
-                variant={currentTab === 1 ? "contained" : "text"}
+                variant={currentTab === 1 ? 'contained' : 'text'}
                 size="small"
                 disableElevation
                 sx={{

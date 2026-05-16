@@ -199,9 +199,9 @@ const SystemLogs = () => {
     <MainCard
       title={t('System Logs')}
       secondary={
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          spacing={2} 
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
           alignItems={{ xs: 'flex-start', sm: 'center' }}
           sx={{ flexWrap: 'wrap' }}
         >
@@ -237,10 +237,10 @@ const SystemLogs = () => {
             InputProps={{ inputProps: { min: 1, max: 500 } }}
             sx={{ width: { xs: '100%', sm: '120px' } }}
           />
-          <Button 
-            variant="outlined" 
-            color="error" 
-            onClick={handleClearLogs} 
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClearLogs}
             startIcon={<Icon icon="solar:trash-bin-trash-bold" />}
             sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
@@ -301,11 +301,7 @@ const SystemLogs = () => {
         ) : (
           filteredLogs.map((log, index) => (
             <Box key={index} sx={{ mb: 1, p: 1, borderRadius: 1, bgcolor: 'background.paper' }}>
-              <Stack 
-                direction={{ xs: 'column', sm: 'row' }} 
-                spacing={1} 
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-              >
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
                   <Typography variant="caption" color="textSecondary">
                     {formatTimestamp(log.timestamp)}

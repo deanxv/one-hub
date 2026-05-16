@@ -14,7 +14,7 @@ import { useTheme } from '@mui/material/styles';
 
 // ==============================|| LOGO SVG ||============================== //
 
-const Logo = () => {
+const Logo = ({ isMini = false }) => {
   const siteInfo = useSelector((state) => state.siteInfo);
   const theme = useTheme();
   const defaultLogo = theme.palette.mode === 'light' ? logoLight : logoDark;
@@ -25,7 +25,18 @@ const Logo = () => {
 
   const logoToDisplay = siteInfo.logo ? siteInfo.logo : defaultLogo;
 
-  return <img src={logoToDisplay} alt={siteInfo.system_name} height="50" />;
+  return (
+    <img
+      src={logoToDisplay}
+      alt={siteInfo.system_name}
+      style={{
+        height: isMini ? '28px' : '50px',
+        maxWidth: isMini ? '48px' : 'none',
+        objectFit: 'contain',
+        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
+    />
+  );
 };
 
 export default Logo;

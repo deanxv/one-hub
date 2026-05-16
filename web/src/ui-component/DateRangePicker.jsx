@@ -73,7 +73,10 @@ export default class DateRangePicker extends React.Component {
             views={this.views}
             sx={{ flex: 1 }}
           />
-          <Typography variant="body" sx={{ px: 1 }}> – </Typography>
+          <Typography variant="body" sx={{ px: 1 }}>
+            {' '}
+            –{' '}
+          </Typography>
           <DatePicker
             label={localeText?.end || ''}
             name="end_date"

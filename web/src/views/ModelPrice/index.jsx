@@ -30,7 +30,7 @@ import {
 } from '@mui/material';
 import { Icon } from '@iconify/react';
 import { API } from 'utils/api';
-import { showError, ValueFormatter, copy, showSuccess } from 'utils/common';
+import { showError, ValueFormatter, copy } from 'utils/common';
 import { useTheme } from '@mui/material/styles';
 import CustomToggleButtonGroup from 'ui-component/ToggleButton';
 import { alpha } from '@mui/material/styles';
@@ -216,9 +216,9 @@ export default function ModelPrice() {
         const hasAccess = model.groups.includes(selectedGroup);
         const price = hasAccess
           ? {
-            input: group.ratio * model.price.input,
-            output: group.ratio * model.price.output
-          }
+              input: group.ratio * model.price.input,
+              output: group.ratio * model.price.output
+            }
           : { input: t('modelpricePage.noneGroup'), output: t('modelpricePage.noneGroup') };
 
         // 计算所有用户组的价格F
@@ -256,7 +256,20 @@ export default function ModelPrice() {
         const ownerB = ownedby?.find((item) => item.name === b.provider);
         return (ownerA?.id || 0) - (ownerB?.id || 0);
       });
-  }, [availableModels, selectedOwnedBy, onlyShowAvailable, selectedGroup, searchQuery, modelInfoMap, selectedModality, selectedTag, userGroupMap, ownedby, t, unit]);
+  }, [
+    availableModels,
+    selectedOwnedBy,
+    onlyShowAvailable,
+    selectedGroup,
+    searchQuery,
+    modelInfoMap,
+    selectedModality,
+    selectedTag,
+    userGroupMap,
+    ownedby,
+    t,
+    unit
+  ]);
 
   // 分页处理
   const paginatedModels = useMemo(() => {
@@ -1155,11 +1168,7 @@ export default function ModelPrice() {
                                 <Typography variant="caption" color="text.secondary" sx={{ minWidth: 40 }}>
                                   {groupPrice.groupName}:
                                 </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color='success.main'
-                                  fontWeight="bold"
-                                >
+                                <Typography variant="body2" color="success.main" fontWeight="bold">
                                   {groupPrice.input > 0
                                     ? formatPrice(groupPrice.input, model.type === 'tokens' ? 'tokens' : 'times')
                                     : t('modelpricePage.free')}
@@ -1180,11 +1189,7 @@ export default function ModelPrice() {
                                 <Typography variant="caption" color="text.secondary" sx={{ minWidth: 40 }}>
                                   {groupPrice.groupName}:
                                 </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color= 'success.main'
-                                  fontWeight="bold"
-                                >
+                                <Typography variant="body2" color="success.main" fontWeight="bold">
                                   {groupPrice.output > 0
                                     ? formatPrice(groupPrice.output, model.type === 'tokens' ? 'tokens' : 'times')
                                     : t('modelpricePage.free')}

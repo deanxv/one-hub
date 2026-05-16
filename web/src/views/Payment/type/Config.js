@@ -2,7 +2,7 @@ const PaymentType = {
   epay: '易支付',
   alipay: '支付宝',
   wxpay: '微信支付',
-  stripe: 'Stripe',
+  stripe: 'Stripe'
 };
 
 const CurrencyType = {
@@ -153,7 +153,7 @@ const PaymentConfig = {
           value: 'Native'
         }
       ]
-    },
+    }
   },
   stripe: {
     secret_key: {
@@ -167,7 +167,7 @@ const PaymentConfig = {
       description: '回调验证密钥，不用填写，创建网关后会自动在stripe后台创建webhook并获取webhook密钥',
       type: 'text',
       value: ''
-    },
+    }
   }
 };
 

@@ -56,7 +56,7 @@ const dashboard = {
       icon: icons.IconSystemInfo,
       breadcrumbs: false,
       isAdmin: true
-    },
+    }
   ]
 };
 
